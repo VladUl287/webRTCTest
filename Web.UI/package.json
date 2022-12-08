@@ -11,7 +11,11 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@microsoft/signalr": "^7.0.0",
+    "@microsoft/signalr-protocol-msgpack": "^7.0.0",
+    "peerjs": "^1.4.7",
     "pinia": "^2.0.26",
+    "uuid": "^9.0.0",
     "vue": "^3.2.45",
     "vue-router": "^4.1.6"
   },
