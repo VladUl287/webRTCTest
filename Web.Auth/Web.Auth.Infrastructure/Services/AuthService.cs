@@ -22,7 +22,7 @@ public sealed class AuthService : IAuthService
 
     public async Task<OneOf<ResultDto, Error<string>>> Login(LoginDto loginDto)
     {
-        var hash = "";
+        var hash = Hash(loginDto.Email, "");
 
         var user = await dbContext.Users
             .AsNoTracking()

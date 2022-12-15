@@ -9,27 +9,21 @@ namespace Web.Auth.Infrastructure.Services;
 
 public sealed class JwtService : ITokenService
 {
-    public string Generate(Guid id, string email, TokenConfiguration configuration)
+    public string Generate(Claim[] claims, DateTime expires, in TokenConfiguration configuration)
     {
         var byteKey = Encoding.UTF8.GetBytes(configuration.SecurityKey);
         var symmetricSecurityKey = new SymmetricSecurityKey(byteKey);
 
         var credentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
-        var claims = new Claim[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, id.ToString()),
-            new Claim(ClaimTypes.Email, email)
-        };
 
         var issuer = configuration.Issuer;
-        var expires = configuration.Expires;
         var audience = configuration.Audience;
         var securityToken = new JwtSecurityToken(issuer, audience, claims, null, expires, credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(securityToken);
     }
 
-    public bool ValidateToken(string token, TokenConfiguration configuration)
+    public bool ValidateToken(string token, in TokenConfiguration configuration)
     {
         try
         {

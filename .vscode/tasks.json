@@ -2,12 +2,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "build-auth",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Web.Hub/WebHub.App.csproj",
+                "${workspaceFolder}/Web.Auth/Web.Auth.Api/Web.Auth.Api.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -22,18 +22,6 @@
                 "${workspaceFolder}/Web.Hub/WebHub.App.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/Web.Hub/WebHub.App.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
