@@ -5,7 +5,7 @@ namespace Web.Auth.Core.Contracts.Services;
 
 public interface ITokenService
 {
-    string Generate(Claim[] claims, DateTime expires, in TokenConfiguration configuration);
+    string Generate(Claim[] claims, string key, string issuer, string audience, DateTime expires);
 
-    bool ValidateToken(string token, in TokenConfiguration configuration);
+    bool ValidateToken(string token, string key, string issuer, string audience);
 }

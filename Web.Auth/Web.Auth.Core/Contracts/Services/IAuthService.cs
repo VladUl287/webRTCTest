@@ -6,7 +6,11 @@ namespace Web.Auth.Core.Contracts.Services;
 
 public interface IAuthService
 {
-    Task<OneOf<ResultDto, Error<string>>> Login(LoginDto loginDto);
+    Task<OneOf<ResultDto, NotFound>> Login(LoginDto loginDto);
 
-    Task<OneOf<ResultDto, Error>> Registration(RegistrationDto registrationDto);
+    Task<OneOf<Success, Error<string>>> Registration(RegistrationDto registrationDto);
+
+    Task<OneOf<ResultDto, NotFound, Error>> Refresh(Guid userId, string token);
+
+    Task Logout(Guid userId, string token);
 }

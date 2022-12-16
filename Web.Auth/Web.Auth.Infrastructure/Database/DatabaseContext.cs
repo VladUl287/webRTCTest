@@ -33,9 +33,16 @@ public sealed class DatabaseContext : DbContext
                 .IsRequired()
                 .HasMaxLength(250);
 
+            entity.Property(x => x.Name)
+                .IsRequired()
+                .HasMaxLength(250);
+
             entity.Property(x => x.Password)
                 .IsRequired()
                 .HasMaxLength(250);
+
+            entity.HasIndex(x => x.Email)
+                .IsUnique();
         });
 
         base.OnModelCreating(modelBuilder);
