@@ -18,11 +18,12 @@ public static class ClaimsPrincipalExtensions
             return default(T);
         }
 
-        if (typeof(T) == typeof(Guid))
+        var converter = TypeDescriptor.GetConverter(typeof(T));
+        if (!converter.CanConvertFrom(typeof(string)))
         {
-            return (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFromString(loggedInUserId);
+            return default(T);
         }
 
-        return (T)Convert.ChangeType(loggedInUserId, typeof(T));
+        return (T)(converter.ConvertFromString(loggedInUserId) ?? default(T));
     }
 }

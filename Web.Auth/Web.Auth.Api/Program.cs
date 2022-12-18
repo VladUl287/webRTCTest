@@ -1,9 +1,12 @@
 using System.Text;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.CookiePolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Web.Auth.Core.Configuration;
+using Web.Auth.Core.Contracts;
+using Web.Auth.Infrastructure.Database;
+using Web.Auth.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -15,7 +18,16 @@ var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddControllers();
 
+    builder.Services.AddDbContext<DatabaseContext>(options =>
+    {
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            options => options.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName));
+    });
+
     builder.Services.AddCors();
+
+    builder.Services.AddScoped<IUserService, UserService>();
 
     var byteKey = Encoding.UTF8.GetBytes(tokenConfiguration.AccessKey);
     builder.Services.AddAuthentication()
@@ -33,10 +45,6 @@ var builder = WebApplication.CreateBuilder(args);
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(byteKey)
             };
-        })
-        .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
-        {
-            
         });
 
     builder.Services.AddEndpointsApiExplorer();
@@ -44,6 +52,9 @@ var builder = WebApplication.CreateBuilder(args);
 }
 
 var app = builder.Build();
+var corsConfiguration = builder.Configuration
+    .GetSection(CorsConfiguration.Position)
+    .Get<CorsConfiguration>()!;
 {
     if (app.Environment.IsDevelopment())
     {
@@ -58,7 +69,7 @@ var app = builder.Build();
         config.AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()
-            .WithOrigins(new string[] { });
+            .WithOrigins(corsConfiguration.Origins);
     });
 
     app.UseCookiePolicy(new CookiePolicyOptions

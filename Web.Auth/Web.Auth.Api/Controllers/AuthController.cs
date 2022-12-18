@@ -1,13 +1,14 @@
 using Web.Auth.Core.Dtos;
-using Microsoft.AspNetCore.Mvc;
-using Web.Auth.Core.Contracts.Services;
-using Microsoft.AspNetCore.Authorization;
 using Web.Auth.Api.Extentions;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Web.Auth.Core.Contracts;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Web.Auth.Api.Controllers;
 
+[ApiController]
+[Route("[controller]/[action]")]
 public sealed class AuthController : ControllerBase
 {
     private readonly IAuthService authService;
@@ -23,7 +24,7 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromForm] LoginDto loginDto)
     {
         var result = await authService.Login(loginDto);
-        if (result.IsT0)
+        if (result.IsT1)
         {
             return NotFound();
         }
@@ -49,18 +50,15 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPut]
-    [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
     public async Task<IActionResult> Refresh()
     {
-        var userId = User.GetLoggedInUserId<Guid>();
         var refreshToken = Request.Cookies[REFRESH_TOKEN];
-
-        if (userId == Guid.Empty || string.IsNullOrEmpty(refreshToken))
+        if (string.IsNullOrEmpty(refreshToken))
         {
             return Unauthorized();
         }
 
-        var result = await authService.Refresh(userId, refreshToken);
+        var result = await authService.Refresh(refreshToken);
 
         return result.Match<IActionResult>(
             success => Ok(success),
@@ -73,14 +71,13 @@ public sealed class AuthController : ControllerBase
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> Logout()
     {
-        var userId = User.GetLoggedInUserId<Guid>();
         var refreshToken = Request.Cookies[REFRESH_TOKEN];
-
-        if (userId == Guid.Empty || string.IsNullOrEmpty(refreshToken))
+        if (string.IsNullOrEmpty(refreshToken))
         {
             return Unauthorized();
         }
 
+        var userId = User.GetLoggedInUserId<Guid>();
         await authService.Logout(userId, refreshToken);
 
         Response.Cookies.Delete(REFRESH_TOKEN);

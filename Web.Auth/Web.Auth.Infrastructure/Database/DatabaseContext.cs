@@ -11,7 +11,7 @@ public sealed class DatabaseContext : DbContext
 
     }
 
-    public DbSet<User> Users { get; init; }
+    public required DbSet<User> Users { get; init; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -20,6 +20,7 @@ public sealed class DatabaseContext : DbContext
             Console.WriteLine(msg);
             Debug.WriteLine(msg);
         });
+
         base.OnConfiguring(optionsBuilder);
     }
 

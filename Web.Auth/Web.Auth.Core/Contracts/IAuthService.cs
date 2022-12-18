@@ -2,7 +2,7 @@ using OneOf;
 using OneOf.Types;
 using Web.Auth.Core.Dtos;
 
-namespace Web.Auth.Core.Contracts.Services;
+namespace Web.Auth.Core.Contracts;
 
 public interface IAuthService
 {
@@ -10,7 +10,7 @@ public interface IAuthService
 
     Task<OneOf<Success, Error<string>>> Registration(RegistrationDto registrationDto);
 
-    Task<OneOf<ResultDto, NotFound, Error>> Refresh(Guid userId, string token);
+    Task<OneOf<ResultDto, NotFound, Error>> Refresh(string token);
 
     Task Logout(Guid userId, string token);
 }
