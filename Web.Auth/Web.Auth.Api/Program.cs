@@ -1,60 +1,22 @@
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.CookiePolicy;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Web.Auth.Core.Configuration;
-using Web.Auth.Core.Contracts;
+using Web.Auth.Api.Extensions;
+using Web.Auth.Infrastructure;
 using Web.Auth.Infrastructure.Database;
-using Web.Auth.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 {
-    var tokenSection = builder.Configuration.GetSection(TokenConfiguration.Position);
+    builder.Services.AddDefaultMvc();
 
-    builder.Services.Configure<TokenConfiguration>(tokenSection);
+    builder.Services.AddDatabase<DatabaseContext, IInfrastructureMarker>(builder.Configuration);
 
-    var tokenConfiguration = tokenSection.Get<TokenConfiguration>()!;
+    builder.Services.AddOpenId();
 
-    builder.Services.AddControllers();
-
-    builder.Services.AddDbContext<DatabaseContext>(options =>
-    {
-        options.UseNpgsql(
-            builder.Configuration.GetConnectionString("DefaultConnection"),
-            options => options.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName));
-    });
-
-    builder.Services.AddCors();
-
-    builder.Services.AddScoped<IUserService, UserService>();
-
-    var byteKey = Encoding.UTF8.GetBytes(tokenConfiguration.AccessKey);
-    builder.Services.AddAuthentication()
-        .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-        {
-            options.RequireHttpsMetadata = true;
-            options.TokenValidationParameters = new()
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidIssuer = tokenConfiguration.Issuer,
-                ValidAudience = tokenConfiguration.Audience,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(byteKey)
-            };
-        });
+    builder.Services.AddDefaultCors(builder.Configuration);
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 }
 
 var app = builder.Build();
-var corsConfiguration = builder.Configuration
-    .GetSection(CorsConfiguration.Position)
-    .Get<CorsConfiguration>()!;
 {
     if (app.Environment.IsDevelopment())
     {
@@ -64,25 +26,15 @@ var corsConfiguration = builder.Configuration
 
     app.UseHttpsRedirection();
 
-    app.UseCors(config =>
-    {
-        config.AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials()
-            .WithOrigins(corsConfiguration.Origins);
-    });
+    app.UseCors();
 
-    app.UseCookiePolicy(new CookiePolicyOptions
-    {
-        MinimumSameSitePolicy = SameSiteMode.None,
-        HttpOnly = HttpOnlyPolicy.Always,
-        Secure = CookieSecurePolicy.Always
-    });
+    // app.UseAuthentication();
+    // app.UseAuthorization();
 
-    app.UseAuthentication();
-    app.UseAuthorization();
+    app.UseStaticFiles();
 
     app.MapControllers();
+    app.MapRazorPages();
 
     app.Run();
 }

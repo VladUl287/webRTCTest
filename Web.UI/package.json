@@ -13,6 +13,7 @@
   "dependencies": {
     "@microsoft/signalr": "^7.0.0",
     "@microsoft/signalr-protocol-msgpack": "^7.0.0",
+    "oidc-client": "^1.11.5",
     "peerjs": "^1.4.7",
     "pinia": "^2.0.26",
     "uuid": "^9.0.0",
