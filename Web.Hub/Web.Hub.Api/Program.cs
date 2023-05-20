@@ -1,4 +1,7 @@
 using WebHub.App.Hubs;
+using Web.Hub.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Web.Hub.Infrastructure.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -16,6 +19,11 @@ var builder = WebApplication.CreateBuilder(args);
                 .WithOrigins(cors);
         });
     });
+
+    builder.Services.AddDbContext<DatabaseContext>(options =>
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            options => options.MigrationsAssembly(typeof(IInfrastructureMarker).Assembly.FullName)));
 
     builder.Services.AddSignalR()
         .AddMessagePackProtocol();

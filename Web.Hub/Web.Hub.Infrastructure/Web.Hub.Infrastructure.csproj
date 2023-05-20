@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\web.hub.core\Web.Hub.Core.csproj" />
+    <ProjectReference Include="..\Web.Hub.Core\Web.Hub.Core.csproj" />
   </ItemGroup>
 
 </Project>
