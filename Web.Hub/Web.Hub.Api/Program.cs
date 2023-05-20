@@ -2,23 +2,45 @@ using WebHub.App.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 {
+    builder.Services.AddControllers();
+
+    var cors = new string[] { "http://localhost:5173" };
+
+    builder.Services.AddCors(setup =>
+    {
+        setup.AddDefaultPolicy(config =>
+        {
+            config.AllowAnyMethod()
+                .AllowAnyMethod()
+                .AllowCredentials()
+                .WithOrigins(cors);
+        });
+    });
+
     builder.Services.AddSignalR()
-                    .AddMessagePackProtocol();
+        .AddMessagePackProtocol();
 
     builder.Services.AddCors();
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
 }
 
 var app = builder.Build();
 {
-    app.UseCors(config =>
+    if (app.Environment.IsDevelopment())
     {
-        config.AllowAnyHeader();
-        config.AllowAnyMethod();
-        config.AllowCredentials();
-        config.WithOrigins("http://localhost:5173");
-    });
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseHttpsRedirection();
+
+    app.UseCors();
 
     app.MapHub<RoomHub>("/room");
-    
+
+    app.MapControllers();
+
     app.Run();
 }

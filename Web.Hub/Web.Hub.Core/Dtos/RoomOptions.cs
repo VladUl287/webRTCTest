@@ -1,4 +1,4 @@
-namespace WebHub.App.Core.Dtos;
+namespace Web.Hub.Core.Dtos;
 
 public sealed class RoomOptions
 {

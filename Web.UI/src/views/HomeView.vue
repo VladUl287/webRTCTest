@@ -1,8 +1,6 @@
 <template>
-  <main>
     <video autoplay id="from"></video>
     <video autoplay id="to"></video>
-  </main>
 </template>
 
 <script setup lang="ts">
