@@ -11,4 +11,6 @@ public sealed class Message
     public required Guid DialogId { get; init; }
 
     public required DateTime Date { get; init; }
+
+    public Dialog? Dialog { get; init; }
 }
