@@ -28,8 +28,6 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddSignalR()
         .AddMessagePackProtocol();
 
-    builder.Services.AddCors();
-
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 }

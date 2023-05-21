@@ -4,7 +4,7 @@ using Web.Hub.Infrastructure.Database.Configuration;
 
 namespace Web.Hub.Infrastructure.Database;
 
-public sealed class DatabaseContext : DbContext
+public sealed class DatabaseContext : DbContext, IUnitOfWork
 {
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
     { }

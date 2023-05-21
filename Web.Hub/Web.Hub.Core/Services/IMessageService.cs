@@ -1,12 +1,12 @@
-using OneOf;
+﻿using OneOf;
 using OneOf.Types;
 using Web.Hub.Core.Dtos.Messages;
 
-namespace Web.Hub.Core.Repositories;
+namespace Web.Hub.Core.Services;
 
-public interface IMessagesManagerRepository : IBaseRepository
+public interface IMessageService
 {
-    Task<MessageInfo> AddMessage(MessageCreate message);
+    Task<MessageInfo> CreateMessage(MessageCreate message);
 
     Task<OneOf<MessageInfo, NotFound>> UpdateMessage(MessageUpdate dialog);
 
