@@ -1,19 +1,55 @@
 using Microsoft.EntityFrameworkCore;
 using Web.Hubs.Core.Configuration;
+using Web.Hubs.Core.Repositories;
+using Web.Hubs.Core.Services;
+using Web.Hubs.Infrastructure.Database;
 
 namespace Web.Hubs.Api.Extensions;
 
 internal static class StartupServices
 {
     public static void AddDatabase<TContext, TAssemblyMarker>(this IServiceCollection services, IConfiguration configuration)
-        where TContext : DbContext
+        where TContext : DbContext, IUnitOfWork
     {
-        services.AddDbContext<TContext>(options =>
-        {
-            options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection"),
-                options => options.MigrationsAssembly(typeof(TAssemblyMarker).Assembly.FullName));
-        });
+        const int RetryCount = 2;
+
+        services.AddDbContext<TContext>(
+            options =>
+            {
+                options.UseNpgsql(
+                    configuration.GetConnectionString("DefaultConnection"),
+                    options =>
+                    {
+                        options.MigrationsAssembly(typeof(TAssemblyMarker).Assembly.FullName);
+                        options.EnableRetryOnFailure(RetryCount);
+                    });
+            },
+            ServiceLifetime.Scoped
+        );
+
+        services.AddScoped<IUnitOfWork, TContext>();
+    }
+
+    public static void AddOpenIdAuthentication(this IServiceCollection services)
+    {
+        // services.AddOpenIddict()
+        // 		.AddValidation(options =>
+        // 		{
+        // 			options.SetIssuer("");
+        // 			options.AddAudiences("");
+
+        // 			options.UseIntrospection()
+        // 				.SetClientId("")
+        // 				.SetClientSecret("");
+
+        // 			options.UseSystemNetHttp();
+        // 			options.UseAspNetCore();
+        // 		});
+
+        // services.AddAuthentication(options =>
+        // {
+        //     options.DefaultScheme = OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+        // });
     }
 
     public static void AddDefaultCors(this IServiceCollection services, IConfiguration configuration)
@@ -22,9 +58,9 @@ internal static class StartupServices
             .GetSection(CorsConfiguration.Position)
             .Get<CorsConfiguration>();
 
-        if (corsConfig is null)
+        if (corsConfig is null or { Origins.Length: 0 })
         {
-            throw new NullReferenceException("Cors configuration not found.");
+            throw new NullReferenceException("Cors configuration not found or not correct.");
         }
 
         services.AddCors(setup =>
@@ -37,5 +73,18 @@ internal static class StartupServices
                     .WithOrigins(corsConfig.Origins);
             });
         });
+    }
+
+    public static void AddRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<IChatPresenterRepository>();
+        services.AddScoped<IMessagesPresenterRepository>();
+    }
+
+    public static void AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<IChatService>();
+        services.AddScoped<IMessageService>();
+        services.AddScoped<IStoreService<long>>();
     }
 }

@@ -2,9 +2,11 @@ using Web.Hubs.Core.Dtos.Chats;
 
 namespace Web.Hubs.Core.Repositories;
 
-public interface IDialogPresenterRepository
+public interface IChatPresenterRepository
 {
-    Task<ChatData[]> GetDialogs(long userId);
+    Task<ChatData[]> GetChats(long userId);
 
-    Task<ChatInfo> GetDialogInfo(Guid dialogId, long userId);
+    Task<long[]> GetUsersIds(Guid chatId);
+
+    Task<ChatInfo> GetChatInfo(Guid dialogId, long userId);
 }

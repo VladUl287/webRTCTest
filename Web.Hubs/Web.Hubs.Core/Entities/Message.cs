@@ -12,5 +12,7 @@ public sealed class Message
 
     public required DateTime Date { get; init; }
 
+    public bool Edit { get; init; }
+
     public Chat? Chat { get; init; }
 }

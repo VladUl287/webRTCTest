@@ -14,6 +14,11 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddSignalR()
         .AddMessagePackProtocol();
 
+    builder.Services.AddOpenIdAuthentication();
+
+    builder.Services.AddRepositories();
+    builder.Services.AddServices();
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 }
@@ -29,6 +34,9 @@ var app = builder.Build();
     app.UseHttpsRedirection();
 
     app.UseCors();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
 
     app.MapHub<RoomHub>("/room");
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Web.Hubs.Api.Hubs;
 
+// [Authorize]
 public sealed class RoomHub : Hub
 {
     public async Task Join(RoomOptions room)

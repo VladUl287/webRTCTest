@@ -5,15 +5,15 @@ using Web.Hubs.Core.Results;
 
 namespace Web.Hubs.Core.Services;
 
-public interface IDialogService
+public interface IChatService
 {
-    Task<ChatData> CreateDialog(ChatCreate chatCreate);
+    Task<ChatData> CreateChat(ChatCreate chatCreate);
 
-    Task<OneOf<Guid, AlreadyExists>> AddUser(Guid dialogId, long userId, long newUserId);
+    Task<OneOf<Guid, AlreadyExists, Error<string>>> AddUser(Guid chatId, long creatorId, long newUserId);
 
-    Task<OneOf<Success, NotFound>> UpdateDialog(ChatUpdate dialog);
+    Task<OneOf<Success, NotFound>> UpdateChat(ChatUpdate chat);
 
-    Task RemoveDialog(Guid chatId, long userId);
+    Task RemoveChat(Guid chatId, long creatorId);
 
     Task RemoveUsers(Guid chatId, long creatorId, long[] usersIds);
 }
