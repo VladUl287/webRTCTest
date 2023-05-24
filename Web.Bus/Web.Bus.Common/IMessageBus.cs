@@ -2,7 +2,9 @@
 
 public interface IMessageBus
 {
-    Task PublishAsync<T>(T message, string exchange, CancellationToken cancellationToken = default);
+    Task PublishAsync<T>(T message, string exchangeName, string route);
 
-    Task SubscribeAsync<T>(Func<T, CancellationToken, Task> handler, string queue, CancellationToken token = default);
+    Task SubscribeAsync<T>(Func<T, Task> handler, string queueName);
+
+    Task BindAsync(string exchangeName, string queueName, string route);
 }
