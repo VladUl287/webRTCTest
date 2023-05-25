@@ -77,14 +77,14 @@ internal static class StartupServices
 
     public static void AddRepositories(this IServiceCollection services)
     {
-        services.AddScoped<IChatPresenterRepository>();
-        services.AddScoped<IMessagesPresenterRepository>();
+        services.AddScoped<IChatPresenter>();
+        services.AddScoped<IMessagePresenter>();
     }
 
     public static void AddServices(this IServiceCollection services)
     {
         services.AddScoped<IChatService>();
         services.AddScoped<IMessageService>();
-        services.AddScoped<IStoreService<long>>();
+        services.AddScoped<IStoreService<long, string>>();
     }
 }

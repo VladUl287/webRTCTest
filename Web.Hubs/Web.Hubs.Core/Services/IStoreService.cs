@@ -1,14 +1,18 @@
 namespace Web.Hubs.Core.Services;
 
-public interface IStoreService<TKey> where TKey : notnull
-{
-    Task<string[]> Get(TKey key);
+public interface IStoreService<TKey, TValue>
+    where TKey : notnull
+    where TValue : notnull
+{    
+    Task<bool> Has(TKey key);
 
-    Task<string[]> Get(TKey[] key);
+    Task<bool> Has(TKey key, TValue value);
 
-    Task Add(TKey key, string content);
+    Task<TValue[]> Get(TKey key);
 
-    Task Delete(TKey key, string content);
+    Task<TValue[]> Get(TKey[] key);
 
-    Task Delete(TKey key);
+    Task Add(TKey key, TValue value);
+
+    Task Delete(TKey key, TValue value);
 }

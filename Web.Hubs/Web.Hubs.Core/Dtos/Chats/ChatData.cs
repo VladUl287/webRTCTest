@@ -8,5 +8,7 @@ public sealed class ChatData
 
     public required string Image { get; init; }
 
-    public string LastMessage { get; init; } = string.Empty;
+    public required DateTime LastRead { get; init; }
+
+    public required string LastMessage { get; init; } = string.Empty;
 }

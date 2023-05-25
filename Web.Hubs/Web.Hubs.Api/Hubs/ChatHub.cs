@@ -1,99 +1,74 @@
 using Web.Hubs.Core.Services;
-using Microsoft.AspNetCore.Mvc;
 using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Messages;
 using Microsoft.AspNetCore.SignalR;
+using Web.Hubs.Api.Extensions;
 
 namespace Web.Hubs.Api.Hubs;
 
 // [Authorize(AuthenticationSchemes = OpenIddict.Validation.AspNetCore)]
 public sealed class ChatHub : Hub
 {
-    private readonly IStoreService<long> store;
+    private readonly IStoreService<long, string> usersStore;
     private readonly IMessageService messageService;
+    private readonly IChatPresenter chatPresenter;
 
-    public ChatHub(IStoreService<long> store, IMessageService messageService)
+    public ChatHub()
     {
-        this.store = store;
-        this.messageService = messageService;
     }
 
-    // OneOf<MessageInfo, Error<string>>
-    public async Task<bool> SendMessage(MessageCreate message, [FromServices] IChatPresenterRepository chatRepository)
+    //OneOf<MessageInfo, Error>
+    public async Task SendMessage(MessageCreate message)
     {
-        if (!long.TryParse(Context?.User?.Identity?.Name, out long userId) || userId != message.UserId)
+        var userId = Context.GetUserId<long>();
+
+        var result = await messageService.CreateMessage(message, userId);
+        if (result.IsT1)
         {
-            return false;
+            return;
         }
 
-        var result = await messageService.CreateMessage(message);
-        if (result.IsT0)
-        {
-            var chatUsersIds = await chatRepository.GetUsersIds(message.ChatId);
-
-            if (chatUsersIds is not null and { Length: > 0 })
-            {
-                var connections = await store.Get(chatUsersIds);
-
-                await Clients.Clients(connections)
-                    .SendAsync("ReceiveMessage", message);
-            }
-
-            return true;
-        }
-
-        return false;
+        await NotifyUsers(result.AsT0, "ReceiveMessage");
     }
 
-    //OneOf<MessageInfo, NotFound, Error<string>>
-    public async Task<bool> UpdateMessage(MessageUpdate update)
+    //OneOf<MessageInfo, Error>
+    public async Task UpdateMessage(MessageUpdate update)
     {
-        if (!long.TryParse(Context?.User?.Identity?.Name, out long userId))
-        {
-            return false;
-        }
+        var userId = Context.GetUserId<long>();
 
         var result = await messageService.UpdateMessage(update.Id, userId, update.Content);
+        if (result.IsT1)
+        {
+            return;
+        }
 
-        return result.Match(
-            success => true,
-            notFound => false
-        );
+        await NotifyUsers(result.AsT0, "UpdateMessage");
     }
 
     //OneOf<Success, NotFound>
-    public async Task<bool> DeleteMessage(Guid messageId)
+    public async Task DeleteMessage(Guid messageId)
     {
-        if (!long.TryParse(Context?.User?.Identity?.Name, out long userId))
-        {
-            return false;
-        }
+        var userId = Context.GetUserId<long>();
 
         var result = await messageService.DeleteMessage(messageId, userId);
-
-        return result.Match(
-            success => true,
-            notFound => false
-        );
-    }
-
-    public override async Task OnConnectedAsync()
-    {
-        if (long.TryParse(Context?.User?.Identity?.Name, out long userId))
+        if (result.IsT1)
         {
-            await store.Add(userId, Context.ConnectionId);
+            return;
         }
 
-        await base.OnConnectedAsync();
+        await NotifyUsers(result.AsT0, "DeleteMessage");
     }
 
-    public override async Task OnDisconnectedAsync(Exception? exception)
+    private async Task NotifyUsers(MessageInfo message, string method)
     {
-        if (long.TryParse(Context?.User?.Identity?.Name, out long userId))
-        {
-            await store.Delete(userId, Context.ConnectionId);
-        }
+        var users = await chatPresenter.GetUsers(message.ChatId);
 
-        await base.OnDisconnectedAsync(exception);
+        if (users?.Length > 0)
+        {
+            var connections = await usersStore.Get(users);
+
+            await Clients.Clients(connections)
+                .SendAsync(method, message);
+        }
     }
 }
