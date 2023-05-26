@@ -2,9 +2,9 @@
 
 public interface IMessageBus
 {
-    Task PublishAsync<T>(T message, string exchangeName, string route);
+    void Publish<T>(T message, string exchangeName, string route);
 
-    Task SubscribeAsync<T>(Func<T, Task> handler, string queueName);
+    void Subscribe<T>(Func<T, Task> handler, string queueName);
 
-    Task BindAsync(string exchangeName, string queueName, string route);
+    void Bind(string exchangeName, string queueName, string route);
 }

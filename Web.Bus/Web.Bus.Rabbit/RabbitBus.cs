@@ -6,7 +6,7 @@ using Polly.Contrib.WaitAndRetry;
 
 namespace Web.Bus.Rabbit;
 
-public sealed class RabbitBus : IMessageBus
+public sealed class RabbitBus : IAsyncMessageBus
 {
     private readonly IAdvancedBus bus;
     private readonly IAsyncPolicy retryPolicy;
