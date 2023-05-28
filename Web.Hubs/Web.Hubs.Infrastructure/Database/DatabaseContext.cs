@@ -9,9 +9,9 @@ public sealed class DatabaseContext : DbContext, IUnitOfWork
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
     { }
 
-    public DbSet<Chat> Dialogs => Set<Chat>();
+    public DbSet<Chat> Chats => Set<Chat>();
     public DbSet<Message> Messages => Set<Message>();
-    public DbSet<ChatUser> DialogsUsers => Set<ChatUser>();
+    public DbSet<ChatUser> ChatsUsers => Set<ChatUser>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

@@ -1,12 +1,14 @@
+using OneOf;
+using OneOf.Types;
 using Web.Hubs.Core.Dtos.Chats;
 
 namespace Web.Hubs.Core.Repositories;
 
 public interface IChatPresenter
 {
-    Task<ChatData[]> GetChats(long userId, PageFilter? pageFilter = null);
+    Task<ChatData[]> GetChats(long userId, PageFilter? filter = null);
 
-    Task<ChatData> GetChat(Guid chatId, long userId);
+    Task<OneOf<ChatData, NotFound>> GetChat(Guid chatId, long userId);
 
-    Task<long[]> GetUsers(Guid chatId, PageFilter? pageFilter = null);
+    Task<long[]> GetUsers(Guid chatId, PageFilter? filter = null);
 }

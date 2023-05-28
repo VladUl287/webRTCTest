@@ -1,6 +1,6 @@
 <template>
     <section>
-        <div v-for="dialog of dialogStore.dialogs" :key="dialog.id">
+        <div v-for="dialog of chatStore.dialogs" :key="dialog.id">
             <p>{{ dialog.image }}</p>
             <p>{{ dialog.name }}</p>
         </div>
@@ -8,16 +8,16 @@
 </template>
   
 <script setup lang="ts">
-import { useDialogStore } from '@/stores/dialog';
+import { useChatStore } from '@/stores/chat';
 import { useRoute } from 'vue-router';
 
 const route = useRoute()
 
-const dialog = route.params.dialog as string;
+const chat = route.params.dialog as string;
 
-const dialogStore = useDialogStore()
+const chatStore = useChatStore()
 
-dialogStore.loading(dialog)
+chatStore.loading(chat)
 
 </script>
   

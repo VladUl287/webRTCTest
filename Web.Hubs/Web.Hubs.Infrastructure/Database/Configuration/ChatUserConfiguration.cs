@@ -8,7 +8,7 @@ public sealed class ChatUserConfiguration : IEntityTypeConfiguration<ChatUser>
 {
     public void Configure(EntityTypeBuilder<ChatUser> builder)
     {
-        builder.HasKey(x => new { x.DialogId, x.UserId });
+        builder.HasKey(x => new { x.ChatId, x.UserId });
 
         builder.Property(x => x.LastRead)
             .IsRequired();

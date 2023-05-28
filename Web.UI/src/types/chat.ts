@@ -1,4 +1,4 @@
-export type Dialog = {
+export type Chat = {
     id: string,
     name: string,
     image: string

@@ -2,7 +2,7 @@
 
 public class PageFilter
 {
-    public required uint Size { get; init; }
+    public required int Size { get; init; }
 
-    public required uint Page { get; init; }
+    public required int Page { get; init; }
 }
