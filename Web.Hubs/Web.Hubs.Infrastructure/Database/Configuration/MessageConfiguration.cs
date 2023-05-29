@@ -24,7 +24,7 @@ public sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
             .IsRequired();
 
         builder.HasOne(x => x.Chat)
-            .WithMany()
+            .WithMany(x => x.Messages)
             .HasForeignKey(x => x.ChatId)
             .OnDelete(DeleteBehavior.Cascade);
     }

@@ -12,5 +12,10 @@ public sealed class ChatUserConfiguration : IEntityTypeConfiguration<ChatUser>
 
         builder.Property(x => x.LastRead)
             .IsRequired();
+
+        builder.HasOne(x => x.Chat)
+            .WithMany(x => x.ChatUsers)
+            .HasForeignKey(x => x.ChatId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

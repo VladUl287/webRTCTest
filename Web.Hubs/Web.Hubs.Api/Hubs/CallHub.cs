@@ -15,17 +15,23 @@ public sealed class CallHub : Hub
 
     private readonly IChatPresenter chatRepository;
 
-    public CallHub()
-    { }
+    public CallHub(IStoreService<Guid, long> callStore, IStoreService<long, Guid> userCallStore, IStoreService<long, string> connectionsStore, IChatPresenter chatRepository)
+    {
+        this.callStore = callStore;
+        this.userCallStore = userCallStore;
+        this.connectionsStore = connectionsStore;
+        this.chatRepository = chatRepository;
+    }
 
     public async Task StartCall(StartCall room)
     {
-        var userId = Context.GetUserId<long>();
+        var userId = Context.User.GetUserId<long>();
 
         var users = await chatRepository.GetUsers(room.ChatId);
         if (users is null or { Length: < 2 })
         {
             return;
+            // return false;
         }
 
         var inCall = await userCallStore.Has(userId);
@@ -48,12 +54,12 @@ public sealed class CallHub : Hub
 
     public async Task JoinCall(JoinCall join)
     {
-        var userId = Context.GetUserId<long>();
+        var userId = Context.User.GetUserId<long>();
 
         var inCall = await userCallStore.Has(userId);
         if (inCall)
         {
-            //leave previous call?
+            //leave active call
             return;
         }
 
@@ -65,7 +71,7 @@ public sealed class CallHub : Hub
 
     public async Task LeaveCall(LeaveCall leave)
     {
-        var userId = Context.GetUserId<long>();
+        var userId = Context.User.GetUserId<long>();
 
         var inCall = await callStore.Has(leave.CallId, userId);
 

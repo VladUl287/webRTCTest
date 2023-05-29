@@ -1,8 +1,6 @@
 namespace Web.Hubs.Core.Services;
 
 public interface IStoreService<TKey, TValue>
-    where TKey : notnull
-    where TValue : notnull
 {    
     Task<bool> Has(TKey key);
 

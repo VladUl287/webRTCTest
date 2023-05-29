@@ -13,13 +13,6 @@ public sealed class DatabaseContext : DbContext, IUnitOfWork
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<ChatUser> ChatsUsers => Set<ChatUser>();
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.LogTo(Console.WriteLine);
-
-        base.OnConfiguring(optionsBuilder);
-    }
-
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.ApplyConfiguration(new DialogConfiguration());

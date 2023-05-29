@@ -1,6 +1,7 @@
 using OneOf;
 using OneOf.Types;
 using Web.Hubs.Core.Dtos.Chats;
+using Web.Hubs.Core.Dtos.Filters;
 
 namespace Web.Hubs.Core.Repositories;
 

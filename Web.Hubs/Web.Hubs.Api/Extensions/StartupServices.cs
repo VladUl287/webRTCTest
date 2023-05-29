@@ -3,6 +3,8 @@ using Web.Hubs.Core.Configuration;
 using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Services;
 using Web.Hubs.Infrastructure.Database;
+using Web.Hubs.Infrastructure.Repositories;
+using Web.Hubs.Infrastructure.Services;
 
 namespace Web.Hubs.Api.Extensions;
 
@@ -11,7 +13,7 @@ internal static class StartupServices
     public static void AddDatabase<TContext, TAssemblyMarker>(this IServiceCollection services, IConfiguration configuration)
         where TContext : DbContext, IUnitOfWork
     {
-        const int RetryCount = 2;
+        const int EnableRetryOnFailure = 2;
 
         services.AddDbContext<TContext>(
             options =>
@@ -21,8 +23,9 @@ internal static class StartupServices
                     options =>
                     {
                         options.MigrationsAssembly(typeof(TAssemblyMarker).Assembly.FullName);
-                        options.EnableRetryOnFailure(RetryCount);
+                        options.EnableRetryOnFailure(EnableRetryOnFailure);
                     });
+                options.LogTo(Console.WriteLine);
             },
             ServiceLifetime.Scoped
         );
@@ -63,28 +66,28 @@ internal static class StartupServices
             throw new NullReferenceException("Cors configuration not found or not correct.");
         }
 
-        services.AddCors(setup =>
-        {
-            setup.AddDefaultPolicy(policy =>
-            {
-                policy.AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials()
-                    .WithOrigins(corsConfig.Origins);
-            });
-        });
+        services.AddCors(setup => setup
+            .AddDefaultPolicy(policy =>
+                {
+                    policy.AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials()
+                        .WithOrigins(corsConfig.Origins);
+                }
+            )
+        );
     }
 
     public static void AddRepositories(this IServiceCollection services)
     {
-        services.AddScoped<IChatPresenter>();
-        services.AddScoped<IMessagePresenter>();
+        services.AddScoped<IChatPresenter, ChatPresenter>();
+        services.AddScoped<IMessagePresenter, MessagePresenter>();
     }
 
     public static void AddServices(this IServiceCollection services)
     {
-        services.AddScoped<IChatService>();
-        services.AddScoped<IMessageService>();
-        services.AddScoped<IStoreService<long, string>>();
+        services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<IMessageService, MessageService>();
+        services.AddScoped<IStoreService<long, string>, StoreService<long, string>>();
     }
 }

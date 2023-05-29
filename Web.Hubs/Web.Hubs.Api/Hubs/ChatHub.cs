@@ -9,32 +9,34 @@ namespace Web.Hubs.Api.Hubs;
 // [Authorize(AuthenticationSchemes = OpenIddict.Validation.AspNetCore)]
 public sealed class ChatHub : Hub
 {
-    private readonly IStoreService<long, string> usersStore;
-    private readonly IMessageService messageService;
     private readonly IChatPresenter chatPresenter;
+    private readonly IMessageService messageService;
+    private readonly IStoreService<long, string> usersStore;
 
-    public ChatHub()
+    public ChatHub(IChatPresenter chatPresenter, IMessageService messageService, IStoreService<long, string> usersStore)
     {
+        this.messageService = messageService;
+        this.chatPresenter = chatPresenter;
+        this.usersStore = usersStore;
     }
 
-    //OneOf<MessageInfo, Error>
     public async Task SendMessage(MessageCreate message)
     {
-        var userId = Context.GetUserId<long>();
+        var userId = Context.User.GetUserId<long>();
 
         var result = await messageService.CreateMessage(message, userId);
         if (result.IsT1)
         {
             return;
+            // return false;
         }
 
         await NotifyUsers(result.AsT0, "ReceiveMessage");
     }
 
-    //OneOf<MessageInfo, Error>
     public async Task UpdateMessage(MessageUpdate update)
     {
-        var userId = Context.GetUserId<long>();
+        var userId = Context.User.GetUserId<long>();
 
         var result = await messageService.UpdateMessage(update.Id, userId, update.Content);
         if (result.IsT1)
@@ -45,10 +47,9 @@ public sealed class ChatHub : Hub
         await NotifyUsers(result.AsT0, "UpdateMessage");
     }
 
-    //OneOf<Success, NotFound>
     public async Task DeleteMessage(Guid messageId)
     {
-        var userId = Context.GetUserId<long>();
+        var userId = Context.User.GetUserId<long>();
 
         var result = await messageService.DeleteMessage(messageId, userId);
         if (result.IsT1)
@@ -59,7 +60,7 @@ public sealed class ChatHub : Hub
         await NotifyUsers(result.AsT0, "DeleteMessage");
     }
 
-    private async Task NotifyUsers(MessageInfo message, string method)
+    private async Task NotifyUsers(MessageData message, string method)
     {
         var users = await chatPresenter.GetUsers(message.ChatId);
 
@@ -70,5 +71,23 @@ public sealed class ChatHub : Hub
             await Clients.Clients(connections)
                 .SendAsync(method, message);
         }
+    }
+
+    public override async Task OnConnectedAsync()
+    {
+        var userId = Context.User.GetUserId<long>();
+
+        await usersStore.Add(userId, Context.ConnectionId);
+
+        await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        var userId = Context.User.GetUserId<long>();
+
+        await usersStore.Delete(userId, Context.ConnectionId);
+
+        await base.OnDisconnectedAsync(exception);
     }
 }

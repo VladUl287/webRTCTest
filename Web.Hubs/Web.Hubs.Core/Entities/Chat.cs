@@ -15,4 +15,8 @@ public sealed class Chat
     public required ChatType Type { get; init; }
 
     public required long UserId { get; init; }
+
+    public IEnumerable<Message> Messages { get; init; } = Enumerable.Empty<Message>();
+
+    public IEnumerable<ChatUser> ChatUsers { get; set; } = Enumerable.Empty<ChatUser>();
 }

@@ -38,9 +38,9 @@ var app = builder.Build();
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.MapHub<CallHub>("/room");
+    app.MapHub<CallHub>("/call");
+    app.MapHub<ChatHub>("/chat");
 
     app.MapControllers();
-
-    app.Run();
 }
+app.Run();

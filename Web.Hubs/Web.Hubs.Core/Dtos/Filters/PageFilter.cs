@@ -1,4 +1,4 @@
-﻿namespace Web.Hubs.Core;
+﻿namespace Web.Hubs.Core.Dtos.Filters;
 
 public class PageFilter
 {
