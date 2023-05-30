@@ -8,8 +8,6 @@ public sealed class MessageData
 
     public required long UserId { get; init; }
     
-    public required string Image { get; init; }
-
     public required Guid ChatId { get; init; }
 
     public required DateTime Date { get; init; }

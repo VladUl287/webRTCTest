@@ -8,7 +8,7 @@ public interface IMessageService
 {
     Task<OneOf<MessageData, Error>> CreateMessage(MessageCreate message, long userId);
 
-    Task<OneOf<MessageData, NotFound>> UpdateMessage(Guid messageId, long userId, string content);
+    Task<OneOf<MessageData, NotFound>> UpdateMessage(MessageUpdate update, long userId);
 
     Task<OneOf<MessageData, NotFound>> DeleteMessage(Guid messageId, long userId);
 }

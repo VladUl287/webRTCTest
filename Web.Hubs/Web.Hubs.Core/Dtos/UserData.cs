@@ -2,7 +2,7 @@ namespace Web.Hubs.Core.Dtos;
 
 public sealed class UserData
 {
-    public Guid Id { get; init; }
+    public long Id { get; init; }
 
     public string Image { get; init; } = string.Empty;
 

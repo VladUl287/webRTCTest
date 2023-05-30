@@ -6,9 +6,9 @@ public sealed class ChatCreate
 {
     public required string Name { get; init; }
 
-    public required long UserId { get; init; }
-
     public required string Image { get; init; }
+
+    public required long UserId { get; init; }
 
     public required ChatType Type { get; init; }
 

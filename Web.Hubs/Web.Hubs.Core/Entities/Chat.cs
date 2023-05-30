@@ -10,13 +10,13 @@ public sealed class Chat
 
     public required string Image { get; set; }
 
-    public required DateTime Date { get; init; }
+    public required long UserId { get; init; }
 
     public required ChatType Type { get; init; }
 
-    public required long UserId { get; init; }
+    public DateTime Date { get; init; } = DateTime.UtcNow;
 
     public IEnumerable<Message> Messages { get; init; } = Enumerable.Empty<Message>();
 
-    public IEnumerable<ChatUser> ChatUsers { get; set; } = Enumerable.Empty<ChatUser>();
+    public IEnumerable<ChatUser> ChatUsers { get; init; } = Enumerable.Empty<ChatUser>();
 }

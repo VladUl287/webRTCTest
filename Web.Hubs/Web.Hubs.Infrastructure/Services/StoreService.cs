@@ -1,9 +1,17 @@
-﻿using Web.Hubs.Core.Services;
+﻿using StackExchange.Redis;
+using Web.Hubs.Core.Services;
 
 namespace Web.Hubs.Infrastructure.Services;
 
 public sealed class StoreService<TKey, TValue> : IStoreService<TKey, TValue>
 {
+    private readonly IDatabaseAsync database;
+
+    public StoreService(ConnectionMultiplexer redis)
+    {
+        database = redis.GetDatabase();
+    }
+
     public Task Add(TKey key, TValue value)
     {
         throw new NotImplementedException();

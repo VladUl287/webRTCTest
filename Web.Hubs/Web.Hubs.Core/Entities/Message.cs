@@ -4,7 +4,7 @@ public sealed class Message
 {
     public Guid Id { get; init; }
 
-    public required string Content { get; init; }
+    public required string Content { get; set; }
 
     public required long UserId { get; init; }
 
