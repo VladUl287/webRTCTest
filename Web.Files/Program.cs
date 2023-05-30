@@ -1,6 +1,6 @@
-using Web.Files;
 using Web.Files.Options;
-using Microsoft.Extensions.FileProviders;
+using Web.Files.Extensions;
+using SixLabors.ImageSharp.Web.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -9,46 +9,20 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.Configure<ImageOptions>(
         builder.Configuration.GetSection(ImageOptions.Position));
 
-    // services.AddOpenIddict()
-    //         .AddValidation(options =>
-    //         {
-    //             options.SetIssuer("");
-    //             options.AddAudiences("");
+    builder.Services.AddImageProcessor(builder.Environment);
 
-    //             options.UseIntrospection()
-    //                 .SetClientId("")
-    //                 .SetClientSecret("");
-
-    //             options.UseSystemNetHttp();
-    //             options.UseAspNetCore();
-    //         });
-
-    // services.AddAuthentication(options =>
-    // {
-    //     options.DefaultScheme = OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-    // });
+    builder.Services.AddOpenIdAuthentication();
 }
 
 var app = builder.Build();
 {
     app.UseHttpsRedirection();
 
-    // app.UseResponseCaching();
+    // app.UseAuthentication();
+    // app.UseAuthorization();
 
-    app.UseAuthentication();
-    app.UseAuthorization();
-
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, Configuration.StaticDirectory)),
-        RequestPath = $"/{Configuration.StaticDirectory}",
-        OnPrepareResponse = (ctx) =>
-        {
-            ctx.Context.Response.Headers.Append("Cache-Control", $"public, max-age={Configuration.CacheMaxAgeSeconds}");
-        }
-    });
+    app.UseImageSharp();
 
     app.MapControllers();
-
-    app.Run();
 }
+app.Run();
