@@ -1,3 +1,5 @@
+using Web.Hubs.Api;
+using FluentValidation;
 using Web.Hubs.Api.Hubs;
 using Web.Hubs.Infrastructure;
 using Web.Hubs.Api.Extensions;
@@ -11,13 +13,15 @@ var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddDatabase<DatabaseContext, IInfrastructureMarker>(builder.Configuration);
 
-    builder.Services.AddSignalR()
-        .AddMessagePackProtocol();
+    builder.Services.AddSignalR();
+        //.AddMessagePackProtocol();
 
     builder.Services.AddOpenIdAuthentication();
 
     builder.Services.AddRepositories();
     builder.Services.AddServices();
+
+    builder.Services.AddValidatorsFromAssembly(typeof(IApiMarker).Assembly);
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
@@ -38,7 +42,6 @@ var app = builder.Build();
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.MapHub<CallHub>("/call");
     app.MapHub<ChatHub>("/chat");
 
     app.MapControllers();

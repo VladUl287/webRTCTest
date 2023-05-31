@@ -2,6 +2,7 @@ using Web.Hubs.Api.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Messages;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Web.Hubs.Api.Controllers;
 
@@ -18,7 +19,7 @@ public class MessagesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<MessageData>> GetMessages([FromQuery] Guid chatId)
+    public async Task<IEnumerable<MessageDto>> GetMessages([FromQuery][BindRequired] Guid chatId)
     {
         var userId = User.GetUserId<long>();
 

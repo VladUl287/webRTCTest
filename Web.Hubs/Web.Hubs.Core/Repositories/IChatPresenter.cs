@@ -7,9 +7,9 @@ namespace Web.Hubs.Core.Repositories;
 
 public interface IChatPresenter
 {
-    Task<ChatData[]> GetChats(long userId, PageFilter? filter = null);
+    Task<OneOf<ChatDto, NotFound>> GetChat(Guid chatId, long userId);
 
-    Task<OneOf<ChatData, NotFound>> GetChat(Guid chatId, long userId);
+    Task<ChatDto[]> GetChats(long userId, PageFilter? filter = null);
 
     Task<long[]> GetUsers(Guid chatId, PageFilter? filter = null);
 }

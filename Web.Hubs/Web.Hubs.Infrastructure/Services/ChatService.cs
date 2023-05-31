@@ -6,6 +6,7 @@ using Web.Hubs.Core.Entities;
 using Web.Hubs.Core.Dtos.Chats;
 using Web.Hubs.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
+using Web.Hubs.Core.Results;
 
 namespace Web.Hubs.Infrastructure.Services;
 
@@ -18,16 +19,23 @@ public sealed class ChatService : IChatService
         this.unitOfWork = unitOfWork;
     }
 
-    public async Task<Guid> CreateChat(ChatCreate create)
+    public async Task<OneOf<Guid, AlreadyExists>> Create(CreateChatDto create)
     {
+        var exists = await unitOfWork.Chats.AnyAsync(chat => chat.UserId == create.UserId && chat.Name == create.Name);
+
+        if (exists)
+        {
+            return new AlreadyExists();
+        }
+
         var chat = create.Adapt<Chat>();
 
         await unitOfWork.Chats.AddAsync(chat);
 
         var chatUsers = create.Users
-            .Select(us => new ChatUser
+            .Select(user => new ChatUser
             {
-                UserId = us.Id,
+                UserId = user.Id,
                 ChatId = chat.Id
             });
 
@@ -38,7 +46,7 @@ public sealed class ChatService : IChatService
         return chat.Id;
     }
 
-    public async Task<OneOf<Success, NotFound>> UpdateChat(ChatUpdate update)
+    public async Task<OneOf<Success, NotFound>> Update(UpdateChatDto update)
     {
         var chat = await unitOfWork.Chats.FindAsync(update.Id);
 
@@ -46,13 +54,6 @@ public sealed class ChatService : IChatService
         {
             return new NotFound();
         }
-
-        // await unitOfWork.Chats
-        //     .Where(chat => chat.Id == update.Id)
-        //     .ExecuteUpdateAsync((chat) =>
-        //         chat.SetProperty(p => p.Name, v => update.Name ?? v.Name)
-        //             .SetProperty(p => p.Image, v => update.Image ?? v.Image)
-        //     );
 
         if (!string.IsNullOrEmpty(update.Name))
         {
@@ -69,7 +70,7 @@ public sealed class ChatService : IChatService
         return new Success();
     }
 
-    public Task RemoveChat(Guid chatId, long userId)
+    public Task Delete(Guid chatId, long userId)
     {
         return unitOfWork.ChatsUsers
             .Where(cu => cu.ChatId == chatId && cu.UserId == userId)

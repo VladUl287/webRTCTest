@@ -5,5 +5,5 @@ namespace Web.Hubs.Core.Repositories;
 
 public interface IMessagePresenter
 {
-    Task<MessageData[]> GetMessages(Guid chatId, long userId, PageFilter? filters = null);
+    Task<MessageDto[]> GetMessages(Guid chatId, long userId, PageFilter? filters = null);
 }

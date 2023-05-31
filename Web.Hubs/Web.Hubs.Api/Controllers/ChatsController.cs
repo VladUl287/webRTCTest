@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Web.Hubs.Api.Extensions;
 using Web.Hubs.Core.Dtos.Chats;
 using Web.Hubs.Core.Repositories;
@@ -18,11 +19,11 @@ public class ChatsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetChat(Guid chatId)
+    public async Task<IActionResult> GetChat([FromQuery][BindRequired] Guid id)
     {
         var userId = User.GetUserId<long>();
 
-        var result = await chatPresenter.GetChat(chatId, userId);
+        var result = await chatPresenter.GetChat(id, userId);
 
         return result.Match<IActionResult>(
             success => Ok(success),
@@ -31,7 +32,7 @@ public class ChatsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<ChatData>> GetChats()
+    public async Task<IEnumerable<ChatDto>> GetChats()
     {
         var userId = User.GetUserId<long>();
 

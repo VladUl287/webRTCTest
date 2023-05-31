@@ -10,9 +10,9 @@ public sealed class Message
 
     public required Guid ChatId { get; init; }
 
-    public required DateTime Date { get; init; }
+    public DateTime Date { get; init; } = DateTime.UtcNow;
 
-    public bool Edit { get; init; }
+    public bool Edit { get; set; }
 
     public Chat? Chat { get; init; }
 }

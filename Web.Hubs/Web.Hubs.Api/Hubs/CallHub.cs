@@ -6,91 +6,79 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Web.Hubs.Api.Hubs;
 
-// [Authorize(AuthenticationSchemes = OpenIddict.Validation.AspNetCore)]
+// [Authorize]
 public sealed class CallHub : Hub
 {
-    private readonly IStoreService<Guid, long> callStore;
-    private readonly IStoreService<long, Guid> userCallStore;
-    private readonly IStoreService<long, string> connectionsStore;
+    private readonly ICallService callService;
+    private readonly IChatPresenter chatPresenter;
+    private readonly IConnectionService connectionService;
 
-    private readonly IChatPresenter chatRepository;
+    public CallHub()
+    { }
 
-    public CallHub(IStoreService<Guid, long> callStore, IStoreService<long, Guid> userCallStore, IStoreService<long, string> connectionsStore, IChatPresenter chatRepository)
-    {
-        this.callStore = callStore;
-        this.userCallStore = userCallStore;
-        this.connectionsStore = connectionsStore;
-        this.chatRepository = chatRepository;
-    }
-
-    public async Task StartCall(StartCall room)
+    public async Task StartCall(StartCall call)
     {
         var userId = Context.User.GetUserId<long>();
 
-        var users = await chatRepository.GetUsers(room.ChatId);
+        var users = await chatPresenter.GetUsers(call.ChatId);
         if (users is null or { Length: < 2 })
         {
             return;
-            // return false;
         }
 
-        var inCall = await userCallStore.Has(userId);
-        if (inCall)
+        var exists = await callService.UserExists(userId);
+        if (exists)
         {
             return;
         }
 
-        var callId = Guid.NewGuid();
+        await callService.AddUser(call.ChatId, userId);
 
-        await userCallStore.Add(userId, callId);
-
-        await callStore.Add(callId, userId);
-
-        var connections = await connectionsStore.Get(users);
+        var connections = await connectionService.Get(users);
 
         await Clients.Clients(connections)
-            .SendAsync("StartingCall", room.ChatId);
+            .SendAsync("StartingCall", call.ChatId);
     }
 
     public async Task JoinCall(JoinCall join)
     {
         var userId = Context.User.GetUserId<long>();
 
-        var inCall = await userCallStore.Has(userId);
-        if (inCall)
+        var exists = await callService.UserExists(userId);
+        if (exists)
         {
-            //leave active call
             return;
         }
 
-        await userCallStore.Add(userId, join.CallId);
-        await callStore.Add(join.CallId, userId);
+        await callService.AddUser(join.ChatId, userId);
 
-        await NotifyCallUsers(join.CallId, join.PeerUserId, "UserConnected");
+        await NotifyUsers(join.ChatId, join.PeerUserId, "UserConnected");
     }
 
     public async Task LeaveCall(LeaveCall leave)
     {
         var userId = Context.User.GetUserId<long>();
 
-        var inCall = await callStore.Has(leave.CallId, userId);
+        var exists = await callService.UserExists(leave.ChatId, userId);
 
-        if (inCall)
+        if (exists)
         {
-            await callStore.Delete(leave.CallId, userId);
-            await userCallStore.Delete(userId, leave.CallId);
+            await callService.RemoveUser(leave.ChatId, userId);
 
-            await NotifyCallUsers(leave.CallId, Guid.Empty, "UserDisconnected");
+            await NotifyUsers(leave.ChatId, Guid.Empty, "UserDisconnected");
         }
     }
 
-    private async Task NotifyCallUsers(Guid callId, Guid peerId, string method)
+    private async Task NotifyUsers(Guid chatId, Guid peerId, string method)
     {
-        var users = await callStore.Get(callId);
+        var users = await chatPresenter.GetUsers(chatId);
 
-        var connections = await connectionsStore.Get(users);
+        if (users?.Length > 0)
+        {
+            var connections = await connectionService.Get(users);
 
-        await Clients.Clients(connections)
-            .SendAsync(method, peerId);
+            await Clients.Clients(connections)
+                .SendAsync(method, peerId);
+        }
     }
 }

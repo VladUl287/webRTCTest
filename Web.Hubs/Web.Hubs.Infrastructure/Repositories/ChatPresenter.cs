@@ -18,29 +18,9 @@ public sealed class ChatPresenter : IChatPresenter
         this.context = context;
     }
 
-    public async Task<OneOf<ChatData, NotFound>> GetChat(Guid chatId, long userId)
+    public async Task<OneOf<ChatDto, NotFound>> GetChat(Guid chatId, long userId)
     {
-        var result = await context.Chats
-            .AsNoTracking()
-            .Select(chat => new ChatData
-            {
-                Id = chat.Id,
-                Name = chat.Name,
-                Image = chat.Image,
-
-                LastMessage = chat.Messages
-                    .OrderByDescending(m => m.Date)
-                    .Select(m => m.Content)
-                    .FirstOrDefault(),
-                    
-                Unread = chat.Messages
-                    .Count(msg => msg.UserId != userId && msg.Date >= chat.ChatUsers
-                        .Where(ch => ch.UserId == userId)
-                        .Select(m => m.LastRead)
-                        .FirstOrDefault()
-                    )
-            })
-            .FirstOrDefaultAsync(chat => chat.Id == chatId);
+        var result = await getChatQuery(context, chatId, userId);
 
         if (result is null)
         {
@@ -50,38 +30,71 @@ public sealed class ChatPresenter : IChatPresenter
         return result;
     }
 
-    public Task<ChatData[]> GetChats(long userId, PageFilter? pageFilter = null)
+    public Task<ChatDto[]> GetChats(long userId, PageFilter? pageFilter = null)
     {
-        return context.Chats
-            .AsNoTracking()
-            .Select(chat => new ChatData
-            {
-                Id = chat.Id,
-                Name = chat.Name,
-                Image = chat.Image,
-
-                LastMessage = chat.Messages
-                    .OrderByDescending(m => m.Date)
-                    .Select(m => m.Content)
-                    .FirstOrDefault(),
-
-                Unread = chat.Messages
-                    .Count(msg => msg.UserId != userId && msg.Date >= chat.ChatUsers
-                        .Where(ch => ch.UserId == userId)
-                        .Select(m => m.LastRead)
-                        .FirstOrDefault()
-                    )
-            })
-            .PageFilter(pageFilter)
-            .ToArrayAsync();
+        return getChatsQuery(context, userId, pageFilter);
     }
 
     public Task<long[]> GetUsers(Guid chatId, PageFilter? pageFilter = null)
     {
-        return context.ChatsUsers
-            .Where(ch => ch.ChatId == chatId)
-            .Select(ch => ch.UserId)
-            .PageFilter(pageFilter)
-            .ToArrayAsync();
+        return getUsersQuery(context, chatId, pageFilter);
     }
+
+    private static readonly Func<DatabaseContext, Guid, long, Task<ChatDto?>> getChatQuery =
+        EF.CompileAsyncQuery((DatabaseContext context, Guid chatId, long userId) =>
+            context.Chats
+                .Select(chat => new ChatDto
+                {
+                    Id = chat.Id,
+                    Name = chat.Name,
+                    Image = chat.Image,
+
+                    Message = chat.Messages
+                        .OrderByDescending(m => m.Date)
+                        .Select(m => m.Content)
+                        .FirstOrDefault(),
+
+                    Unread = chat.Messages
+                        .Count(msg => msg.UserId != userId && msg.Date >= chat.ChatUsers
+                            .Where(ch => ch.UserId == userId)
+                            .Select(m => m.LastRead)
+                            .FirstOrDefault()
+                        )
+                })
+                .FirstOrDefault(chat => chat.Id == chatId)
+        );
+
+    private static readonly Func<DatabaseContext, long, PageFilter?, Task<ChatDto[]>> getChatsQuery =
+        EF.CompileAsyncQuery((DatabaseContext context, long userId, PageFilter? pageFilter) =>
+            context.Chats
+                .Select(chat => new ChatDto
+                {
+                    Id = chat.Id,
+                    Name = chat.Name,
+                    Image = chat.Image,
+
+                    Message = chat.Messages
+                        .OrderByDescending(m => m.Date)
+                        .Select(m => m.Content)
+                        .FirstOrDefault(),
+
+                    Unread = chat.Messages
+                        .Count(msg => msg.UserId != userId && msg.Date >= chat.ChatUsers
+                            .Where(ch => ch.UserId == userId)
+                            .Select(m => m.LastRead)
+                            .FirstOrDefault()
+                        )
+                })
+                .PageFilter(pageFilter)
+                .ToArray()
+        );
+
+    private static readonly Func<DatabaseContext, Guid, PageFilter?, Task<long[]>> getUsersQuery =
+        EF.CompileAsyncQuery((DatabaseContext context, Guid chatId, PageFilter? pageFilter) =>
+            context.ChatsUsers
+                .Where(ch => ch.ChatId == chatId)
+                .Select(ch => ch.UserId)
+                .PageFilter(pageFilter)
+                .ToArray()
+        );
 }

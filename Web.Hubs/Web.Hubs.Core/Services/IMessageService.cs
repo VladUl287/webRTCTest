@@ -6,9 +6,9 @@ namespace Web.Hubs.Core.Services;
 
 public interface IMessageService
 {
-    Task<OneOf<MessageData, Error>> CreateMessage(MessageCreate message, long userId);
+    Task<OneOf<MessageDto, Error>> Create(CreateMessageDto message, long userId);
 
-    Task<OneOf<MessageData, NotFound>> UpdateMessage(MessageUpdate update, long userId);
+    Task<OneOf<MessageDto, NotFound>> Update(UpdateMessageDto update, long userId);
 
-    Task<OneOf<MessageData, NotFound>> DeleteMessage(Guid messageId, long userId);
+    Task<OneOf<MessageDto, NotFound>> Delete(Guid messageId, long userId);
 }

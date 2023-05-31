@@ -1,10 +1,8 @@
-using Microsoft.EntityFrameworkCore;
-using Web.Hubs.Core.Configuration;
 using Web.Hubs.Core.Repositories;
-using Web.Hubs.Core.Services;
+using Web.Hubs.Core.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Web.Hubs.Infrastructure.Database;
 using Web.Hubs.Infrastructure.Repositories;
-using Web.Hubs.Infrastructure.Services;
 
 namespace Web.Hubs.Api.Extensions;
 
@@ -25,6 +23,7 @@ internal static class StartupServices
                         options.MigrationsAssembly(typeof(TAssemblyMarker).Assembly.FullName);
                         options.EnableRetryOnFailure(EnableRetryOnFailure);
                     });
+                // options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
                 options.LogTo(Console.WriteLine);
             },
             ServiceLifetime.Scoped
@@ -86,8 +85,7 @@ internal static class StartupServices
 
     public static void AddServices(this IServiceCollection services)
     {
-        services.AddScoped<IChatService, ChatService>();
-        services.AddScoped<IMessageService, MessageService>();
-        services.AddScoped<IStoreService<long, string>, StoreService<long, string>>();
+        // services.AddScoped<IChatService, ChatService>();
+        // services.AddScoped<IMessageService, MessageService>();
     }
 }

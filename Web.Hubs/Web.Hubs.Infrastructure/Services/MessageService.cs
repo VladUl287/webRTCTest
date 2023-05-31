@@ -18,13 +18,11 @@ public sealed class MessageService : IMessageService
         this.unitOfWork = unitOfWork;
     }
 
-    public async Task<OneOf<MessageData, Error>> CreateMessage(MessageCreate create, long userId)
+    public async Task<OneOf<MessageDto, Error>> Create(CreateMessageDto create, long userId)
     {
-        //validation
+        var chatUserExists = await unitOfWork.ChatsUsers.AnyAsync(cu => cu.ChatId == create.ChatId && cu.UserId == userId);
 
-        var userInChat = await unitOfWork.ChatsUsers.AnyAsync(cu => cu.ChatId == create.ChatId && cu.UserId == userId);
-
-        if (!userInChat)
+        if (!chatUserExists)
         {
             return new Error();
         }
@@ -33,39 +31,17 @@ public sealed class MessageService : IMessageService
         {
             Content = create.Content,
             ChatId = create.ChatId,
-            Date = DateTime.UtcNow,
             UserId = userId,
         };
 
         await unitOfWork.Messages.AddAsync(message);
         await unitOfWork.SaveChangesAsync();
 
-        return message.Adapt<MessageData>();
+        return message.Adapt<MessageDto>();
     }
 
-    public async Task<OneOf<MessageData, NotFound>> DeleteMessage(Guid messageId, long userId)
+    public async Task<OneOf<MessageDto, NotFound>> Update(UpdateMessageDto update, long userId)
     {
-        //validation
-
-        var message = await unitOfWork.Messages
-            .AsNoTracking()
-            .FirstOrDefaultAsync(ms => ms.Id == messageId && ms.UserId == userId);
-
-        if (message is null)
-        {
-            return new NotFound();
-        }
-
-        unitOfWork.Messages.Remove(message);
-        await unitOfWork.SaveChangesAsync();
-
-        return message.Adapt<MessageData>();
-    }
-
-    public async Task<OneOf<MessageData, NotFound>> UpdateMessage(MessageUpdate update, long userId)
-    {
-        //validation
-
         var message = await unitOfWork.Messages
             .FirstOrDefaultAsync(m => m.Id == update.Id && m.UserId == userId);
 
@@ -75,9 +51,27 @@ public sealed class MessageService : IMessageService
         }
 
         message.Content = update.Content;
+        message.Edit = true;
 
         await unitOfWork.SaveChangesAsync();
 
-        return message.Adapt<MessageData>();
+        return message.Adapt<MessageDto>();
+    }
+
+    public async Task<OneOf<MessageDto, NotFound>> Delete(Guid id, long userId)
+    {
+        var message = await unitOfWork.Messages
+            .AsNoTracking()
+            .FirstOrDefaultAsync(ms => ms.Id == id && ms.UserId == userId);
+
+        if (message is null)
+        {
+            return new NotFound();
+        }
+
+        unitOfWork.Messages.Remove(message);
+        await unitOfWork.SaveChangesAsync();
+
+        return message.Adapt<MessageDto>();
     }
 }
