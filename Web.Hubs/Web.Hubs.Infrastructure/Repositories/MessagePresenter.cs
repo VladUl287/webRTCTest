@@ -19,10 +19,10 @@ public sealed class MessagePresenter : IMessagePresenter
 
     public Task<MessageDto[]> GetMessages(Guid chatId, long userId, PageFilter? pageFilter = null)
     {
-        return getMessagesQuery(context, chatId, userId, pageFilter);
+        return getMessages(context, chatId, userId, pageFilter);
     }
 
-    private static readonly Func<DatabaseContext, Guid, long, PageFilter?, Task<MessageDto[]>> getMessagesQuery =
+    private static readonly Func<DatabaseContext, Guid, long, PageFilter?, Task<MessageDto[]>> getMessages =
         EF.CompileAsyncQuery((DatabaseContext context, Guid chatId, long userId, PageFilter? pageFilter) =>
             context.Messages
                 .ProjectToType<MessageDto>(null)

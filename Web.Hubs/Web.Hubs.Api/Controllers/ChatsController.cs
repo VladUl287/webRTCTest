@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Web.Hubs.Api.Extensions;
 using Web.Hubs.Core.Dtos.Chats;
+using Web.Hubs.Core.Dtos.Filters;
 using Web.Hubs.Core.Repositories;
 
 namespace Web.Hubs.Api.Controllers;
@@ -32,10 +33,10 @@ public class ChatsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<ChatDto>> GetChats()
+    public async Task<IEnumerable<ChatDto>> GetChats([FromQuery] PageFilter? filter)
     {
         var userId = User.GetUserId<long>();
 
-        return await chatPresenter.GetChats(userId);
+        return await chatPresenter.GetChats(userId, filter);
     }
 }

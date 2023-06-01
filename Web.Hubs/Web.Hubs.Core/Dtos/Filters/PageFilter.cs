@@ -1,6 +1,6 @@
 ﻿namespace Web.Hubs.Core.Dtos.Filters;
 
-public class PageFilter
+public sealed class PageFilter
 {
     public required int Size { get; init; }
 
