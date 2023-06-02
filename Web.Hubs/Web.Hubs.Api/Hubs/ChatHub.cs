@@ -13,12 +13,12 @@ public sealed class ChatHub : Hub
     private readonly IMessageService messageService;
     private readonly IConnectionService connectionStore;
 
-    // public ChatHub(IChatPresenter chatPresenter, IMessageService messageService, IConnectionService connectionStore)
-    // {
-    //     this.chatPresenter = chatPresenter;
-    //     this.messageService = messageService;
-    //     this.connectionStore = connectionStore;
-    // }
+    public ChatHub(IChatPresenter chatPresenter, IMessageService messageService, IConnectionService connectionStore)
+    {
+        this.chatPresenter = chatPresenter;
+        this.messageService = messageService;
+        this.connectionStore = connectionStore;
+    }
 
     public async Task SendMessage(CreateMessageDto message)
     {
@@ -28,6 +28,8 @@ public sealed class ChatHub : Hub
 
         if (result.IsT1)
         {
+            await Clients.Client(Context.ConnectionId).SendAsync("SendingError");
+
             return;
         }
 
@@ -77,7 +79,7 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        // await connectionStore.Add(userId, Context.ConnectionId);
+        await connectionStore.Add(userId, Context.ConnectionId);
 
         await base.OnConnectedAsync();
     }
@@ -86,7 +88,7 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        // await connectionStore.Delete(userId, Context.ConnectionId);
+        await connectionStore.Delete(userId, Context.ConnectionId);
 
         await base.OnDisconnectedAsync(exception);
     }

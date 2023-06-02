@@ -19,14 +19,9 @@ public sealed class MessagePresenter : IMessagePresenter
 
     public Task<MessageDto[]> GetMessages(Guid chatId, long userId, PageFilter? pageFilter = null)
     {
-        return getMessages(context, chatId, userId, pageFilter);
+        return context.Messages
+            .ProjectToType<MessageDto>(null)
+            .PageFilter(pageFilter)
+            .ToArrayAsync();
     }
-
-    private static readonly Func<DatabaseContext, Guid, long, PageFilter?, Task<MessageDto[]>> getMessages =
-        EF.CompileAsyncQuery((DatabaseContext context, Guid chatId, long userId, PageFilter? pageFilter) =>
-            context.Messages
-                .ProjectToType<MessageDto>(null)
-                .PageFilter(pageFilter)
-                .ToArray()
-        );
 }

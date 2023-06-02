@@ -3,6 +3,9 @@ using Web.Hubs.Core.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Web.Hubs.Infrastructure.Database;
 using Web.Hubs.Infrastructure.Repositories;
+using Web.Hubs.Core.Services;
+using Web.Hubs.Infrastructure.Services;
+using StackExchange.Redis;
 
 namespace Web.Hubs.Api.Extensions;
 
@@ -85,7 +88,10 @@ internal static class StartupServices
 
     public static void AddServices(this IServiceCollection services)
     {
-        // services.AddScoped<IChatService, ChatService>();
-        // services.AddScoped<IMessageService, MessageService>();
+        services.AddSingleton<ConnectionMultiplexer>(factory => ConnectionMultiplexer.Connect("localhost:6379,allowAdmin=true"));
+
+        services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<IMessageService, MessageService>();
+        services.AddSingleton<IConnectionService, ConnectionService>();
     }
 }

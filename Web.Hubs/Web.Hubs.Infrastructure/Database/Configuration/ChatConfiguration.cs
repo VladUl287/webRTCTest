@@ -15,8 +15,7 @@ public sealed class DialogConfiguration : IEntityTypeConfiguration<Chat>
             .IsRequired();
 
         builder.Property(x => x.Image)
-            .HasMaxLength(255)
-            .IsRequired();
+            .HasMaxLength(255);
 
         builder.Property(x => x.UserId)
             .IsRequired();

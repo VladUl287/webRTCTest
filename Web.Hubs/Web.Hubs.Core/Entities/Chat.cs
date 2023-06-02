@@ -8,7 +8,7 @@ public sealed class Chat
 
     public required string Name { get; set; }
 
-    public required string Image { get; set; }
+    public string Image { get; set; } = string.Empty;
 
     public required long UserId { get; init; }
 

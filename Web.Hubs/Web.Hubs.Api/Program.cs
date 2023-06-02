@@ -4,6 +4,7 @@ using Web.Hubs.Api.Hubs;
 using Web.Hubs.Infrastructure;
 using Web.Hubs.Api.Extensions;
 using Web.Hubs.Infrastructure.Database;
+using Web.Hubs.Api.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -14,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddDatabase<DatabaseContext, IInfrastructureMarker>(builder.Configuration);
 
     builder.Services.AddSignalR();
-        //.AddMessagePackProtocol();
+    //.AddMessagePackProtocol();
 
     builder.Services.AddOpenIdAuthentication();
 
@@ -22,6 +23,8 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddServices();
 
     builder.Services.AddValidatorsFromAssembly(typeof(IApiMarker).Assembly);
+
+    builder.Services.AddHostedService<RedisFlushService>();
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
@@ -42,7 +45,7 @@ var app = builder.Build();
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.MapHub<ChatHub>("/chat");
+    app.MapHub<ChatHub>("/hubs/chat");
 
     app.MapControllers();
 }

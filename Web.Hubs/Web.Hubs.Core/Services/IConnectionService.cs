@@ -7,4 +7,6 @@ public interface IConnectionService
     Task Add(long userId, string value);
 
     Task Delete(long userId, string value);
+
+    Task Flush();
 }

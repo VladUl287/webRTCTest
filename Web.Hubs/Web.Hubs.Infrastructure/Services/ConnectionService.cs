@@ -6,10 +6,12 @@ namespace Web.Hubs.Infrastructure.Services;
 public sealed class ConnectionService : IConnectionService
 {
     private readonly IDatabaseAsync database;
+    private readonly ConnectionMultiplexer redis;
 
     public ConnectionService(ConnectionMultiplexer redis)
     {
         database = redis.GetDatabase();
+        this.redis = redis;
     }
 
     public async Task<string[]> Get(long userId)
@@ -67,5 +69,12 @@ public sealed class ConnectionService : IConnectionService
         var redisValue = new RedisValue(value);
 
         return database.HashDeleteAsync(redisKey, redisValue);
+    }
+
+    public async Task Flush()
+    {
+        var endpoint = await database.IdentifyEndpointAsync();
+
+        await redis.GetServer(endpoint).FlushDatabaseAsync();
     }
 }

@@ -32,12 +32,19 @@ public sealed class ChatPresenter : IChatPresenter
 
     public Task<ChatDto[]> GetChats(long userId, PageFilter? filter = null)
     {
-        return getChats(dbcontext, userId, filter);
+        return dbcontext.Chats
+            .ProjectToDto(userId)
+            .PageFilter(filter)
+            .ToArrayAsync();
     }
 
     public Task<long[]> GetUsers(Guid chatId, PageFilter? pageFilter = null)
     {
-        return getUsers(dbcontext, chatId, pageFilter);
+        return dbcontext.ChatsUsers
+            .Where(ch => ch.ChatId == chatId)
+            .Select(ch => ch.UserId)
+            .PageFilter(pageFilter)
+            .ToArrayAsync();
     }
 
     private static readonly Func<DatabaseContext, Guid, long, Task<ChatDto?>> getChat =
@@ -45,22 +52,5 @@ public sealed class ChatPresenter : IChatPresenter
             context.Chats
                 .ProjectToDto(userId)
                 .FirstOrDefault(chat => chat.Id == chatId)
-        );
-
-    private static readonly Func<DatabaseContext, long, PageFilter?, Task<ChatDto[]>> getChats =
-        EF.CompileAsyncQuery((DatabaseContext context, long userId, PageFilter? filter) =>
-            context.Chats
-                .ProjectToDto(userId)
-                .PageFilter(filter)
-                .ToArray()
-        );
-
-    private static readonly Func<DatabaseContext, Guid, PageFilter?, Task<long[]>> getUsers =
-        EF.CompileAsyncQuery((DatabaseContext context, Guid chatId, PageFilter? pageFilter) =>
-            context.ChatsUsers
-                .Where(ch => ch.ChatId == chatId)
-                .Select(ch => ch.UserId)
-                .PageFilter(pageFilter)
-                .ToArray()
         );
 }
