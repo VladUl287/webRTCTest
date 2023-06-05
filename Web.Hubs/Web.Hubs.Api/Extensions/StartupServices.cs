@@ -88,10 +88,11 @@ internal static class StartupServices
 
     public static void AddServices(this IServiceCollection services)
     {
-        services.AddSingleton<ConnectionMultiplexer>(factory => ConnectionMultiplexer.Connect("localhost:6379,allowAdmin=true"));
+        // services.AddSingleton<ConnectionMultiplexer>(factory => ConnectionMultiplexer.Connect("localhost:6379,allowAdmin=true"));
 
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<IMessageService, MessageService>();
-        services.AddSingleton<IConnectionService, ConnectionService>();
+        // services.AddSingleton<IConnectionService, ConnectionService>();
+        services.AddSingleton<IConnectionService, ConnectionServiceDict>();
     }
 }

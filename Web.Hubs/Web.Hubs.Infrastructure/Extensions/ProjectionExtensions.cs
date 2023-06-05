@@ -1,4 +1,5 @@
 ﻿using Web.Hubs.Core.Dtos.Chats;
+using Web.Hubs.Core.Dtos.Messages;
 using Web.Hubs.Core.Entities;
 
 namespace Web.Hubs.Infrastructure.Extensions;
@@ -18,7 +19,15 @@ internal static class ProjectionExtensions
 
                 Message = chat.Messages
                     .OrderByDescending(m => m.Date)
-                    .Select(m => m.Content)
+                    .Select(m => new MessageDto
+                    {
+                        Id = m.Id,
+                        UserId = m.UserId,
+                        ChatId = m.ChatId,
+                        Content = m.Content,
+                        Date = m.Date,
+                        Edit = m.Edit
+                    })
                     .FirstOrDefault(),
 
                 Unread = chat.Messages
