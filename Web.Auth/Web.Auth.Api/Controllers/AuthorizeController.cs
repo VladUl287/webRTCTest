@@ -1,6 +1,6 @@
-﻿using System.IO;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using System.Security.Claims;
+using Web.Auth.Core.Entities;
 using OpenIddict.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Server.AspNetCore;
@@ -10,7 +10,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Primitives;
 using Microsoft.AspNetCore.Authentication;
 using static OpenIddict.Abstractions.OpenIddictConstants;
-using Web.Auth.Core.Entities;
 
 namespace Web.Auth.Api;
 
@@ -228,8 +227,6 @@ public sealed class AuthorizeController : Controller
     [HttpGet("~/connect/logout")]
     public IActionResult Logout() => View();
 
-    #region Helpers
-
     private static IEnumerable<string> GetDestinations(Claim claim)
     {
         switch (claim.Type)
@@ -266,6 +263,4 @@ public sealed class AuthorizeController : Controller
                 yield break;
         }
     }
-
-    #endregion
 }

@@ -13,6 +13,17 @@ const router = createRouter({
       path: '/account',
       name: 'account',
       component: () => import('@/views/AccountView.vue')
+    },
+    {
+      path: '/callback',
+      name: 'callback',
+      component: () => import('@/views/CallbackView.vue')
+    },
+    {
+      path: '/:catchAll(.*)',
+      redirect: {
+        path: '/chat'
+      }
     }
   ]
 })

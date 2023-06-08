@@ -1,3 +1,4 @@
+using Web.Auth.Api;
 using Web.Auth.Api.Extensions;
 using Web.Auth.Infrastructure;
 using Web.Auth.Infrastructure.Database;
@@ -12,6 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddDefaultCors(builder.Configuration);
 
+    builder.Services.AddHostedService<ClientsInitializeService>();
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 }
@@ -25,13 +28,17 @@ var app = builder.Build();
     }
 
     app.UseHttpsRedirection();
+    app.UseStaticFiles();
+
+    app.UseRouting();
 
     app.UseCors();
 
-    app.UseStaticFiles();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-    app.MapControllers();
     app.MapRazorPages();
+    app.MapControllers();
 
     app.Run();
 }

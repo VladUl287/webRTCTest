@@ -1,9 +1,9 @@
-﻿using Web.Auth.Core.Configuration;
+﻿using Web.Auth.Core.Entities;
+using Web.Auth.Core.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Web.Auth.Infrastructure.Database;
 using static OpenIddict.Abstractions.OpenIddictConstants;
-using Web.Auth.Core.Entities;
 
 namespace Web.Auth.Api.Extensions;
 
@@ -23,6 +23,8 @@ internal static class StartupServices
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 options => options.MigrationsAssembly(typeof(TAssemblyMarker).Assembly.FullName));
+
+            options.UseOpenIddict();
         });
     }
 
@@ -43,10 +45,10 @@ internal static class StartupServices
                 options.SetAuthorizationEndpointUris("connect/authorize")
                     .SetLogoutEndpointUris("connect/logout")
                     .SetTokenEndpointUris("connect/token")
-                    .SetUserinfoEndpointUris("connect/userinfo");
+                    // .SetUserinfoEndpointUris("connect/userinfo")
+                    ;
 
-                // options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.Roles);
-                options.RegisterScopes(Scopes.Email);
+                options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.Roles);
 
                 options.AllowAuthorizationCodeFlow()
                     .AllowRefreshTokenFlow();
@@ -58,7 +60,8 @@ internal static class StartupServices
                     .EnableAuthorizationEndpointPassthrough()
                     .EnableLogoutEndpointPassthrough()
                     .EnableStatusCodePagesIntegration()
-                    .EnableTokenEndpointPassthrough();
+                    .EnableTokenEndpointPassthrough()
+                    ;
             })
             .AddValidation(options =>
             {
@@ -84,8 +87,9 @@ internal static class StartupServices
             {
                 config.AllowAnyMethod()
                     .AllowAnyMethod()
-                    .AllowCredentials()
-                    .WithOrigins(cors.Origins);
+                    .AllowAnyOrigin();
+                    // .AllowCredentials()
+                    // .WithOrigins(cors.Origins);
             });
         });
     }

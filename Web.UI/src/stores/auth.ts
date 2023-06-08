@@ -4,27 +4,39 @@ import { UserManager, WebStorageStateStore } from 'oidc-client';
 export const useAuthStore = defineStore('auth', () => {
     const config = {
         userStore: new WebStorageStateStore({ store: window.localStorage }),
-        authority: "https://localhost:5001",
-        client_id: 'vue',
-        client_secret: 'vue_secret',
+        authority: "https://localhost:7250",
+        client_id: 'vue-client',
+        // client_secret: '',
         offline_access: true,
-        redirect_uri: 'http://localhost:8080/callback.html',
-        popup_redirect_uri: 'http://localhost:8080/callback.html',
+        redirect_uri: 'http://127.0.0.1:5173/callback',
+        popup_redirect_uri: 'http://127.0.0.1:5173/callback.html',
         automaticSilentRenew: true,
-        silent_redirect_uri: 'http://localhost:8080/silent-renew.html',
+        silent_redirect_uri: 'http://127.0.0.1:5173/silent-renew.html',
         response_type: 'code',
-        scope: 'openid profile api1 offline_access',
-        post_logout_redirect_uri: 'http://localhost:8080/',
+        scope: 'openid profile offline_access',
+        post_logout_redirect_uri: 'http://127.0.0.1:5173/',
         filterProtocolClaims: true,
-    };
 
-    const userManager = new UserManager(config);
+        loadUserInfo: false,
+    }
+
+    const userManager = new UserManager(config)
 
     const getUser = () => userManager.getUser()
 
-    const login = () => userManager.signinRedirect();
+    const login = () => userManager.signinRedirect()
 
-    const logout = () => userManager.signoutRedirect();
+    const logout = () => userManager.signoutRedirect()
 
-    return { getUser, login, logout }
+    const signingRedirectCallback = (redirectCallback: () => void) => {
+        userManager.signinRedirectCallback()
+            .then((user) => {
+                console.log("signin response success", user);
+                redirectCallback()
+            }).catch((err) => {
+                console.log(err);
+            })
+    }
+
+    return { getUser, login, logout, signingRedirectCallback }
 })

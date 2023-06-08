@@ -19,8 +19,8 @@ internal sealed class ClientsInitializeService : IHostedService
 
         var context = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
 
-        await context.Database.EnsureDeletedAsync();
-        await context.Database.EnsureCreatedAsync();
+        // await context.Database.EnsureDeletedAsync();
+        // await context.Database.EnsureCreatedAsync();
         //await context.Database.MigrateAsync();
 
         var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
@@ -29,38 +29,43 @@ internal sealed class ClientsInitializeService : IHostedService
 
         var client = await manager.FindByClientIdAsync(clinetName);
 
+        if(client is not null) {
+            await manager.DeleteAsync(client);
+
+            client = null;
+        }
+
         if (client is null)
         {
             await manager.CreateAsync(new OpenIddictApplicationDescriptor
             {
                 ClientId = clinetName,
                 Type = ClientTypes.Public,
-                // ClientSecret = Guid.NewGuid(),
                 ConsentType = ConsentTypes.Explicit,
                 DisplayName = "Vue client application",
                 PostLogoutRedirectUris =
                 {
-                    new Uri("http://localhost:5173/callback")
+                    new Uri("http://127.0.0.1:5173/callback")
                 },
                 RedirectUris =
                 {
-                    new Uri("http://localhost:5173/callback")
+                    new Uri("http://127.0.0.1:5173/callback")
                 },
                 Permissions =
                 {
-                    // Permissions.Scopes.Roles,
+                    Permissions.Scopes.Roles,
                     Permissions.Scopes.Email,
-                    // Permissions.Scopes.Profile,
+                    Permissions.Scopes.Profile,
+                    Permissions.ResponseTypes.Code,
                     Permissions.Endpoints.Token,
                     Permissions.Endpoints.Logout,
-                    // Permissions.ResponseTypes.Code,
-                    // Permissions.GrantTypes.RefreshToken,
                     Permissions.Endpoints.Authorization,
-                    // Permissions.GrantTypes.AuthorizationCode
+                    Permissions.GrantTypes.RefreshToken,
+                    Permissions.GrantTypes.AuthorizationCode
                 },
                 Requirements =
                 {
-                    // Requirements.Features.ProofKeyForCodeExchange
+                    Requirements.Features.ProofKeyForCodeExchange
                 }
             });
         }
