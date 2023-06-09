@@ -9,11 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddDatabase<DatabaseContext, IInfrastructureMarker>(builder.Configuration);
 
-    builder.Services.AddOpenId();
+    builder.Services.AddOpenId<DatabaseContext>();
 
     builder.Services.AddDefaultCors(builder.Configuration);
 
-    builder.Services.AddHostedService<ClientsInitializeService>();
+    builder.Services.AddHostedService<ClientsInitService>();
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
@@ -39,6 +39,5 @@ var app = builder.Build();
 
     app.MapRazorPages();
     app.MapControllers();
-
-    app.Run();
 }
+    app.Run();

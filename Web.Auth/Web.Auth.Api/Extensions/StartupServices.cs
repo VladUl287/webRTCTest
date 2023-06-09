@@ -2,7 +2,6 @@
 using Web.Auth.Core.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Web.Auth.Infrastructure.Database;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Web.Auth.Api.Extensions;
@@ -25,26 +24,29 @@ internal static class StartupServices
                 options => options.MigrationsAssembly(typeof(TAssemblyMarker).Assembly.FullName));
 
             options.UseOpenIddict();
+
+            options.LogTo(Console.WriteLine);
         });
     }
 
-    public static void AddOpenId(this IServiceCollection services)
+    public static void AddOpenId<TContext>(this IServiceCollection services)
+        where TContext : DbContext
     {
         services.AddIdentity<User, IdentityRole>()
-            .AddEntityFrameworkStores<DatabaseContext>()
+            .AddEntityFrameworkStores<TContext>()
             .AddDefaultTokenProviders();
 
         services.AddOpenIddict()
             .AddCore(options =>
             {
                 options.UseEntityFrameworkCore()
-                    .UseDbContext<DatabaseContext>();
+                    .UseDbContext<TContext>();
             })
             .AddServer(options =>
             {
                 options.SetAuthorizationEndpointUris("connect/authorize")
-                    .SetLogoutEndpointUris("connect/logout")
                     .SetTokenEndpointUris("connect/token")
+                    // .SetLogoutEndpointUris("connect/logout")
                     // .SetUserinfoEndpointUris("connect/userinfo")
                     ;
 
@@ -58,9 +60,10 @@ internal static class StartupServices
 
                 options.UseAspNetCore()
                     .EnableAuthorizationEndpointPassthrough()
-                    .EnableLogoutEndpointPassthrough()
                     .EnableStatusCodePagesIntegration()
                     .EnableTokenEndpointPassthrough()
+                    // .EnableLogoutEndpointPassthrough()
+                    // .EnableUserinfoEndpointPassthrough()
                     ;
             })
             .AddValidation(options =>
@@ -76,9 +79,9 @@ internal static class StartupServices
             .GetSection(CorsConfiguration.Position)
             .Get<CorsConfiguration>();
 
-        if (cors is null)
+        if (cors is null or { Origins.Length: 0 })
         {
-            throw new NullReferenceException("Cors configuration not found.");
+            throw new NullReferenceException("Cors configuration not found or not correct.");
         }
 
         services.AddCors(setup =>
@@ -88,8 +91,8 @@ internal static class StartupServices
                 config.AllowAnyMethod()
                     .AllowAnyMethod()
                     .AllowAnyOrigin();
-                    // .AllowCredentials()
-                    // .WithOrigins(cors.Origins);
+                // .AllowCredentials()
+                // .WithOrigins(cors.Origins);
             });
         });
     }

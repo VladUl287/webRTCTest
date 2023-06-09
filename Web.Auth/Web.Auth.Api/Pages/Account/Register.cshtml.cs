@@ -116,20 +116,21 @@ public sealed class RegisterModel : PageModel
 
     public sealed class InputModel
     {
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
+        [Required(ErrorMessage = "email обязателен")]
+        [EmailAddress(ErrorMessage = "некорректный email")]
+        [Display(Prompt = "example@example.org")]
         public required string Email { get; set; }
 
-        [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [Required(ErrorMessage = "пароль обязателен")]
+        [StringLength(100, ErrorMessage = "минимум 6 символов", MinimumLength = 6)]
+        [Display(Prompt = "пароль")]
         [DataType(DataType.Password)]
-        [Display(Name = "Password")]
         public required string Password { get; set; }
 
+        [Required(ErrorMessage = "подтверждение обязательно")]
         [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        [Display(Prompt = "подтверждение")]
+        [Compare("Password", ErrorMessage = "пароли не совпадают")]
         public required string ConfirmPassword { get; set; }
     }
 }

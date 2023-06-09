@@ -1,24 +1,136 @@
 :root {
-    --color-text: #fff;
-    --color-background: #000;
+    --color-text: #000;
+    --background: #0d1321ea;
+    --form-background: #fff;
 }
 
 *,
-*::after,
-*::before {
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
 body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+        Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    text-rendering: optimizeLegibility;
+
     margin: 0;
     height: 100vh;
     color: var(--color-text);
-    background: var(--color-background);
+    background-color: var(--background);
 }
 
 main {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    top: 50%;
+    position: relative;
+    transform: translateY(-50%);
+}
+
+.text-danger {
+    color: rgb(153, 8, 8);
+}
+
+.field-validation-error {
+    position: absolute;
+    top: 100%;
+    left: 0;
+}
+
+main .form-wrap {
+    max-width: 25%;
+    margin: 0 auto;
+}
+
+.form-wrap form {
+    padding: 0 3em;
+    border-radius: 2%;
+    background-color: var(--form-background);
+}
+
+.form-wrap h2 {
+    padding: 10% 0;
+    font-weight: bold;
+    text-align: center;
+    font-size: xx-large;
+}
+
+.form-wrap .form-field {
+    position: relative;
+    margin: 0 0 2em 0;
+}
+
+.form-wrap .form-remember-field {
+    margin: 2em 0 1em 0;
+    user-select: none;
+}
+
+.form-wrap .form-remember-field * {
+    cursor: pointer;
+}
+
+.form-field input {
+    width: 100%;
+    padding: .5em;
+    font-size: large;
+    border: 1px solid;
+    border-color: transparent transparent rgba(128, 128, 128, 0.637) transparent;
+}
+
+.form-field input::placeholder {
+    font-size: medium;
+    color: rgba(128, 128, 128, 0.5);
+}
+
+.form-wrap form button {
+    width: 100%;
+    border: none;
+    padding: .5em;
+    margin: 1em 0 2em 0;
+    cursor: pointer;
+    font-size: large;
+    border-radius: 5em;
+}
+
+.form-wrap .form-additional {
+    margin: 0 auto;
+    width: fit-content;
+    padding: 0 0 2em 0;
+}
+
+.form-wrap form a {
+    text-decoration: none;
+    color: var(--color-text);
+}
+
+.form-wrap .validation-summary-errors {
+    padding: 0 0 2em 0;
+}
+
+@media screen and (max-width: 1201px){
+    main .form-wrap {
+        max-width: 35%;
+    }
+}
+
+@media screen and (max-width: 1025px){
+    main .form-wrap {
+        max-width: 40%;
+    }
+}
+
+@media screen and (max-width: 768px){
+    main .form-wrap {
+        max-width: 60%;
+    }
+}
+
+@media screen and (max-width: 481px){
+    main .form-wrap {
+        max-width: 95%;
+    }
+
+    .form-wrap form {
+        padding: 0 2em;
+    }
 }

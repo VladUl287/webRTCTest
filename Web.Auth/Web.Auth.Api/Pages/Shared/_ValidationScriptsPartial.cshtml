@@ -1,10 +1,10 @@
-<environment include="Development">
+@* <environment include="Development">
     <script src="~/lib/jquery/jquery.js"></script>
     <script src="~/lib/jquery-validate/jquery.validate.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
-</environment>
+</environment> *@
 
-<environment exclude="Development">
+<environment include="Development">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"
         asp-fallback-src="~/lib/jquery/jquery.min.js" asp-fallback-test="window.jQuery" crossorigin="anonymous"
         integrity="sha384-NXgwF8Kv9SSAr+jemKKcbvQsz+teULH/a5UNJvZc6kP47hZgl62M1vGnw6gHQhb1"></script>

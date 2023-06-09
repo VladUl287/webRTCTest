@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace Web.Auth.Infrastructure.Database;
 
-public sealed class DatabaseContext : IdentityDbContext<User>
+public sealed class DatabaseContext : IdentityDbContext<User, Role, long>
 {
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
-    {}
+    { }
 }

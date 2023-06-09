@@ -49,10 +49,10 @@ public sealed class LoginModel : PageModel
                 return LocalRedirect(returnUrl);
             }
 
-            if (result.RequiresTwoFactor)
-            {
-                return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, Input.RememberMe });
-            }
+            // if (result.RequiresTwoFactor)
+            // {
+            //     return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, Input.RememberMe });
+            // }
 
             if (result.IsLockedOut)
             {
@@ -67,15 +67,15 @@ public sealed class LoginModel : PageModel
 
     public sealed class InputModel
     {
-        [Required]
+        [Required(ErrorMessage = "email обязателен")]
         [EmailAddress]
-        public required string Email { get; init; } = string.Empty;
+        public required string Email { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "пароль обязателен")]
         [DataType(DataType.Password)]
-        public required string Password { get; init; } = string.Empty;
+        public required string Password { get; set; } = string.Empty;
 
-        [Display(Name = "Запомнить?")]
+        [Display(Name = "Запомнить меня")]
         public bool RememberMe { get; set; }
     }
 }

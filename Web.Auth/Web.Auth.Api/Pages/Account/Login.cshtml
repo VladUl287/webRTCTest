@@ -3,39 +3,41 @@
 @model Web.Auth.Api.Pages.Account.LoginModel;
 
 @{
-    ViewData["Title"] = "Вход";
+    ViewBag.Title = "Вход";
+
+    ViewData["Title"] = ViewBag.Title;
 }
 
-<div class="form-container">
-    <form id="account" method="post">
+<div class="form-wrap">
+    <form asp-route-returnUrl="@Model.ReturnUrl" method="post" class="login-form">
+        <h2>@ViewBag.Title</h2>
+
         <div class="form-field">
-            <label asp-for="Input.Email">Email</label>
             <input asp-for="Input.Email" placeholder="email@example.com" />
             <span asp-validation-for="Input.Email" class="text-danger"></span>
         </div>
 
         <div class="form-field">
-            <label asp-for="Input.Password">Пароль</label>
-            <input asp-for="Input.Password" autocomplete="current-password" aria-required="true" placeholder="пароль" />
+            <input asp-for="Input.Password" placeholder="пароль" />
             <span asp-validation-for="Input.Password" class="text-danger"></span>
         </div>
 
-        <div class="form-field">
+        <div class="form-remember-field">
+            <input class="form-check-input" asp-for="Input.RememberMe" />
             <label asp-for="Input.RememberMe" class="form-label">
-                <input class="form-check-input" asp-for="Input.RememberMe" />
                 @Html.DisplayNameFor(m => m.Input.RememberMe)
             </label>
         </div>
 
         <button type="submit">Войти</button>
 
-        <div>
-            <a asp-page="./ForgotPassword">Забыли пароль?</a>
+        <div class="form-additional">
             <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Зарегистрироваться</a>
         </div>
 
         <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
     </form>
+
     @* <div class="col-md-6 col-md-offset-2">
     <section>
     <h3>Use another service to log in.</h3>
