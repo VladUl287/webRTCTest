@@ -54,6 +54,15 @@
   box-sizing: border-box;
 }
 
+*::-webkit-scrollbar {
+  width: 7px;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: darkgrey;
+}
+
 body {
   margin: 0;
   height: 100vh;

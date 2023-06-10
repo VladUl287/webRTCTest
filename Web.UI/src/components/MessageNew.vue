@@ -26,18 +26,23 @@ const send = () => emits('send-message', { chatId: props.chatId, content: 'send-
   
 <style>
 .message-new {
-    min-width: 50%;
-    max-width: 70%;
-    margin: 0 auto;
+    display: flex;
+    padding: .5em 0;
+    column-gap: .5em;
+    align-items: center;
+    justify-content: center;
 }
 
 .message-new #message-content {
-    width: 100%;
-    height: 5em;
+    height: 3em;
     resize: none;
+    padding: 1em 1em;
+    border-radius: 5em;
 }
 
 .message-new button {
-    /* display: none; */
+    border: none;
+    height: 100%;
+    border-radius: 5em;
 }
 </style>

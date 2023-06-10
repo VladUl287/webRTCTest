@@ -3,7 +3,7 @@
     <ChatsList :chats="chatsStore.chats" :loading="false" @select="chatSelect" />
     <div class="messages-main" v-if="chatId">
       <!-- <ChatHead :chat=""/> -->
-      <div></div>
+      <div class="messges-header"></div>
       <MessagesList :messages="messagesStore.messages" :loading="false" />
       <MessageNew :chatId="chatId" :disabled="false" @sendMessage="sendMessage" />
     </div>
@@ -31,9 +31,15 @@ const route = useRoute()
 const router = useRouter()
 
 onMounted(() => {
+  let message = messagesStore.messages[0]
+
+  for (let i = 0; i < 100; i++) {
+    messagesStore.messages.push(message)
+  }
+
   const chatIdParam = route.query.id
   chatId.value = chatIdParam as string
-  chatId.value && messagesStore.getMessages(chatId.value)
+  // chatId.value && messagesStore.getMessages(chatId.value)
 })
 
 watch(
@@ -54,7 +60,7 @@ const sendMessage = (message: any) => {
 
 hubsStore.connection.on('receiveMessage', (message: any) => {
   console.log(message);
-  
+
   messagesStore.messages.push(message)
 })
 
@@ -72,8 +78,8 @@ const chatSelect = (chat: any) => {
 }
 
 .messages-main {
-  row-gap: .5em;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  overflow-y: hidden;
+  grid-template-rows: 1fr 11fr 1fr;
 }
 </style>
