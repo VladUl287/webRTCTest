@@ -28,12 +28,12 @@ defineProps({
   
 <style>
 .messages-wrap {
-    overflow-y: hidden;
     padding: 0 5px;
+    overflow-y: hidden;
 }
 
 .messages-list {
-    max-height: 100%;
     overflow-y: auto;
+    max-height: 100%;
 }
 </style>

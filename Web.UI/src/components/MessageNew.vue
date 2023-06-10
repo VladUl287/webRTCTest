@@ -1,6 +1,8 @@
 <template>
     <div class="message-new">
-        <textarea name="message-content" id="message-content" cols="30" rows="10"></textarea>
+        <div class="textarea-wrap">
+            <div class="textarea" role="textbox" contenteditable>ауцау</div>
+        </div>
         <button @click="send">
             <span class="material-symbols-outlined">
                 send
@@ -29,20 +31,34 @@ const send = () => emits('send-message', { chatId: props.chatId, content: 'send-
     display: flex;
     padding: .5em 0;
     column-gap: .5em;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
 }
 
-.message-new #message-content {
-    height: 3em;
+.textarea-wrap {
+    border-radius: 1em;
+    border: 1px solid #ccc;
+    padding: .5em .5em .5em 1em;
+}
+
+.textarea {
+    padding: 0 .5em 0 0;
+    width: 20rem;
     resize: none;
-    padding: 1em 1em;
-    border-radius: 5em;
+    outline: none;
+    overflow-y: auto;
+    max-height: 20rem;
+}
+
+.textarea[contenteditable]:empty::before {
+    content: "Message";
+    color: gray;
 }
 
 .message-new button {
+    padding: 1em;
     border: none;
-    height: 100%;
     border-radius: 5em;
+    height: fit-content;
 }
 </style>

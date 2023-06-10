@@ -80,6 +80,6 @@ const chatSelect = (chat: any) => {
 .messages-main {
   display: grid;
   overflow-y: hidden;
-  grid-template-rows: 1fr 11fr 1fr;
+  grid-template-rows: 1fr 11fr auto;
 }
 </style>
