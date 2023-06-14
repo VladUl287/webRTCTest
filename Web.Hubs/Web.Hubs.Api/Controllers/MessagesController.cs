@@ -2,11 +2,12 @@ using Web.Hubs.Api.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Messages;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Web.Hubs.Api.Controllers;
 
-// [Authorize]
+[Authorize]
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class MessagesController : ControllerBase

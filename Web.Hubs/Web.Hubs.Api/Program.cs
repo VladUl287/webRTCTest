@@ -1,10 +1,10 @@
 using Web.Hubs.Api;
 using FluentValidation;
+using Web.Hubs.Api.Host;
 using Web.Hubs.Api.Hubs;
 using Web.Hubs.Infrastructure;
 using Web.Hubs.Api.Extensions;
 using Web.Hubs.Infrastructure.Database;
-using Web.Hubs.Api.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 {

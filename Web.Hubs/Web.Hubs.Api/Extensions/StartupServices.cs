@@ -1,11 +1,10 @@
+using Web.Hubs.Core.Services;
 using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Web.Hubs.Infrastructure.Database;
-using Web.Hubs.Infrastructure.Repositories;
-using Web.Hubs.Core.Services;
 using Web.Hubs.Infrastructure.Services;
-using StackExchange.Redis;
+using Web.Hubs.Infrastructure.Repositories;
 
 namespace Web.Hubs.Api.Extensions;
 
@@ -37,24 +36,25 @@ internal static class StartupServices
 
     public static void AddOpenIdAuthentication(this IServiceCollection services)
     {
-        // services.AddOpenIddict()
-        // 		.AddValidation(options =>
-        // 		{
-        // 			options.SetIssuer("");
-        // 			options.AddAudiences("");
+        services.AddOpenIddict()
+                .AddValidation(options =>
+                {
+                    options.SetIssuer("https://localhost:7250/");
 
-        // 			options.UseIntrospection()
-        // 				.SetClientId("")
-        // 				.SetClientSecret("");
+                    options.AddAudiences("hubs-api");
 
-        // 			options.UseSystemNetHttp();
-        // 			options.UseAspNetCore();
-        // 		});
+                    options.UseIntrospection()
+                           .SetClientId("hubs-api")
+                           .SetClientSecret("846B62D0-DEF9-4215-A99D-86E6B8DAB342");
 
-        // services.AddAuthentication(options =>
-        // {
-        //     options.DefaultScheme = OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-        // });
+                    options.UseSystemNetHttp();
+                    options.UseAspNetCore();
+                });
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+        });
     }
 
     public static void AddDefaultCors(this IServiceCollection services, IConfiguration configuration)
