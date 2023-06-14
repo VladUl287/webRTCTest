@@ -1,5 +1,5 @@
 <template>
-    <div class="message-item">
+    <div class="message-item" :class="{ 'right': proper }">
         <p>{{ message.content }}</p>
         <p class="message-date">{{ message.date }}</p>
     </div>
@@ -13,7 +13,8 @@ defineProps({
     message: {
         type: Object as PropType<Message>,
         required: true
-    }
+    },
+    proper: Boolean
 })
 </script>
   
@@ -32,5 +33,10 @@ defineProps({
 
 .message-item .message-date {
     font-size: .5em;
+}
+
+.message-item.right {
+    margin-left: auto;
+    background-color: rgb(124, 14, 14);
 }
 </style>

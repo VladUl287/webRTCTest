@@ -6,14 +6,13 @@ export const useAuthStore = defineStore('auth', () => {
         userStore: new WebStorageStateStore({ store: window.localStorage }),
         authority: "https://localhost:7250",
         client_id: 'vue-client',
-        // client_secret: '',
         offline_access: true,
         redirect_uri: 'http://127.0.0.1:5173/callback',
         popup_redirect_uri: 'http://127.0.0.1:5173/callback.html',
         automaticSilentRenew: true,
         silent_redirect_uri: 'http://127.0.0.1:5173/silent-renew.html',
         response_type: 'code',
-        scope: 'openid profile offline_access',
+        scope: 'openid profile api1 email offline_access',
         post_logout_redirect_uri: 'http://127.0.0.1:5173/',
         filterProtocolClaims: true,
 
@@ -28,13 +27,13 @@ export const useAuthStore = defineStore('auth', () => {
 
     const logout = () => userManager.signoutRedirect()
 
-    const signingRedirectCallback = (redirectCallback: () => void) => {
+    const signingRedirectCallback = (callback: () => void) => {
         userManager.signinRedirectCallback()
             .then((user) => {
-                console.log("signin response success", user);
-                redirectCallback()
+                console.log(user)
+                callback()
             }).catch((err) => {
-                console.log(err);
+                console.log(err)
             })
     }
 

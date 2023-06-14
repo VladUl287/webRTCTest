@@ -13,16 +13,15 @@
   
 <script setup lang="ts">
 
-const props = defineProps({
-    chatId: String,
+defineProps({
     disabled: Boolean
 })
 
 const emits = defineEmits<{
-    (e: 'send-message', message: any): void
+    (e: 'send', content: string): void
 }>()
 
-const send = () => emits('send-message', { chatId: props.chatId, content: 'send-message' })
+const send = () => emits('send', 'send-message')
 
 </script>
   

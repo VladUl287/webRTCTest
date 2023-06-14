@@ -1,35 +1,18 @@
-import axios from 'axios';
-import router from '@/router';
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 const instance = axios.create({
-    baseURL: 'https://localhost:7242/',
+    baseURL: 'https://localhost:7010/',
     withCredentials: true
 });
 
-// instance.interceptors.request.use((config) => {
-//     if (store.getters.StateToken) {
-//         config.headers = {
-//             Authorization: 'Bearer ' + store.getters.StateToken
-//         };
-//     }
-//     return config;
-// });
+instance.interceptors.request.use(async (config: any) => {
+    const store = useAuthStore()
+    const user = await store.getUser()
 
-// let refresh = false;
-// instance.interceptors.response.use(undefined, async (error) => {
-//     if (error.response.status === 401 && error.config && !refresh) {
-//         refresh = true;
-//         try {
-//             await store.dispatch('Refresh');
-//             return instance.request(error.config);
-//         } catch {
-//             await store.dispatch('Logout');
-//             router.push('/login');
-//         } finally {
-//             refresh = false;
-//         }
-//     }
-//     return Promise.reject(error);
-// });
+    config.headers.Authorization = 'Bearer ' + user?.access_token;
+
+    return config;
+});
 
 export default instance;

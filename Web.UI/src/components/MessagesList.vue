@@ -35,5 +35,10 @@ defineProps({
 .messages-list {
     overflow-y: auto;
     max-height: 100%;
+    padding: 0 10px 0 0;
+}
+
+.messages-list > * {
+    margin: 5px 0;
 }
 </style>

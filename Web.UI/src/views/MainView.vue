@@ -5,7 +5,7 @@
       <!-- <ChatHead :chat=""/> -->
       <div class="messges-header"></div>
       <MessagesList :messages="messagesStore.messages" :loading="false" />
-      <MessageNew :chatId="chatId" :disabled="false" @sendMessage="sendMessage" />
+      <MessageNew :disabled="false" @send="sendMessage" />
     </div>
   </section>
 </template>
@@ -54,13 +54,11 @@ watch(
 const hubsStore = useHubsStore()
 hubsStore.connection.start();
 
-const sendMessage = (message: any) => {
-  hubsStore.connection.send('sendMessage', message)
+const sendMessage = (content: string) => {
+  hubsStore.connection.send('sendMessage', { chatId, content })
 }
 
 hubsStore.connection.on('receiveMessage', (message: any) => {
-  console.log(message);
-
   messagesStore.messages.push(message)
 })
 

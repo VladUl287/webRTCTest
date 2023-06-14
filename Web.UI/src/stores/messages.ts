@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import instance from '@/http/hub'
+import instance from '@/http'
 import type { Message } from '@/types/chat'
 
 export const useMessagesStore = defineStore('messages', () => {
