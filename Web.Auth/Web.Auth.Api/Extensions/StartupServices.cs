@@ -32,7 +32,7 @@ internal static class StartupServices
     public static void AddOpenId<TContext>(this IServiceCollection services)
         where TContext : DbContext
     {
-        services.AddIdentity<User, IdentityRole>()
+        services.AddIdentity<User, Role>()
             .AddEntityFrameworkStores<TContext>()
             .AddDefaultTokenProviders();
 
@@ -46,6 +46,7 @@ internal static class StartupServices
             {
                 options.SetAuthorizationEndpointUris("connect/authorize")
                     .SetTokenEndpointUris("connect/token")
+                    .SetIntrospectionEndpointUris("connect/introspect")
                     // .SetLogoutEndpointUris("connect/logout")
                     // .SetUserinfoEndpointUris("connect/userinfo")
                     ;
@@ -89,7 +90,6 @@ internal static class StartupServices
             setup.AddDefaultPolicy(config =>
             {
                 config.AllowAnyMethod()
-                    .AllowAnyMethod()
                     .AllowAnyOrigin();
                 // .AllowCredentials()
                 // .WithOrigins(cors.Origins);

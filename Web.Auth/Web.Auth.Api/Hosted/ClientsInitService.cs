@@ -25,7 +25,34 @@ internal sealed class ClientsInitService : IHostedService
 
         var appManager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
 
+        await AddHubApiIfNotExists(appManager);
+
         await AddVueClientIfNotExists(appManager);
+
+        var scopeManager = scope.ServiceProvider.GetRequiredService<IOpenIddictScopeManager>();
+
+        await RegisterScopesAsync(scopeManager);
+    }
+
+    private async Task AddHubApiIfNotExists(IOpenIddictApplicationManager manager)
+    {
+        const string clinetName = "hubs-api";
+
+        var client = await manager.FindByClientIdAsync(clinetName);
+
+        if (client is null)
+        {
+            await manager.CreateAsync(new()
+            {
+                ClientId = clinetName,
+                ClientSecret = "846B62D0-DEF9-4215-A99D-86E6B8DAB342",
+                Permissions =
+                {
+                    Permissions.Endpoints.Introspection
+                }
+            });
+        }
+
     }
 
     private static async Task AddVueClientIfNotExists(IOpenIddictApplicationManager manager)
@@ -36,7 +63,7 @@ internal sealed class ClientsInitService : IHostedService
 
         if (client is null)
         {
-            await manager.CreateAsync(new OpenIddictApplicationDescriptor
+            await manager.CreateAsync(new()
             {
                 ClientId = clinetName,
                 Type = ClientTypes.Public,
@@ -60,11 +87,27 @@ internal sealed class ClientsInitService : IHostedService
                     Permissions.Endpoints.Logout,
                     Permissions.Endpoints.Authorization,
                     Permissions.GrantTypes.RefreshToken,
-                    Permissions.GrantTypes.AuthorizationCode
+                    Permissions.GrantTypes.AuthorizationCode,
+                    Permissions.Prefixes.Scope + "api1"
                 },
                 Requirements =
                 {
                     Requirements.Features.ProofKeyForCodeExchange
+                }
+            });
+        }
+    }
+
+    static async Task RegisterScopesAsync(IOpenIddictScopeManager manager)
+    {
+        if (await manager.FindByNameAsync("api1") is null)
+        {
+            await manager.CreateAsync(new()
+            {
+                Name = "api1",
+                Resources =
+                {
+                    "hubs-api"
                 }
             });
         }
