@@ -4,6 +4,7 @@ using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Messages;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Web.Hubs.Core.Dtos.Filters;
 
 namespace Web.Hubs.Api.Controllers;
 
@@ -20,10 +21,10 @@ public class MessagesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<MessageDto>> GetMessages([FromQuery][BindRequired] Guid chatId)
+    public async Task<IEnumerable<MessageDto>> GetMessages([FromQuery][BindRequired] Guid chatId, PageFilter? filter = null)
     {
         var userId = User.GetUserId<long>();
 
-        return await messagesPresenter.GetMessages(chatId, userId);
+        return await messagesPresenter.GetMessages(chatId, userId, filter);
     }
 }

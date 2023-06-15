@@ -92,6 +92,7 @@ internal static class StartupServices
 
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<IMessageService, MessageService>();
+        services.AddScoped<IUserChatService, UserChatService>();
         // services.AddSingleton<IConnectionService, ConnectionService>();
         services.AddSingleton<IConnectionService, ConnectionServiceDict>();
     }

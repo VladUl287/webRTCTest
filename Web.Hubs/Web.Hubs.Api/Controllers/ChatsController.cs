@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Web.Hubs.Api.Extensions;
 using Web.Hubs.Core.Dtos.Chats;
@@ -7,7 +8,7 @@ using Web.Hubs.Core.Repositories;
 
 namespace Web.Hubs.Api.Controllers;
 
-// [Authorize]
+[Authorize]
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class ChatsController : ControllerBase
@@ -20,11 +21,11 @@ public class ChatsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetChat([FromQuery][BindRequired] Guid id)
+    public async Task<IActionResult> GetChat([FromQuery][BindRequired] Guid chatId)
     {
         var userId = User.GetUserId<long>();
 
-        var result = await chatPresenter.GetChat(id, userId);
+        var result = await chatPresenter.GetChat(chatId, userId);
 
         return result.Match<IActionResult>(
             success => Ok(success),
@@ -33,7 +34,7 @@ public class ChatsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<ChatDto>> GetChats([FromQuery] PageFilter? filter)
+    public async Task<IEnumerable<ChatDto>> GetChats(PageFilter? filter = null)
     {
         var userId = User.GetUserId<long>();
 

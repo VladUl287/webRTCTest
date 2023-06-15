@@ -20,7 +20,9 @@ public sealed class ChatPresenter : IChatPresenter
 
     public async Task<OneOf<ChatDto, NotFound>> GetChat(Guid chatId, long userId)
     {
-        var result = await getChat(dbcontext, chatId, userId);
+        var result = await dbcontext.Chats
+            .ProjectToDto(userId)
+            .FirstOrDefaultAsync(chat => chat.Id == chatId);
 
         if (result is null)
         {

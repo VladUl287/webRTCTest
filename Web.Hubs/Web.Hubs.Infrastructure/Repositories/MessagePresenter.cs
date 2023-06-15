@@ -20,6 +20,8 @@ public sealed class MessagePresenter : IMessagePresenter
     public Task<MessageDto[]> GetMessages(Guid chatId, long userId, PageFilter? pageFilter = null)
     {
         return context.Messages
+            .Where(message => message.ChatId == chatId)
+            .OrderBy(message => message.Date)
             .ProjectToType<MessageDto>(null)
             .PageFilter(pageFilter)
             .ToArrayAsync();

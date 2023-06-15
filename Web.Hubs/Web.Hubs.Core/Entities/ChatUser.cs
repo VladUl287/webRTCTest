@@ -6,7 +6,7 @@ public sealed class ChatUser
 
     public required Guid ChatId { get; init; }
 
-    public DateTime LastRead { get; init; } = DateTime.UtcNow;
+    public DateTime LastRead { get; set; } = DateTime.UtcNow;
 
     public Chat? Chat { get; init; }
 }

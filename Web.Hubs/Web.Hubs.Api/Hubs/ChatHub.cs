@@ -3,21 +3,25 @@ using Web.Hubs.Api.Extensions;
 using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Messages;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Authorization;
+using Web.Hubs.Core.Dtos.UserChat;
 
 namespace Web.Hubs.Api.Hubs;
 
-// [Authorize]
+[Authorize]
 public sealed class ChatHub : Hub
 {
+    private readonly IUserChatService userChatService;
     private readonly IChatPresenter chatPresenter;
     private readonly IMessageService messageService;
     private readonly IConnectionService connectionStore;
 
-    public ChatHub(IChatPresenter chatPresenter, IMessageService messageService, IConnectionService connectionStore)
+    public ChatHub(IChatPresenter chatPresenter, IMessageService messageService, IConnectionService connectionStore, IUserChatService userChatService)
     {
         this.chatPresenter = chatPresenter;
         this.messageService = messageService;
         this.connectionStore = connectionStore;
+        this.userChatService = userChatService;
     }
 
     public async Task SendMessage(CreateMessageDto message)
@@ -33,7 +37,7 @@ public sealed class ChatHub : Hub
             return;
         }
 
-        await NotifyUsers(result.AsT0, "ReceiveMessage");
+        await NotifyUsers(result.AsT0, "ReceivedMessage");
     }
 
     public async Task UpdateMessage(UpdateMessageDto update)
@@ -46,7 +50,7 @@ public sealed class ChatHub : Hub
             return;
         }
 
-        await NotifyUsers(result.AsT0, "UpdateMessage");
+        await NotifyUsers(result.AsT0, "UpdatedMessage");
     }
 
     public async Task DeleteMessage(Guid messageId)
@@ -59,7 +63,29 @@ public sealed class ChatHub : Hub
             return;
         }
 
-        await NotifyUsers(result.AsT0, "DeleteMessage");
+        await NotifyUsers(result.AsT0, "DeletedMessage");
+    }
+
+    public async Task UpdateUserChat(UpdateChatUserDto userChat)
+    {
+        var userId = Context.User.GetUserId<long>();
+
+        var result = await userChatService.Update(userChat.ChatId, userId, userChat.LastRead);
+
+        if (result.IsT1 || result.IsT2)
+        {
+            return;
+        }
+
+        var users = await chatPresenter.GetUsers(userChat.ChatId);
+
+        if (users?.Length > 0)
+        {
+            var connections = await connectionStore.Get(users);
+
+            await Clients.Clients(connections)
+                .SendAsync("UpdatedChat", userChat.ChatId);
+        }
     }
 
     private async Task NotifyUsers(MessageDto message, string method)
