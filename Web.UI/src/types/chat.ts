@@ -9,7 +9,7 @@ export type Chat = {
 export type Message = {
     id: string,
     content: string,
-    userId: number,
+    userId: string,
     date: string,
     edit: boolean
 }
@@ -17,4 +17,9 @@ export type Message = {
 export type LastMessage = {
     date: string,
     content: string
+}
+
+export enum MessageAction {
+    Update,
+    Delete,
 }

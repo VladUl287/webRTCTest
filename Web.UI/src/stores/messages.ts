@@ -4,21 +4,14 @@ import instance from '@/http'
 import type { Message } from '@/types/chat'
 
 export const useMessagesStore = defineStore('messages', () => {
-    const messages = ref<Message[]>([
-        {
-            id: '1',
-            content: 'test',
-            date: new Date().toDateString(),
-            edit: false,
-            userId: 1
-        }
-    ])
+    const messages = ref<Message[]>([])
 
     const getMessages = async (chatId: string): Promise<void> => {
-        try {
+        try {           
             messages.value = []
 
             const result = await instance.get<Message[]>('/api/messages/getmessages', { params: { chatId } });
+            
             messages.value = result.data
         } catch (error) {
             console.log(error);

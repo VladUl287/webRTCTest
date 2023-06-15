@@ -1,10 +1,17 @@
+import { useAuthStore } from '@/stores/auth';
 import { defineStore } from 'pinia'
 import { HubConnectionState, type HubConnection } from '@microsoft/signalr'
 import { HubConnectionBuilder } from '@microsoft/signalr'
 
 export const useHubsStore = defineStore('hubs', () => {
     const connection: HubConnection = new HubConnectionBuilder()
-        .withUrl("https://localhost:7010/hubs/chat")
+        .withUrl("https://localhost:7010/hubs/chat", {
+            accessTokenFactory: async () => {
+                const user = await useAuthStore().getUser()
+
+                return user!.access_token
+            }
+        })
         // .withHubProtocol(new signalRMsgpack.MessagePackHubProtocol())
         .build()
 

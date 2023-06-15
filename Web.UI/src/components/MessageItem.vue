@@ -1,5 +1,5 @@
 <template>
-    <div class="message-item" :class="{ 'right': proper }">
+    <div v-if="message" class="message-item" :class="{ 'right': proper }">
         <p>{{ message.content }}</p>
         <p class="message-date">{{ message.date }}</p>
     </div>

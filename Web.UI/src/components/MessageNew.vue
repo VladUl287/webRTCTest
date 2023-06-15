@@ -1,7 +1,7 @@
 <template>
     <div class="message-new">
         <div class="textarea-wrap">
-            <div class="textarea" role="textbox" contenteditable>ауцау</div>
+            <div class="textarea" role="textbox" contenteditable ref="textarea">ауцау</div>
         </div>
         <button @click="send">
             <span class="material-symbols-outlined">
@@ -12,6 +12,7 @@
 </template>
   
 <script setup lang="ts">
+import { ref } from 'vue'
 
 defineProps({
     disabled: Boolean
@@ -21,7 +22,13 @@ const emits = defineEmits<{
     (e: 'send', content: string): void
 }>()
 
-const send = () => emits('send', 'send-message')
+const textarea = ref<HTMLElement>()
+
+const send = () => {
+    if (textarea.value && textarea.value.innerText) {
+        emits('send', textarea.value.innerText)
+    }
+}
 
 </script>
   

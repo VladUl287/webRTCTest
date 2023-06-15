@@ -1,11 +1,13 @@
 <template>
-    <div class="chat-item" :data-time="getTime(chat.message.date)">
-        <img :src="chat.image" width="100" height="100" />
+    <div class="chat-item" :data-time="getTime(chat.message?.date)" :class="{ 'active': active }">
+        <div class="chat-img-wrap">
+            <img :src="chat.image" @error="(event: Event) => imgError(event)" alt="Avatar" />
+        </div>
         <div class="chat-info">
             <p class="chat-name">{{ chat.name }}</p>
-            <p class="chat-message">{{ chat.message.content }}</p>
+            <p class="chat-message" v-if="chat.message">{{ chat.message.content }}</p>
         </div>
-        <span class="chat-unread">{{ chat.unread }}</span>
+        <span class="chat-unread" v-if="chat.unread > 0">{{ chat.unread }}</span>
     </div>
 </template>
   
@@ -17,10 +19,13 @@ defineProps({
     chat: {
         type: Object as PropType<Chat>,
         required: true
-    }
+    },
+    active: Boolean
 })
 
 const getTime = (dateString: string) => {
+    if (!dateString) return
+
     const date = new Date(dateString)
 
     const isToday = (date: Date) => {
@@ -34,20 +39,33 @@ const getTime = (dateString: string) => {
     return new Intl.DateTimeFormat('ru').format(date)
 }
 
+const imgError = (event: Event) => {
+    const image = (event.target as HTMLImageElement)
 
+    if (image) {
+        image.src = 'https://html.com/wp-content/uploads/flamingo4x.jpg'
+        image.onerror = null
+    }
+}
 </script>
   
 <style>
 .chat-item {
-    position: relative;
-    display: grid;
+    display: flex;
+    padding: .5em;
     cursor: pointer;
-    overflow: hidden;
     column-gap: .5em;
+    overflow: hidden;
+    position: relative;
     align-items: center;
-    border-radius: .5em;
-    grid-template-columns: min-content auto min-content;
-    background-color: rgba(255, 0, 0, 0.1);
+    border-radius: .3em;
+    border: 1px solid #fff;
+
+    --color: #fff;
+}
+
+.chat-item.active {
+    background-color: #ffffff36;
 }
 
 .chat-item::after {
@@ -55,34 +73,35 @@ const getTime = (dateString: string) => {
     position: absolute;
     right: 10px;
     top: 5px;
-    color: black;
+    color: var(--color);
     font-size: .6em;
 }
 
-.chat-item:hover,
-.chat-item:focus {}
-
-.chat-item img {
+.chat-item .chat-img-wrap {
+    width: 50px;
+    height: 50px;
     max-width: 50px;
     max-height: 50px;
 }
 
-.chat-item .chat-info {
-    overflow: hidden;
+.chat-item .chat-img-wrap img {
+    border-radius: 50%;
+    width: 100%;
+    height: 100%;
 }
 
-.chat-item p {
+.chat-item .chat-info p {
     margin: 0;
     overflow: hidden;
     user-select: none;
+    color: var(--color);
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-.chat-item .chat-name {}
+.chat-info .chat-name {}
 
-.chat-item .chat-message {
-    color: black;
+.chat-info .chat-message {
     font-size: .7em;
 }
 
