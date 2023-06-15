@@ -1,2 +1,2 @@
 ﻿dotnet ef database update --project ./Web.Hubs/Web.Hubs.Infrastructure --startup-project ./Web.Hubs/Web.Hubs.Api
-dotnet ef database update --project ./Web.Auth/Web.Auth.Infrastructure --startup-project ./Web.Auth.Web.Auth.Api
+dotnet ef database update --project ./Web.Auth/Web.Auth.Infrastructure --startup-project ./Web.Auth/Web.Auth.Api
