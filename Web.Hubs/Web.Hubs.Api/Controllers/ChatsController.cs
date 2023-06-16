@@ -4,20 +4,37 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Web.Hubs.Api.Extensions;
 using Web.Hubs.Core.Dtos.Chats;
 using Web.Hubs.Core.Dtos.Filters;
+using Web.Hubs.Core.Enums;
 using Web.Hubs.Core.Repositories;
+using Web.Hubs.Core.Services;
 
 namespace Web.Hubs.Api.Controllers;
 
 [Authorize]
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class ChatsController : ControllerBase
+public sealed class ChatsController : ControllerBase
 {
     private readonly IChatPresenter chatPresenter;
+    private readonly IChatService chatService;
 
-    public ChatsController(IChatPresenter chatPresenter)
+    public ChatsController(IChatPresenter chatPresenter, IChatService chatService)
     {
+        this.chatService = chatService;
         this.chatPresenter = chatPresenter;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetChatId(long userId, ChatType chatType)
+    {
+        var currentUserId = User.GetUserId<long>();
+
+        var result = await chatPresenter.GetChatId(currentUserId, userId, chatType);
+
+        return result.Match<IActionResult>(
+            id => Ok(id),
+            notFound => NotFound()
+        );
     }
 
     [HttpGet]
@@ -39,5 +56,16 @@ public class ChatsController : ControllerBase
         var userId = User.GetUserId<long>();
 
         return await chatPresenter.GetChats(userId, filter);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateChatDto createChat)
+    {
+        var result = await chatService.Create(createChat);
+
+        return result.Match<IActionResult>(
+            id => Ok(id),
+            error => BadRequest(error)
+        );
     }
 }

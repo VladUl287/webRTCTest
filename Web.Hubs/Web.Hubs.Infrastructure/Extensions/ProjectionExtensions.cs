@@ -31,7 +31,7 @@ internal static class ProjectionExtensions
                     .FirstOrDefault(),
 
                 Unread = chat.Messages
-                    .Count(msg => msg.UserId != userId && msg.Date >= chat.ChatUsers
+                    .Count(msg => msg.UserId != userId && msg.Date >= chat.ChatUsers!
                         .Where(ch => ch.UserId == userId)
                         .Select(m => m.LastRead)
                         .FirstOrDefault()

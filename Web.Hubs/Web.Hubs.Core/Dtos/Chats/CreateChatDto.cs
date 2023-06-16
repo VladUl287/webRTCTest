@@ -12,5 +12,5 @@ public sealed class CreateChatDto
 
     public required ChatType Type { get; init; }
 
-    public IEnumerable<UserDto> Users { get; init; } = Enumerable.Empty<UserDto>();
+    public UserDto[] Users { get; init; } = Array.Empty<UserDto>();
 }

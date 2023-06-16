@@ -11,7 +11,7 @@ namespace Web.Hubs.Api.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class MessagesController : ControllerBase
+public sealed class MessagesController : ControllerBase
 {
     private readonly IMessagePresenter messagesPresenter;
 

@@ -5,6 +5,8 @@ namespace Web.Hubs.Infrastructure.Database;
 
 public interface IUnitOfWork
 {
+    DatabaseContext Context { get; }
+
     DbSet<Chat> Chats { get; }
 
     DbSet<Message> Messages { get; }

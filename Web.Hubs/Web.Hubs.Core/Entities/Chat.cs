@@ -18,5 +18,5 @@ public sealed class Chat
 
     public IEnumerable<Message> Messages { get; init; } = Enumerable.Empty<Message>();
 
-    public IEnumerable<ChatUser> ChatUsers { get; init; } = Enumerable.Empty<ChatUser>();
+    public ICollection<ChatUser>? ChatUsers { get; init; }
 }
