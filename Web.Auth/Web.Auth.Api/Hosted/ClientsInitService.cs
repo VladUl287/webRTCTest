@@ -20,7 +20,7 @@ internal sealed class ClientsInitService : IHostedService
         var context = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
 
         // await context.Database.EnsureDeletedAsync();
-        // await context.Database.EnsureCreatedAsync();
+        await context.Database.EnsureCreatedAsync();
         //await context.Database.MigrateAsync();
 
         var appManager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();

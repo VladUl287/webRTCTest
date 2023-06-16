@@ -1,7 +1,9 @@
 using Web.Auth.Api;
 using Web.Auth.Api.Extensions;
+using Web.Auth.Core.Repositories;
 using Web.Auth.Infrastructure;
 using Web.Auth.Infrastructure.Database;
+using Web.Auth.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -14,6 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddDefaultCors(builder.Configuration);
 
     builder.Services.AddHostedService<ClientsInitService>();
+
+    builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
@@ -40,4 +44,4 @@ var app = builder.Build();
     app.MapRazorPages();
     app.MapControllers();
 }
-    app.Run();
+app.Run();
