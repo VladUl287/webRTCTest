@@ -11,7 +11,7 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.AspNetCore.Authentication;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
-namespace Web.Auth.Api;
+namespace Web.Auth.Api.Controllers;
 
 public sealed class AuthorizeController : Controller
 {

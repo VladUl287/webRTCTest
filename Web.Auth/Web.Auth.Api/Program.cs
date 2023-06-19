@@ -1,9 +1,12 @@
+using Refit;
 using Web.Auth.Api;
 using Web.Auth.Api.Extensions;
+using Web.Auth.Api.HttpHandlers;
 using Web.Auth.Core.Repositories;
 using Web.Auth.Infrastructure;
 using Web.Auth.Infrastructure.Database;
 using Web.Auth.Infrastructure.Repositories;
+using Web.Auth.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -18,6 +21,17 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddHostedService<ClientsInitService>();
 
     builder.Services.AddScoped<IUsersRepository, UsersRepository>();
+
+    builder.Services.AddHttpContextAccessor();
+
+    builder.Services.AddTransient<AuthHeaderHandler>();
+
+    builder.Services.AddRefitClient<IHubApi>()
+        .ConfigureHttpClient(config =>
+        {
+            config.BaseAddress = new Uri("https://localhost:7010/api");
+        })
+        .AddHttpMessageHandler<AuthHeaderHandler>();
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();

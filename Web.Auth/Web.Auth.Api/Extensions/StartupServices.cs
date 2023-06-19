@@ -90,6 +90,7 @@ internal static class StartupServices
             setup.AddDefaultPolicy(config =>
             {
                 config.AllowAnyMethod()
+                    .AllowAnyHeader()
                     .AllowAnyOrigin();
                 // .AllowCredentials()
                 // .WithOrigins(cors.Origins);

@@ -4,5 +4,5 @@ namespace Web.Auth.Core.Repositories;
 
 public interface IUsersRepository
 {
-    Task<UserDto[]> GetUsers(UsersFilter? filter);
+    Task<UserDto[]> GetUsers(UsersFilter? filter = null);
 }
