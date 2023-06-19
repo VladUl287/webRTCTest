@@ -1,5 +1,5 @@
 <template>
-    <section class="chats-wrap">
+    <section class="list-wrap">
         <div v-if="loading">loading...</div>
         <div v-else>
             <ChatItem v-for="chat of chats" :key="chat.id" :chat="chat" @click="selectChat(chat.id)"
@@ -23,10 +23,10 @@ const props = defineProps({
 })
 
 watch(
-    () => props, 
-() => {
-    console.log('watch', props.selected)
-})
+    () => props,
+    () => {
+        console.log('watch', props.selected)
+    })
 
 const emits = defineEmits<{
     (e: 'select', chatId: string): void
@@ -36,13 +36,8 @@ const selectChat = (chatId: string) => emits('select', chatId)
 </script>
   
 <style>
-.chats-wrap {
-    width: 500px;
-    max-width: 600px;
-    min-width: 400px;
-
+.list-wrap {
     padding: .5em;
-    background-color: #001524;
 }
 
 .chat-item {
