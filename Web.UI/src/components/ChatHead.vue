@@ -1,10 +1,15 @@
 <template>
-    <div class="chat-head">
-        <img :src="chat.image" width="100" height="100" />
-        <p class="chat-name">{{ chat.name }}</p>
-        <div class="chat-functions">
-
-        </div>
+    <div v-if="chat" class="chat-head">
+        <section class="img-wrap">
+            <img :src="chat.image" @error="(event: Event) => imgError(event)" alt="Avatar" />
+        </section>
+        <section>
+            <p class="chat-name">{{ chat.name }}</p>
+        </section>
+        <section></section>
+    </div>
+    <div v-else>
+        loading...
     </div>
 </template>
   
@@ -13,12 +18,40 @@ import type { PropType } from 'vue';
 import type { Chat } from '@/types/chat';
 
 defineProps({
-    chat: {
-        type: Object as PropType<Chat>,
-        required: true
-    }
+    chat: Object as PropType<Chat>
 })
+
+const imgError = (event: Event) => {
+    const image = (event.target as HTMLImageElement)
+
+    if (image) {
+        image.src = 'https://html.com/wp-content/uploads/flamingo4x.jpg'
+        image.onerror = null
+    }
+}
 
 </script>
   
-<style></style>
+<style scoped>
+.chat-head {
+    display: flex;
+    padding: 0 1em;
+    column-gap: 1em;
+    user-select: none;
+    align-items: center;
+    background-color: #001524;
+}
+
+.img-wrap {
+    width: 50px;
+    height: 50px;
+    max-width: 50px;
+    max-height: 50px;
+}
+
+.img-wrap img {
+    border-radius: 50%;
+    width: 100%;
+    height: 100%;
+}
+</style>

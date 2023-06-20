@@ -63,10 +63,10 @@ const action = (message: Message, messageAction: MessageAction) => {
 
 .messages-list {
     display: flex;
-    flex-direction: column-reverse;
     overflow-y: auto;
     max-height: 100%;
     padding: 0 10px 0 0;
+    flex-direction: column-reverse;
 }
 
 .messages-list>* {

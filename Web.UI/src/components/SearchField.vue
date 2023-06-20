@@ -1,24 +1,37 @@
 <template>
     <div class="search-field" :class="{ 'active': active }">
-        <input type="text" name="search" id="search" placeholder="search" @input="search">
+        <section class="search-wrap">
+            <input type="text" id="search" placeholder="search" @input="search" autocomplete="off">
+        </section>
         <section class="items-list">
-            <div v-for="item of items" :key="item.key">{{ item.value }}</div>
+            <button v-for="item of items" :key="item.key" @click="select(item)">{{ item.label }}</button>
+        </section>
+        <section v-if="loading" class="loading">
+            <LoadingRing />
+        </section>
+        <section v-else class="empty-list">
+            empty
         </section>
     </div>
 </template>
 
 <script setup lang="ts">
-import type { SearchItem } from '@/types/components'
 import type { PropType } from 'vue'
+import type { SearchItem } from '@/types/components'
+import LoadingRing from '@/components/helpers/LoadingRing.vue'
 
 defineProps({
     items: Object as PropType<SearchItem[]>,
-    active: Boolean
+    active: Boolean,
+    loading: Boolean
 })
 
 const emits = defineEmits<{
-    (e: 'search', value: string): void
+    (e: 'input', value: string): void,
+    (e: 'select', value: SearchItem): void
 }>()
+
+const select = (item: SearchItem) => emits('select', item)
 
 let timeout: number
 const search = (event: Event) => {
@@ -26,46 +39,76 @@ const search = (event: Event) => {
 
     timeout = setTimeout(() => {
         const input = (event.target as HTMLInputElement)
-        searchEmit(input.value)
-    }, 800)
+        emits('input', input.value)
+    }, 700)
 }
-
-const searchEmit = async (value: string) => emits('search', value)
 </script>
 
 <style scoped>
+.search-field {
+    padding: .5em;
+}
+
 .search-field.active {
     height: 100%;
-    background-color: black;
+}
+
+.search-wrap {
+    position: relative;
 }
 
 #search {
     width: 100%;
+    padding: .8em 1em;
+    font-size: medium;
     color: #fff;
-    padding: 1em 1em;
     border-radius: 5em;
     background-color: transparent;
+    border: 1px solid var(--color-border);
 }
 
 #search::placeholder {
     font-style: italic;
+    color: var(--color-placeholder)
 }
 
-.items-list {
+.items-list,
+.empty-list,
+.loading {
     display: none;
-    width: 100%;
-    background-color: transparent;
 }
 
-.search-field.active .items-list {
+.empty-list {
+    user-select: none;
+    width: fit-content;
+    margin: 50% auto 0 auto;
+}
+
+.search-field.active .items-list,
+.search-field.active .loading {
     display: block;
 }
 
-.items-list>div {
+.search-field.active .items-list:empty+.empty-list {
+    display: block;
+}
+
+.items-list>button {
+    width: 100%;
     padding: 1em;
+    margin: .5em 0;
+    display: block;
     cursor: pointer;
+    text-align: left;
     border-radius: .5em;
-    margin: .5em .5em 0 .5em;
-    border: 1px solid gray;
+    color: var(--color-text);
+    background-color: transparent;
+    border: 1px solid var(--color-border);
+}
+
+.loading {
+    width: 4em;
+    height: 4em;
+    margin: 50% auto 0 auto;
 }
 </style>

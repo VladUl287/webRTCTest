@@ -31,5 +31,15 @@ export const useChatsStore = defineStore('chat', () => {
         }
     }
 
-    return { chats, getChats, getChat }
+    const create = async (chat: { name: string, image: string, userId: number, type: number, users: any[] }): Promise<string | undefined> => {
+        try {
+            const result = await instance.post<string>('/api/chats/create', chat);
+
+            return result.data
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    return { chats, getChats, getChat, create }
 })
