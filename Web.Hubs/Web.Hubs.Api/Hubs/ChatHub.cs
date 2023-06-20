@@ -2,9 +2,9 @@ using Web.Hubs.Core.Services;
 using Web.Hubs.Api.Extensions;
 using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Messages;
+using Web.Hubs.Core.Dtos.UserChat;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
-using Web.Hubs.Core.Dtos.UserChat;
 
 namespace Web.Hubs.Api.Hubs;
 
@@ -64,6 +64,19 @@ public sealed class ChatHub : Hub
         }
 
         await NotifyUsers(result.AsT0, "DeletedMessage");
+    }
+
+    public async Task ChatCreated(Guid chatId)
+    {
+        var users = await chatPresenter.GetUsers(chatId);
+
+        if (users?.Length > 0)
+        {
+            var connections = await connectionStore.Get(users);
+
+            await Clients.Clients(connections)
+                .SendAsync("ChatCreated", chatId);
+        }
     }
 
     public async Task UpdateUserChat(UpdateChatUserDto userChat)

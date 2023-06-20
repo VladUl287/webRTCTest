@@ -53,35 +53,6 @@ public sealed class ChatService : IChatService
         }
     }
 
-    public async Task<OneOf<Success, NotFound>> Update(UpdateChatDto update)
-    {
-        if (string.IsNullOrEmpty(update.Name) || string.IsNullOrEmpty(update.Image))
-        {
-            return new Success();
-        }
-
-        var chat = await unitOfWork.Chats.FindAsync(update.Id);
-
-        if (chat is null)
-        {
-            return new NotFound();
-        }
-
-        chat.Name = update.Name;
-        chat.Image = update.Image;
-
-        await unitOfWork.SaveChangesAsync();
-
-        return new Success();
-    }
-
-    public Task Delete(Guid chatId, long userId)
-    {
-        return unitOfWork.ChatsUsers
-            .Where(cu => cu.ChatId == chatId && cu.UserId == userId)
-            .ExecuteDeleteAsync();
-    }
-
     #region 
 
     private static readonly Func<DatabaseContext, long, ChatType, Task<bool>> chatExists =

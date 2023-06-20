@@ -7,7 +7,9 @@ namespace Web.Hubs.Infrastructure.Database;
 public sealed class DatabaseContext : DbContext, IUnitOfWork
 {
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
-    {}
+    {
+        Database.EnsureCreated();
+    }
 
     public DatabaseContext Context => this;
 
