@@ -5,5 +5,5 @@ namespace Web.Auth.Infrastructure.Services;
 public interface IHubApi
 {
     [Get("/chats/getChatId")]
-    Task<Guid> GetChatId(long userId, int chatType);
+    Task<ApiResponse<Guid>> GetChatId(long userId, int chatType);
 }

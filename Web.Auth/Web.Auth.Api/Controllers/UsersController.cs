@@ -22,17 +22,17 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<UserDto[]> GetUsers([FromQuery] UsersFilter? filters = null)
+    public async Task<IEnumerable<UserDto>> GetUsers([FromQuery] UsersFilter? filters = null)
     {
         var users = await usersRepository.GetUsers(filters);
 
         for (int i = 0; i < users.Length; i++)
         {
-            var chatId = await hubApi.GetChatId(users[i].Id, 1);
+            var response = await hubApi.GetChatId(users[i].Id, 1);
 
-            if (chatId != default)
+            if (response.IsSuccessStatusCode)
             {
-                users[i] = null;
+                users[i].ChatId = response.Content;
             }
         }
 
