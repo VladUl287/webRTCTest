@@ -46,6 +46,7 @@ var app = builder.Build();
     app.UseAuthorization();
 
     app.MapHub<ChatHub>("/hubs/chat");
+    app.MapHub<CallHub>("/hubs/call");
 
     app.MapControllers();
 }

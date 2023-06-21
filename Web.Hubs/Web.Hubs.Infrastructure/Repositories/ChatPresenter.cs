@@ -21,9 +21,11 @@ public sealed class ChatPresenter : IChatPresenter
 
     public async Task<OneOf<ChatDto, NotFound>> GetChat(Guid chatId, long userId)
     {
-        var result = await dbcontext.Chats
+        var result = await dbcontext.ChatsUsers
+            .Where(cu => cu.ChatId == chatId && cu.UserId == userId)
+            .Select(cu => cu.Chat!)
             .ProjectToDto(userId)
-            .FirstOrDefaultAsync(chat => chat.Id == chatId);
+            .FirstOrDefaultAsync();
 
         if (result is null)
         {
@@ -35,7 +37,9 @@ public sealed class ChatPresenter : IChatPresenter
 
     public Task<ChatDto[]> GetChats(long userId, PageFilter? filter = null)
     {
-        return dbcontext.Chats
+        return dbcontext.ChatsUsers
+            .Where(cu => cu.UserId == userId)
+            .Select(cu => cu.Chat!)
             .ProjectToDto(userId)
             .PageFilter(filter)
             .ToArrayAsync();

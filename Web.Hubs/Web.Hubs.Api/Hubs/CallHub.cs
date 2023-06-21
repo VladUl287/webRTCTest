@@ -3,18 +3,23 @@ using Web.Hubs.Core.Services;
 using Web.Hubs.Api.Extensions;
 using Web.Hubs.Core.Repositories;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Web.Hubs.Api.Hubs;
 
-// [Authorize]
+[Authorize]
 public sealed class CallHub : Hub
 {
     private readonly ICallService callService;
     private readonly IChatPresenter chatPresenter;
     private readonly IConnectionService connectionService;
 
-    public CallHub()
-    { }
+    public CallHub(ICallService callService, IChatPresenter chatPresenter, IConnectionService connectionService)
+    {
+        this.callService = callService;
+        this.chatPresenter = chatPresenter;
+        this.connectionService = connectionService;
+    }
 
     public async Task StartCall(StartCall call)
     {
@@ -26,13 +31,13 @@ public sealed class CallHub : Hub
             return;
         }
 
-        var exists = await callService.UserExists(userId);
-        if (exists)
-        {
-            return;
-        }
+        // var exists = await callService.UserExists(userId);
+        // if (exists)
+        // {
+        //     return;
+        // }
 
-        await callService.AddUser(call.ChatId, userId);
+        // await callService.AddUser(call.ChatId, userId);
 
         var connections = await connectionService.Get(users);
 

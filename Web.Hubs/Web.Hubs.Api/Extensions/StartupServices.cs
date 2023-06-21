@@ -91,6 +91,7 @@ internal static class StartupServices
         // services.AddSingleton<ConnectionMultiplexer>(factory => ConnectionMultiplexer.Connect("localhost:6379,allowAdmin=true"));
 
         services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<ICallService, CallService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IUserChatService, UserChatService>();
         // services.AddSingleton<IConnectionService, ConnectionService>();
