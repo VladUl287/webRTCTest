@@ -1,17 +1,31 @@
 <template>
   <section class="chats-main">
     <div class="chats-wrap">
-      <SearchField :active="active" :items="items" :loading="searching" @input="input" @select="itemSelect"
-        @focusin="focus" @focusout="focus" />
+      <SearchField v-model="active" :items="items" :loading="searching" @input="input" @select="itemSelect"
+        @focusin="focusin" />
 
       <ChatsList v-if="!active" :chats="chatsStore.chats" :loading="chatsLoading" :selected="chatIdentity"
         @select="chatSelect" />
     </div>
-    <div class="messages-main" v-if="chatIdentity">
-      <ChatHead :chat="chat" />
+    <div class="chat-content" v-if="chatIdentity">
+      <ChatHead :chat="chat" @start-call="startCall"/>
 
-      <MessagesList v-if="user" :messages="messagesStore.messages" :user="user" :loading="messagesLoading"
-        @action="action" />
+      <section class="chat-messages">
+        <div class="chat-notification">
+          <p>Call #1</p>
+          <div class="notify-controls">
+            <button class="success">
+              <span class="material-symbols-outlined">call</span>
+            </button>
+            <button class="danger">
+              <span class="material-symbols-outlined">call_end</span>
+            </button>
+          </div>
+        </div>
+
+        <MessagesList v-if="user" :messages="messagesStore.messages" :user="user" :loading="messagesLoading" />
+      </section>
+
 
       <MessageNew :disabled="false" @send="sendMessage" />
     </div>
@@ -20,20 +34,21 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useChatsStore } from '@/stores/chats';
+import { useChatsStore } from '@/stores/chats'
 import ChatHead from '@/components/ChatHead.vue'
 import ChatsList from '@/components/ChatsList.vue'
 import SearchField from '@/components/SearchField.vue'
 import MessagesList from '@/components/MessagesList.vue'
 import MessageNew from '@/components/MessageNew.vue'
-import { useMessagesStore } from '@/stores/messages';
-import { useHubsStore } from '@/stores/hubs';
-import { useRoute, useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import type { User } from 'oidc-client';
-import { MessageAction, type Chat } from '@/types/chat';
-import { getUsers } from '@/http/users';
-import type { SearchItem } from '@/types/components';
+import { useMessagesStore } from '@/stores/messages'
+import { useHubsStore } from '@/stores/hubs'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { getUsers } from '@/http/users'
+import type { User } from 'oidc-client'
+import type { Chat } from '@/types/chat'
+import type { SearchItem } from '@/types/components'
+import { useCallsStore } from '@/stores/call'
 
 const chat = ref<Chat | undefined>()
 const user = ref<User | null>()
@@ -58,16 +73,18 @@ onMounted(() => {
 
   getChats()
 
-  chatsStore.getChat(chatIdentity.value!)
-    .then(c => chat.value = c)
-
   authStore.getUser()
     .then(us => user.value = us)
 
   getMessages()
+
+  if (chatIdentity.value) {
+    chatsStore.getChat(chatIdentity.value)
+      .then(c => chat.value = c)
+  }
 })
 
-const focus = () => active.value = !active.value
+const focusin = () => active.value = true
 
 const setChatId = () => {
   chatIdentity.value = route.query.id as string
@@ -80,8 +97,10 @@ watch(
     getMessages()
     updateChat()
 
-    chatsStore.getChat(chatIdentity.value!)
-      .then(c => chat.value = c)
+    if (chatIdentity.value) {
+      chatsStore.getChat(chatIdentity.value)
+        .then(c => chat.value = c)
+    }
   }
 )
 
@@ -134,7 +153,30 @@ const input = async (value: string) => {
   }
 }
 
-hubsStore.connection.start();
+//calls
+
+const callstore = useCallsStore()
+const test = async () => {
+  try {
+
+    await callstore.connection.start()
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+const startCall = () => {
+  callstore.connection.send('startCall', { chatId: chatIdentity.value, peerUserId: '06427427-b6ad-4dca-b43f-92bc5c9b0b68' })
+}
+
+callstore.connection.on('startingCall', () => {
+  hubsStore.connection.send('sendMessage', { chatId: chatIdentity.value, content: 'starting call' })
+})
+
+test()
+//
+
+// hubsStore.connection.start()
 
 const sendMessage = (content: string) => {
   if (chatIdentity.value) {
@@ -169,7 +211,7 @@ hubsStore.connection.on('chatCreated', async (chatId: string) => {
 })
 
 hubsStore.connection.on('updatedChat', async (chatId: string) => {
-  console.log('updated');
+  console.log('updated')
 
   await chatsStore.getChat(chatId)
 })
@@ -179,6 +221,8 @@ const chatSelect = (chat: any) => {
 }
 
 const itemSelect = async (item: SearchItem) => {
+  active.value = false
+
   items.value = []
 
   if (item.value) {
@@ -196,18 +240,6 @@ const itemSelect = async (item: SearchItem) => {
 
   router.push({ path: '/chat', query: { id: chatId } })
 }
-
-const action = (content: any) => {
-  if (!chatIdentity.value) return
-
-  if (content.messageAction === MessageAction.Update) {
-    hubsStore.connection.send('updateMessage', { id: content.message.id, content: content.message.content })
-  }
-
-  if (content.messageAction === MessageAction.Delete) {
-    hubsStore.connection.send('deleteMessage', content.message.id)
-  }
-}
 </script>
 
 <style scoped>
@@ -224,10 +256,47 @@ const action = (content: any) => {
   background-color: var(--color-background);
 }
 
-.messages-main {
+.chat-content {
   display: grid;
   overflow-y: hidden;
-  border-left: 1px solid gray;
-  grid-template-rows: 1fr 11fr auto;
+  grid-template-rows: 1fr 12fr auto;
+  border-left: 1px solid var(--color-border-dark)
+}
+
+.chat-messages {
+  position: relative;
+}
+
+.chat-notification {
+  display: flex;
+  user-select: none;
+  align-items: center;
+  position: absolute;
+  width: 100%;
+  z-index: 999;
+  padding: 0 1em;
+  background-color: var(--color-active-light);
+}
+
+.chat-notification .notify-controls {
+  margin-left: auto;
+}
+
+.notify-controls button {
+  border: none;
+  padding: .5em;
+  cursor: pointer;
+  margin-right: .5em;
+  border-radius: 50%;
+  display: inline-flex;
+  color: var(--color-text)
+}
+
+.success {
+  background-color: var(--color-success)
+}
+
+.danger {
+  background-color: var(--color-danger);
 }
 </style>

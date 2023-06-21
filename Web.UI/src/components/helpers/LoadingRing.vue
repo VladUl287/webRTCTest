@@ -19,7 +19,7 @@
     border-radius: 50%;
     border: 4px solid #fff;
     animation: loading 1s linear infinite;
-    border-color: var(--color-border) transparent var(--color-border) transparent;
+    border-color: var(--color-border-dark) transparent var(--color-border-dark) transparent;
 }
 
 @keyframes loading {

@@ -6,7 +6,9 @@
         <section>
             <p class="chat-name">{{ chat.name }}</p>
         </section>
-        <section></section>
+        <section>
+            <button @click="emits('startCall')">start call</button>
+        </section>
     </div>
     <div v-else>
         loading...
@@ -20,6 +22,10 @@ import type { Chat } from '@/types/chat';
 defineProps({
     chat: Object as PropType<Chat>
 })
+
+const emits = defineEmits<{
+    (e: 'startCall'): void
+}>()
 
 const imgError = (event: Event) => {
     const image = (event.target as HTMLImageElement)
@@ -39,7 +45,7 @@ const imgError = (event: Event) => {
     column-gap: 1em;
     user-select: none;
     align-items: center;
-    background-color: #001524;
+    background-color: var(--color-background);
 }
 
 .img-wrap {

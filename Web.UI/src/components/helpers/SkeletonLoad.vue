@@ -16,7 +16,7 @@
     position: relative;
     align-items: center;
     border-radius: var(--border-radius);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-dark);
 
     --border-radius: 5px;
 }
@@ -25,7 +25,7 @@
     width: 12%;
     height: 100%;
     clip-path: circle(20px);
-    background-color: var(--color-border);
+    background-color: var(--color-border-dark);
 }
 
 .group {
@@ -35,7 +35,7 @@
 .line {
     height: .7em;
     border-radius: var(--border-radius);
-    background-color: var(--color-border);
+    background-color: var(--color-border-dark);
 }
 
 .line:not(:last-child) {

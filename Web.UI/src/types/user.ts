@@ -1,5 +1,5 @@
 export type UserDto = {
     id: string,
-    chatId: string | undefined,
+    chatId: string | null,
     userName: string,
 }

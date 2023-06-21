@@ -1,5 +1,5 @@
 export type SearchItem = {
     key: string,
-    value: string | undefined,
+    value: string | null,
     label: string
 }

@@ -1,7 +1,7 @@
 <template>
     <div class="message-new">
         <div class="textarea-wrap">
-            <div class="textarea" role="textbox" contenteditable ref="textarea">ауцау</div>
+            <div class="textarea" contenteditable data-placeholder="message" ref="textarea"></div>
         </div>
         <button @click="send">
             <span class="material-symbols-outlined">
@@ -34,17 +34,16 @@ const send = () => {
   
 <style>
 .message-new {
-    display: flex;
+    margin: 0 auto;
     padding: .5em 0;
-    column-gap: .5em;
-    align-items: flex-end;
-    justify-content: center;
+    width: fit-content;
 }
 
 .textarea-wrap {
-    border-radius: 1em;
-    border: 1px solid #ccc;
-    padding: .5em .5em .5em 1em;
+    padding: .7em 1em;
+    border-radius: 5em;
+    display: inline-block;
+    border: 1px solid var(--color-border-light);
 }
 
 .textarea {
@@ -57,14 +56,18 @@ const send = () => {
 }
 
 .textarea[contenteditable]:empty::before {
-    content: "Message";
-    color: gray;
+    content: attr(data-placeholder);
+    color: var(--color-placeholder);
 }
 
 .message-new button {
-    padding: 1em;
-    border: none;
+    display: inline-flex;
+    margin: .5em;
+    padding: .7em;
+    cursor: pointer;
     border-radius: 5em;
-    height: fit-content;
+    background-color: transparent;
+    color: var(--color-placeholder);
+    border: 1px solid var(--color-border-dark);
 }
 </style>

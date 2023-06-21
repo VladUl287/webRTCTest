@@ -6,19 +6,19 @@
             </div>
         </div>
         <div v-else>
-            <ChatItem v-for="chat of chats" :key="chat.id" :chat="chat" @click="selectChat(chat.id)"
-                :active="selected === chat.id" class="chat-item" />
+            <ChatItem v-for="chat of chats" :key="chat.id" :chat="chat" @click="select(chat.id)"
+                :active="selected === chat.id" class="item" />
         </div>
     </section>
 </template>
   
 <script setup lang="ts">
-import { type PropType, watch } from 'vue'
+import type { PropType } from 'vue'
 import type { Chat } from '@/types/chat'
 import ChatItem from '@/components/ChatItem.vue'
-import SkeletonLoad from './Helpers/SkeletonLoad.vue'
+import SkeletonLoad from '@/components/helpers/SkeletonLoad.vue'
 
-const props = defineProps({
+defineProps({
     chats: {
         type: Object as PropType<Chat[]>,
         required: true
@@ -27,30 +27,24 @@ const props = defineProps({
     loading: Boolean
 })
 
-watch(
-    () => props,
-    () => {
-        console.log('watch', props.selected)
-    })
-
 const emits = defineEmits<{
     (e: 'select', chatId: string): void
 }>()
 
-const selectChat = (chatId: string) => emits('select', chatId)
+const select = (chatId: string) => emits('select', chatId)
 </script>
   
 <style>
 .list-wrap {
-    padding: .5em;
+    padding: 0 .5em;
 }
 
-.chat-item {
-    margin: .5em 0;
+.item {
+    margin: .5em 0 0 0;
 }
 
 .loading-wrap>div {
     height: 60px;
-    margin: 0 0 5px 0;
+    margin: 0 0 .5em 0;
 }
 </style>

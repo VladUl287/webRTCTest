@@ -1,7 +1,7 @@
 <template>
-    <div v-if="message" class="message-item" :class="{ 'right': proper }">
+    <div v-if="message" class="message-item" :class="{ 'right': right }">
         <p>{{ message.content }}</p>
-        <p class="message-date">{{ message.date }}</p>
+        <p class="message-date">{{ getTime(message.date) }}</p>
     </div>
 </template>
   
@@ -14,29 +14,38 @@ defineProps({
         type: Object as PropType<Message>,
         required: true
     },
-    proper: Boolean
+    right: Boolean
 })
+
+const formatOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' }
+const timeFormat = new Intl.DateTimeFormat('ru', formatOptions)
+
+const getTime = (dateString: string) => dateString && timeFormat.format(new Date(dateString))
 </script>
   
 <style>
 .message-item {
-    max-width: 70%;
+    max-width: 60%;
+    min-width: 15%;
     padding: .5em 1em;
     border-radius: 1em;
     width: fit-content;
-    background-color: rgba(137, 43, 226, 0.322);
+    background-color: var(--vt-c-indigo);
 }
 
 .message-item p {
     margin: 0;
+    word-break: break-all;
 }
 
 .message-item .message-date {
     font-size: .5em;
+    user-select: none;
+    text-align: right;
 }
 
-.message-item.right {
+.right {
     margin-left: auto;
-    background-color: rgb(124, 14, 14);
+    background-color: var(--color-main);
 }
 </style>
