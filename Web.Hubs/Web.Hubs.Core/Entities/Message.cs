@@ -12,8 +12,6 @@ public sealed class Message
 
     public required Guid ChatId { get; init; }
 
-    public MessageType Type { get; init; }
-
     public DateTime Date { get; init; } = DateTime.UtcNow;
 
     public bool Edit { get; set; }

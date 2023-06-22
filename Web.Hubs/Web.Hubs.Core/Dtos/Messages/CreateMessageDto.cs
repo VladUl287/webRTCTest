@@ -7,6 +7,4 @@ public sealed class CreateMessageDto
     public required Guid ChatId { get; init; }
 
     public required string Content { get; init; }
-
-    public required MessageType Type { get; init; }
 }
