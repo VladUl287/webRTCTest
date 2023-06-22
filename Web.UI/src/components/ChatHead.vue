@@ -6,8 +6,10 @@
         <section>
             <p class="chat-name">{{ chat.name }}</p>
         </section>
-        <section>
-            <button @click="emits('startCall')">start call</button>
+        <section class="chat-actions">
+            <button @click="emits('startCall')" class="chat-action">
+                <span class="material-symbols-outlined">call</span>
+            </button>
         </section>
     </div>
     <div v-else>
@@ -59,5 +61,19 @@ const imgError = (event: Event) => {
     border-radius: 50%;
     width: 100%;
     height: 100%;
+}
+
+.chat-actions {
+    margin-left: auto;
+}
+
+.chat-action {
+    display: flex;
+    padding: .5em;
+    cursor: pointer;
+    border-radius: 50%;
+    background-color: transparent;
+    color: var(--color-placeholder);
+    border: 1px solid var(--color-border-dark);
 }
 </style>

@@ -7,12 +7,20 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
-import { useHubsStore } from './stores/hubs'
+import { useAuthStore } from './stores/auth'
+import HubClient from './hubs/chat'
 
 onMounted(async () => {
-  // const chatHubStore = useHubsStore()
+  const authStore = useAuthStore()
+  const user = await authStore.getUser()
+  const access_token = user?.access_token
 
-  // chatHubStore.connect();
+  if (!access_token) {
+    return authStore.login()
+  }
+
+  HubClient.build(access_token)
+  HubClient.Instance?.connect()
 })
 </script>
 

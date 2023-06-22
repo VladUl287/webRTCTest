@@ -4,17 +4,17 @@
       <SearchField v-model="active" :items="items" :loading="searching" @input="input" @select="itemSelect"
         @focusin="focusin" />
 
-      <ChatsList v-if="!active" :chats="chatsStore.chats" :loading="chatsLoading" :selected="chatIdentity"
+      <ChatsList v-if="!active" :chats="chatsStore.chats" :selected="chatId" :loading="chatsLoading"
         @select="chatSelect" />
     </div>
-    <div class="chat-content" v-if="chatIdentity">
-      <ChatHead :chat="chat" @start-call="startCall"/>
+    <div class="chat-content" v-if="chatId">
+      <ChatHead :chat="chat" @start-call="startCall" />
 
       <section class="chat-messages">
         <div class="chat-notification">
           <p>Call #1</p>
           <div class="notify-controls">
-            <button class="success">
+            <button class="success" @click="joinCall">
               <span class="material-symbols-outlined">call</span>
             </button>
             <button class="danger">
@@ -23,13 +23,15 @@
           </div>
         </div>
 
-        <MessagesList v-if="user" :messages="messagesStore.messages" :user="user" :loading="messagesLoading" />
+        <MessagesList v-if="user" :messages="messagesStore.messages" :userId="user.profile.sub"
+          :loading="messagesLoading" />
       </section>
 
 
       <MessageNew :disabled="false" @send="sendMessage" />
     </div>
   </section>
+  <CallModal v-model="call" />
 </template>
 
 <script setup lang="ts">
@@ -39,6 +41,7 @@ import ChatHead from '@/components/ChatHead.vue'
 import ChatsList from '@/components/ChatsList.vue'
 import SearchField from '@/components/SearchField.vue'
 import MessagesList from '@/components/MessagesList.vue'
+import CallModal from '@/components/CallModal.vue'
 import MessageNew from '@/components/MessageNew.vue'
 import { useMessagesStore } from '@/stores/messages'
 import { useHubsStore } from '@/stores/hubs'
@@ -48,11 +51,17 @@ import { getUsers } from '@/http/users'
 import type { User } from 'oidc-client'
 import type { Chat } from '@/types/chat'
 import type { SearchItem } from '@/types/components'
-import { useCallsStore } from '@/stores/call'
+import peer from '@/peer'
+import chatHub from '@/hubs/chat'
 
-const chat = ref<Chat | undefined>()
+// const user = await useAuthStore().getUser()
+
+// const access_token = user?.access_token
+
+const chat = ref<Chat>()
 const user = ref<User | null>()
-const chatIdentity = ref<string>()
+
+const chatId = ref<string>()
 const chatsLoading = ref<boolean>()
 const searching = ref<boolean>()
 const messagesLoading = ref<boolean>()
@@ -64,6 +73,7 @@ const chatsStore = useChatsStore()
 const messagesStore = useMessagesStore()
 
 const active = ref<boolean>()
+const call = ref<boolean>(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -78,8 +88,8 @@ onMounted(() => {
 
   getMessages()
 
-  if (chatIdentity.value) {
-    chatsStore.getChat(chatIdentity.value)
+  if (chatId.value) {
+    chatsStore.getChat(chatId.value)
       .then(c => chat.value = c)
   }
 })
@@ -87,7 +97,7 @@ onMounted(() => {
 const focusin = () => active.value = true
 
 const setChatId = () => {
-  chatIdentity.value = route.query.id as string
+  chatId.value = route.query.id as string
 }
 
 watch(
@@ -97,16 +107,16 @@ watch(
     getMessages()
     updateChat()
 
-    if (chatIdentity.value) {
-      chatsStore.getChat(chatIdentity.value)
+    if (chatId.value) {
+      chatsStore.getChat(chatId.value)
         .then(c => chat.value = c)
     }
   }
 )
 
 const updateChat = () => {
-  if (chatIdentity.value) {
-    hubsStore.connection.send('updateUserChat', { chatId: chatIdentity.value, lastRead: new Date() })
+  if (chatId.value) {
+    hubsStore.connection.send('updateUserChat', { chatId: chatId.value, lastRead: new Date() })
   }
 }
 
@@ -122,11 +132,11 @@ const getChats = async () => {
 
 const getMessages = async () => {
   try {
-    if (!chatIdentity.value) return
+    if (!chatId.value) return
 
     messagesLoading.value = true
 
-    await messagesStore.getMessages(chatIdentity.value)
+    await messagesStore.getMessages(chatId.value)
   } finally {
     messagesLoading.value = false
   }
@@ -153,40 +163,46 @@ const input = async (value: string) => {
   }
 }
 
-//calls
+const startCall = async () => {
+  call.value = true
 
-const callstore = useCallsStore()
-const test = async () => {
-  try {
+  // hubsStore.connection.send('startCall', { chatId: chatIdentity.value, peerUserId: 'ed7594b7-6998-4d82-a552-4a09c2916307' })
 
-    await callstore.connection.start()
-  } catch (error) {
-    console.log(error);
-  }
+  // sendMessage('starting call')
 }
 
-const startCall = () => {
-  callstore.connection.send('startCall', { chatId: chatIdentity.value, peerUserId: '06427427-b6ad-4dca-b43f-92bc5c9b0b68' })
-}
-
-callstore.connection.on('startingCall', () => {
-  hubsStore.connection.send('sendMessage', { chatId: chatIdentity.value, content: 'starting call' })
-})
-
-test()
-//
-
-// hubsStore.connection.start()
+hubsStore.connection.start()
 
 const sendMessage = (content: string) => {
-  if (chatIdentity.value) {
-    hubsStore.connection.send('sendMessage', { chatId: chatIdentity.value, content })
+  if (chatId.value) {
+    hubsStore.connection.send('sendMessage', { chatId: chatId.value, content })
   }
 }
+
+const joinCall = () => {
+  return hubsStore.connection.send('joinCall', {
+    chatId: chatId.value,
+    peerUserId: 'ed7594b7-6998-4d82-a552-4a09c2916307'
+  })
+}
+
+hubsStore.connection.on('StartingCall', async (chatId: any) => {
+  console.log(chatId);
+})
+
+hubsStore.connection.on('JoinedCall', async (peerId: any) => {
+  const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
+
+  peer.call(peerId, camera_stream)
+})
+
+hubsStore.connection.on('LeaveCall', async (peerId: any) => {
+  console.log(peerId);
+})
 
 hubsStore.connection.on('receivedMessage', async (message: any) => {
   messagesStore.messages.push(message)
-  await chatsStore.getChat(chatIdentity.value!)
+  await chatsStore.getChat(chatId.value!)
 })
 
 hubsStore.connection.on('deletedMessage', async (message: any) => {

@@ -5,7 +5,7 @@
         </div>
         <div v-else class="messages-list" ref="list">
             <MessageItem v-for="message of messagesReverse" :key="message.id" :message="message"
-                @click="action(message, MessageAction.Delete)" :right="user.profile.sub == message.userId" />
+                @click="action(message, MessageAction.Delete)" :right="userId == message.userId" />
         </div>
     </section>
 </template>
@@ -22,10 +22,7 @@ const props = defineProps({
         type: Object as PropType<Message[]>,
         required: true
     },
-    user: {
-        type: Object as PropType<User>,
-        required: true
-    },
+    userId: String,
     loading: Boolean
 })
 
