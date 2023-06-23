@@ -1,5 +1,3 @@
-using Web.Hubs.Core.Enums;
-
 namespace Web.Hubs.Core.Dtos.Messages;
 
 public sealed class CreateMessageDto

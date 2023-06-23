@@ -1,16 +1,17 @@
-﻿using StackExchange.Redis;
+using StackExchange.Redis;
 using Web.Hubs.Core.Services;
 
 namespace Web.Hubs.Infrastructure.Services;
 
-public sealed class ConnectionService : IConnectionService
+public sealed class Storage : IStorage<long>
 {
     private readonly IDatabaseAsync database;
     private readonly ConnectionMultiplexer redis;
 
-    public ConnectionService(ConnectionMultiplexer redis)
+    public Storage(ConnectionMultiplexer redis)
     {
         database = redis.GetDatabase();
+        
         this.redis = redis;
     }
 

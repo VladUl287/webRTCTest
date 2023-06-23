@@ -26,7 +26,7 @@ internal static class StartupServices
                         options.EnableRetryOnFailure(EnableRetryOnFailure);
                     });
                 // options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-                options.LogTo(Console.WriteLine);
+                options.LogTo(Console.WriteLine, LogLevel.Information);
             },
             ServiceLifetime.Scoped
         );
@@ -89,12 +89,13 @@ internal static class StartupServices
     public static void AddServices(this IServiceCollection services)
     {
         // services.AddSingleton<ConnectionMultiplexer>(factory => ConnectionMultiplexer.Connect("localhost:6379,allowAdmin=true"));
+        // services.AddSingleton<IStorage<long>, Storage>();
 
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<ICallService, CallService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IUserChatService, UserChatService>();
-        // services.AddSingleton<IConnectionService, ConnectionService>();
-        services.AddSingleton<IConnectionService, ConnectionServiceDict>();
+        
+        services.AddSingleton<IStorage<long>, StorageDictionary>();
     }
 }

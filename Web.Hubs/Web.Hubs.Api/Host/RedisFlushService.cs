@@ -4,9 +4,9 @@ namespace Web.Hubs.Api.Host;
 
 public sealed class RedisFlushService : IHostedService
 {
-    private readonly IConnectionService connectionService;
+    private readonly IStorage<long> connectionService;
 
-    public RedisFlushService(IConnectionService connectionService)
+    public RedisFlushService(IStorage<long> connectionService)
     {
         this.connectionService = connectionService;
     }

@@ -22,107 +22,67 @@ public sealed class ChatService : IChatService
         this.logger = logger;
     }
 
-    public async Task<OneOf<Guid, Error<string>>> Create(CreateChatDto chatDto)
+    public async Task<OneOf<Guid, Error<string>>> Create(CreateChatDto chat)
     {
         try
         {
-            var monologResult = await ValidateMonolog(chatDto);
-            if (monologResult.IsT0)
+            if (chat is null)
             {
-                return new Error<string>(monologResult.AsT0);
+                return new Error<string>("");
             }
 
-            var dialogResult = await ValidateDialog(chatDto);
-            if (dialogResult.IsT0)
+            if (chat is { Type: ChatType.Monolog })
             {
-                return new Error<string>(dialogResult.AsT0);
+                if (chat is { Users.Length: not 1 })
+                {
+                    return new Error<string>("");
+                }
+
+                var user = chat.Users[0];
+
+                if (user is null || user.Id != chat.UserId)
+                {
+                    return new Error<string>("");
+                }
+
+                var chatId = await getMonologId(unitOfWork.Context, user.Id);
+
+                if (chatId != default)
+                {
+                    return chatId;
+                }
+            }
+            else if (chat is { Type: ChatType.Dialog })
+            {
+                if (chat.Users is { Length: not 2 })
+                {
+                    return new Error<string>("");
+                }
+
+                var firstCollocutor = chat.Users[0];
+                var secondCollocutor = chat.Users[1];
+
+                if (firstCollocutor is null || secondCollocutor is null)
+                {
+                    return new Error<string>("");
+                }
+
+                var chatId = await getDialogId(unitOfWork.Context, firstCollocutor.Id, secondCollocutor.Id);
+
+                if (chatId != default)
+                {
+                    return chatId;
+                }
             }
 
-            if (dialogResult.IsT1)
-            {
-                return dialogResult.AsT1;
-            }
-
-            return await CreateChat(chatDto);
+            return await CreateChat(chat);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.Message, chatDto);
+            logger.LogError(ex.Message, chat);
 
             return new Error<string>("");
         }
-    }
-
-    #region 
-
-    private static readonly Func<DatabaseContext, long, ChatType, Task<bool>> chatExists =
-        EF.CompileAsyncQuery((DatabaseContext context, long userId, ChatType type) =>
-            context.Chats.Any(chat => chat.UserId == userId && chat.Type == type)
-        );
-
-    private async Task<OneOf<string, None>> ValidateMonolog(CreateChatDto chatDto)
-    {
-        if (chatDto is { Type: ChatType.Monolog })
-        {
-            if (chatDto is { Users.Length: not 1 })
-            {
-                return "";
-            }
-
-            var user = chatDto.Users[0];
-            if (user.Id != chatDto.UserId)
-            {
-                return "";
-            }
-
-            var exists = await chatExists(unitOfWork.Context, chatDto.UserId, chatDto.Type);
-            if (exists)
-            {
-                return "";
-            }
-        }
-
-        return new None();
-    }
-
-    private async Task<OneOf<string, Guid, None>> ValidateDialog(CreateChatDto chatDto)
-    {
-        if (chatDto is { Type: ChatType.Dialog })
-        {
-            if (chatDto.Users is { Length: not 2 })
-            {
-                return "";
-            }
-
-            if (!chatDto.Users.Any(user => user.Id == chatDto.UserId))
-            {
-                return "";
-            }
-
-            var secondUser = chatDto.Users.FirstOrDefault(u => u.Id != chatDto.UserId);
-            if (secondUser is null)
-            {
-                return "";
-            }
-
-            var chats = await unitOfWork.ChatsUsers
-                .AsNoTracking()
-                .Where(cu => cu.UserId == chatDto.UserId && cu.Chat!.Type == ChatType.Dialog)
-                .Select(cu => cu.ChatId)
-                .ToListAsync();
-
-            var chatId = await unitOfWork.ChatsUsers
-                .Where(cu => cu.UserId == secondUser.Id && chats.Contains(cu.ChatId))
-                .Select(cu => cu.ChatId)
-                .FirstOrDefaultAsync();
-
-            if (chatId != default)
-            {
-                return chatId;
-            }
-        }
-
-        return new None();
     }
 
     private async Task<Guid> CreateChat(CreateChatDto create)
@@ -143,6 +103,29 @@ public sealed class ChatService : IChatService
 
         return chat.Id;
     }
+
+    #region
+
+    private static readonly Func<DatabaseContext, long, Task<Guid>> getMonologId =
+        EF.CompileAsyncQuery((DatabaseContext context, long userId) =>
+            context.ChatsUsers
+                .Where(cu => cu.UserId == userId && cu.Chat!.Type == ChatType.Monolog)
+                .Select(cu => cu.ChatId)
+                .FirstOrDefault()
+        );
+
+    private static readonly Func<DatabaseContext, long, long, Task<Guid>> getDialogId =
+        EF.CompileAsyncQuery((DatabaseContext context, long firstCollocutor, long secondCollocutor) =>
+            context.ChatsUsers
+                .Where(cu => cu.Chat!.Type == ChatType.Dialog && cu.UserId == firstCollocutor)
+                .Select(cu => cu.ChatId)
+                      .Intersect(
+                        context.ChatsUsers
+                            .Where(cu => cu.Chat!.Type == ChatType.Dialog && cu.UserId == secondCollocutor)
+                            .Select(cu => cu.ChatId)
+                        )
+                .FirstOrDefault()
+        );
 
     #endregion
 }

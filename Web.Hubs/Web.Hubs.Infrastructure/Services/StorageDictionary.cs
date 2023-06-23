@@ -2,7 +2,7 @@ using Web.Hubs.Core.Services;
 
 namespace Web.Hubs.Infrastructure.Services;
 
-public sealed class ConnectionServiceDict : IConnectionService
+public sealed class StorageDictionary : IStorage<long>
 {
     private static readonly Dictionary<long, HashSet<string>> connections = new();
 

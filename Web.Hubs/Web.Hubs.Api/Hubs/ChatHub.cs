@@ -12,85 +12,69 @@ namespace Web.Hubs.Api.Hubs;
 [Authorize]
 public sealed class ChatHub : Hub
 {
-    private readonly IUserChatService userChatService;
+    private readonly IStorage<long> userConnections;
+    private readonly ICallService callService;
     private readonly IChatPresenter chatPresenter;
     private readonly IMessageService messageService;
-    private readonly IConnectionService connectionStore;
-    private readonly ICallService callService;
+    private readonly IUserChatService userChatService;
 
-    public ChatHub(IChatPresenter chatPresenter, IMessageService messageService, IConnectionService connectionStore, IUserChatService userChatService, ICallService callService)
+    public ChatHub(
+        IStorage<long> storage,
+        ICallService callService,
+        IChatPresenter chatPresenter,
+        IMessageService messageService,
+        IUserChatService userChatService)
     {
+        this.userConnections = storage;
+        this.callService = callService;
         this.chatPresenter = chatPresenter;
         this.messageService = messageService;
-        this.connectionStore = connectionStore;
         this.userChatService = userChatService;
-        this.callService = callService;
     }
 
-    public async Task StartCall(StartCall call)
+    public async Task Calling(StartCall call)
     {
         var userId = Context.User.GetUserId<long>();
 
-        var users = await chatPresenter.GetUsers(call.ChatId);
-        if (users is null or { Length: < 2 })
+        var callExists = await callService.HasKey(call.ChatId);
+        if (callExists)
         {
             return;
         }
 
-        // var exists = await callService.UserExists(userId);
-        // if (exists)
-        // {
-        //     return;
-        // }
+        var userInCall = await callService.HasValue(userId);
+        if (userInCall)
+        {
+            return;
+        }
 
-        // await callService.AddUser(call.ChatId, userId);
+        await callService.Add(call.ChatId, userId);
 
-        var connections = await connectionStore.Get(users);
-
-        await Clients.Clients(connections)
-            .SendAsync("StartingCall", call.ChatId);
+        await NotifyUsers(call.ChatId, call.ChatId, nameof(Calling));
     }
 
     public async Task JoinCall(JoinCall join)
     {
         var userId = Context.User.GetUserId<long>();
 
-        // var exists = await callService.UserExists(userId);
-        // if (exists)
-        // {
-        //     return;
-        // }
+        var userInCall = await callService.HasValue(userId);
+        if (userInCall)
+        {
+            return;
+        }
 
-        // await callService.AddUser(join.ChatId, userId);
+        await callService.Add(join.ChatId, userId);
 
-        await NotifyUsers(join.ChatId, join.PeerUserId, "JoinedCall");
+        await NotifyUsers(join.ChatId, join.PeerUserId, nameof(JoinCall));
     }
 
     public async Task LeaveCall(LeaveCall leave)
     {
         var userId = Context.User.GetUserId<long>();
 
-        var exists = await callService.UserExists(leave.ChatId, userId);
+        await callService.Delete(leave.ChatId, userId);
 
-        if (exists)
-        {
-            await callService.RemoveUser(leave.ChatId, userId);
-
-            await NotifyUsers(leave.ChatId, Guid.Empty, "LeaveCall");
-        }
-    }
-
-    private async Task NotifyUsers(Guid chatId, Guid peerId, string method)
-    {
-        var users = await chatPresenter.GetUsers(chatId);
-
-        if (users?.Length > 0)
-        {
-            var connections = await connectionStore.Get(users);
-
-            await Clients.Clients(connections)
-                .SendAsync(method, peerId);
-        }
+        await NotifyUsers<object>(leave.ChatId, null, nameof(LeaveCall));
     }
 
     public async Task SendMessage(CreateMessageDto message)
@@ -101,54 +85,13 @@ public sealed class ChatHub : Hub
 
         if (result.IsT1)
         {
-            await Clients.Client(Context.ConnectionId).SendAsync("SendingError");
-
             return;
         }
 
-        await NotifyUsers(result.AsT0, "ReceivedMessage");
+        await NotifyUsers(result.AsT0.ChatId, result.AsT0, nameof(SendMessage));
     }
 
-    public async Task UpdateMessage(UpdateMessageDto update)
-    {
-        var userId = Context.User.GetUserId<long>();
-
-        var result = await messageService.Update(update, userId);
-        if (result.IsT1)
-        {
-            return;
-        }
-
-        await NotifyUsers(result.AsT0, "UpdatedMessage");
-    }
-
-    public async Task DeleteMessage(Guid messageId)
-    {
-        var userId = Context.User.GetUserId<long>();
-
-        var result = await messageService.Delete(messageId, userId);
-        if (result.IsT1)
-        {
-            return;
-        }
-
-        await NotifyUsers(result.AsT0, "DeletedMessage");
-    }
-
-    public async Task ChatCreated(Guid chatId)
-    {
-        var users = await chatPresenter.GetUsers(chatId);
-
-        if (users?.Length > 0)
-        {
-            var connections = await connectionStore.Get(users);
-
-            await Clients.Clients(connections)
-                .SendAsync("ChatCreated", chatId);
-        }
-    }
-
-    public async Task UpdateUserChat(UpdateChatUserDto userChat)
+    public async Task UpdateChat(UpdateChatDto userChat)
     {
         var userId = Context.User.GetUserId<long>();
 
@@ -159,24 +102,18 @@ public sealed class ChatHub : Hub
             return;
         }
 
-        var users = await chatPresenter.GetUsers(userChat.ChatId);
-
-        if (users?.Length > 0)
-        {
-            var connections = await connectionStore.Get(users);
-
-            await Clients.Clients(connections)
-                .SendAsync("UpdatedChat", userChat.ChatId);
-        }
+        await NotifyUsers(userChat.ChatId, userChat.ChatId, nameof(UpdateChat));
     }
 
-    private async Task NotifyUsers(MessageDto message, string method)
+    public Task ChatCreated(Guid chatId) => NotifyUsers(chatId, chatId, nameof(ChatCreated));
+
+    private async Task NotifyUsers<TMessage>(Guid chatId, TMessage? message, string method)
     {
-        var users = await chatPresenter.GetUsers(message.ChatId);
+        var users = await chatPresenter.GetUsers(chatId);
 
         if (users?.Length > 0)
         {
-            var connections = await connectionStore.Get(users);
+            var connections = await userConnections.Get(users);
 
             await Clients.Clients(connections)
                 .SendAsync(method, message);
@@ -187,7 +124,7 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        await connectionStore.Add(userId, Context.ConnectionId);
+        await userConnections.Add(userId, Context.ConnectionId);
 
         await base.OnConnectedAsync();
     }
@@ -196,7 +133,7 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        await connectionStore.Delete(userId, Context.ConnectionId);
+        await userConnections.Delete(userId, Context.ConnectionId);
 
         await base.OnDisconnectedAsync(exception);
     }

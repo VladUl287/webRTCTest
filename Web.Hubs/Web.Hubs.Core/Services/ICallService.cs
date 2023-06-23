@@ -2,11 +2,13 @@ namespace Web.Hubs.Core.Services;
 
 public interface ICallService
 {
-    Task AddUser(Guid callId, long userId);
+    Task Add(Guid callId, long value);
 
-    Task<bool> UserExists(long userId);
+    Task<bool> Has(Guid callId, long value);
 
-    Task<bool> UserExists(Guid callId, long userId);
+    Task<bool> HasKey(Guid callId);
 
-    Task RemoveUser(Guid callId, long userId);
+    Task<bool> HasValue(long value);
+
+    Task Delete(Guid callId, long value);
 }

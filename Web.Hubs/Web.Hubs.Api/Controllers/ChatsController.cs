@@ -10,7 +10,7 @@ using Web.Hubs.Core.Services;
 
 namespace Web.Hubs.Api.Controllers;
 
-[Authorize]
+// [Authorize]
 [ApiController]
 [Route("api/[controller]/[action]")]
 public sealed class ChatsController : ControllerBase
@@ -51,7 +51,7 @@ public sealed class ChatsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<ChatDto>> GetChats(PageFilter? filter = null)
+    public async Task<IEnumerable<ChatDto>> GetChats([FromQuery] PageFilter? filter = null)
     {
         var userId = User.GetUserId<long>();
 

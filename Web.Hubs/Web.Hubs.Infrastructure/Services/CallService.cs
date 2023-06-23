@@ -1,42 +1,39 @@
 using Web.Hubs.Core.Services;
+using Web.Hubs.Infrastructure.Database;
 
 namespace Web.Hubs.Infrastructure.Services;
 
 public sealed class CallService : ICallService
 {
-    private static readonly Dictionary<Guid, HashSet<long>> calls = new();
+    private readonly IUnitOfWork unitOfWork;
 
-    public Task AddUser(Guid callId, long value)
+    public CallService(IUnitOfWork unitOfWork)
     {
-        if (calls.TryGetValue(callId, out var values))
-        {
-            values.Add(value);
-        }
-        else
-        {
-            calls.Add(callId, new() { value });
-        }
-
-        return Task.CompletedTask;
+        this.unitOfWork = unitOfWork;
     }
 
-    public Task<bool> UserExists(long userId)
+    public Task Add(Guid callId, long value)
     {
         throw new NotImplementedException();
     }
 
-    public Task<bool> UserExists(Guid callId, long userId)
+    public Task<bool> HasValue(long value)
     {
         throw new NotImplementedException();
     }
 
-    public Task RemoveUser(Guid callId, long userId)
+    public Task<bool> Has(Guid callId, long value)
     {
         throw new NotImplementedException();
     }
 
-    public Task Flush()
+    public Task<bool> HasKey(Guid callId)
     {
-        return Task.CompletedTask;
+        throw new NotImplementedException();
+    }
+
+    public Task Delete(Guid callId, long value)
+    {
+        throw new NotImplementedException();
     }
 }
