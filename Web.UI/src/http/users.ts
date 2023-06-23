@@ -7,8 +7,7 @@ const instance = axios.create({
 })
 
 instance.interceptors.request.use(async (config: any) => {
-    const store = useAuthStore()
-    const user = await store.getUser()
+    const user = await useAuthStore().getUser()
 
     config.headers.Authorization = 'Bearer ' + user?.access_token;
 
@@ -22,7 +21,6 @@ export const getUsers = async (name: string): Promise<UserDto[]> => {
         return result.data
     } catch (error) {
         console.log(error)
-
         return []
     }
 }

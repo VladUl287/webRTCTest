@@ -5,16 +5,15 @@
         </div>
         <div v-else class="messages-list" ref="list">
             <MessageItem v-for="message of messagesReverse" :key="message.id" :message="message"
-                @click="action(message, MessageAction.Delete)" :right="userId == message.userId" />
+                :right="userId == message.userId" />
         </div>
     </section>
 </template>
   
 <script setup lang="ts">
 import { computed, onUpdated, ref, type PropType } from 'vue'
-import { MessageAction, type Message } from '@/types/chat'
+import type { MessageAction, Message } from '@/types/chat'
 import MessageItem from '@/components/MessageItem.vue'
-import type { User } from 'oidc-client'
 import LoadingRing from '@/components/helpers/LoadingRing.vue'
 
 const props = defineProps({
@@ -26,7 +25,7 @@ const props = defineProps({
     loading: Boolean
 })
 
-const emit = defineEmits<{
+defineEmits<{
     (e: 'action', content: { message: Message, messageAction: MessageAction }): void
 }>()
 
@@ -42,13 +41,6 @@ const scrollToBottom = () => {
     if (list.value) {
         list.value.scrollTop = -1
     }
-}
-
-const action = (message: Message, messageAction: MessageAction) => {
-    // const newMessage = { ...message, content: 'new-content' }
-    // emit('action', { message: newMessage, messageAction: MessageAction.Update })
-
-    // emit('action', { message, messageAction })
 }
 </script>
   

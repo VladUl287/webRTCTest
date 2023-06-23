@@ -7,12 +7,12 @@ const instance = axios.create({
 });
 
 instance.interceptors.request.use(async (config: any) => {
-    const store = useAuthStore()
-    const user = await store.getUser()
+    const { getUser } = useAuthStore()
+    const user = await getUser()
 
     config.headers.Authorization = 'Bearer ' + user?.access_token;
 
     return config;
-});
+})
 
 export default instance;
