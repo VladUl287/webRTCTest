@@ -3,7 +3,7 @@ import Peer from "peerjs";
 const peer = new Peer('', {
     host: '/',
     port: 9000,
-    path: '/chat'
+    path: '/myapp'
 })
 
 export default peer

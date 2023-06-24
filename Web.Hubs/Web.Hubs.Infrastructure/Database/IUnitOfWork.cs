@@ -9,7 +9,11 @@ public interface IUnitOfWork
 
     DbSet<Chat> Chats { get; }
 
+    DbSet<Call> Calls { get; }
+
     DbSet<Message> Messages { get; }
+
+    DbSet<CallUser> CallsUsers { get; }
 
     DbSet<ChatUser> ChatsUsers { get; }
 

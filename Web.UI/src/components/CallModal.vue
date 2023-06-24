@@ -1,7 +1,7 @@
 <template>
     <dialog ref="dialog">
         <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit!</p>
-        <section id="videos"></section>
+        <!-- <section id="videos"></section> -->
         <button @click="ok">ok</button>
     </dialog>
 </template>
@@ -20,25 +20,25 @@ const emits = defineEmits<{
     (e: 'update:modelValue', value: Boolean): void
 }>()
 
-peer.on('call', async (call) => {
-    const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
+// peer.on('call', async (call) => {
+//     const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
-    call.answer(camera_stream)
-    call.on('stream', userVideoStream => {
-        const videos: HTMLElement | null = document.querySelector('#videos')
+//     call.answer(camera_stream)
+//     call.on('stream', userVideoStream => {
+//         const videos: HTMLElement | null = document.querySelector('#videos')
 
-        if (videos) {
-            try {
-                const video = document.createElement('video')
-                video.srcObject = userVideoStream
+//         if (videos) {
+//             try {
+//                 const video = document.createElement('video')
+//                 video.srcObject = userVideoStream
 
-                videos.appendChild(video)
-            } catch (error) {
-                console.log(error);
-            }
-        }
-    })
-})
+//                 videos.appendChild(video)
+//             } catch (error) {
+//                 console.log(error);
+//             }
+//         }
+//     })
+// })
 
 watch(
     () => props.modelValue,
@@ -50,7 +50,7 @@ watch(
         dialog.value?.close()
     }
 )
-181574114
+
 const ok = () => emits('update:modelValue', false)
 
 const openModal = async () => {
@@ -58,18 +58,19 @@ const openModal = async () => {
 
     if (videos) {
         try {
-            const camera_stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+            const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
 
-            const audio = new Audio()
-            audio.srcObject = camera_stream
-            await audio.play()
+            // const audio = new Audio()
+            // audio.srcObject = camera_stream
+            // await audio.play()
 
-            // const video = document.createElement('video')
-            // video.srcObject = camera_stream
-            // videos.id = 'from'
+            const video = document.createElement('video')
+            video.srcObject = camera_stream
+            videos.id = 'from'
 
-            // videos.appendChild(video)
-            videos.appendChild(audio)
+            videos.appendChild(video)
+            video.play()
+            // videos.appendChild(audio)
         } catch (error) {
             console.log(error);
         }

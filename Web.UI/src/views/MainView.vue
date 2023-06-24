@@ -6,9 +6,15 @@
 
       <ChatsList v-if="!searchActive" :chats="chatsStore.chats" :selected="chatId" :loading="chatsLoading"
         @select="chatSelect" />
+
+      <button @click="joinCall">join call</button>
     </div>
     <div class="chat-content" v-if="chatId">
-      <ChatHead :chat="chat" @start-call="startCall" />
+      <section id="videos">
+        <video autoplay id="from"></video>
+        <video autoplay id="to"></video>
+      </section>
+      <!-- <ChatHead :chat="chat" @start-call="startCall" />
 
       <section class="chat-messages">
         <ChatNotification @success="joinCall" />
@@ -17,7 +23,7 @@
           :loading="messagesLoading" />
       </section>
 
-      <MessageNew :disabled="false" @send="sendMessage" />
+      <MessageNew :disabled="false" @send="sendMessage" /> -->
     </div>
   </section>
   <CallModal v-model="call" />
@@ -64,6 +70,9 @@ const router = useRouter()
 
 onMounted(() => {
   initialize()
+
+  authStore.getUser()
+    .then(u => user.value = u)
 })
 
 watch(
@@ -140,9 +149,9 @@ const input = async (value: string) => {
 const startCall = async () => {
   call.value = true
 
-  // chatConnection.send('startCall', { chatId: chatIdentity.value, peerUserId: 'ed7594b7-6998-4d82-a552-4a09c2916307' })
+  chatConnection.send('Calling', { chatId: chatId.value, peerUserId: 'ed7594b7-6998-4d82-a552-4a09c2916307' })
 
-  // sendMessage('starting call')
+  sendMessage('starting call')
 }
 
 const sendMessage = (content: string) => {
@@ -152,18 +161,57 @@ const sendMessage = (content: string) => {
 }
 
 const joinCall = () => {
+  console.log('start join call', {
+    chatId: chatId.value,
+    peerUserId: peer.id
+  })
   return chatConnection.send('joinCall', {
     chatId: chatId.value,
-    peerUserId: 'ed7594b7-6998-4d82-a552-4a09c2916307'
+    peerUserId: peer.id
   })
 }
 
-chatConnection.on('StartingCall', async (chatId: any) => {
+peer.on('call', async (call) => {
+  console.log('call');
+
+  const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
+
+  call.answer(camera_stream)
+  call.on('stream', userVideoStream => {
+    const video: HTMLVideoElement | null = document.querySelector('#to')
+    if (video) {
+      video.srcObject = userVideoStream
+    }
+    // const videos: HTMLElement | null = document.querySelector('#videos')
+
+    // if (videos) {
+    //   try {
+    //     const video = document.createElement('video')
+    //     console.log('stream', userVideoStream)
+    //     video.srcObject = userVideoStream
+    //     video.width = 350
+    //     video.height = 150
+
+    //     videos.appendChild(video)
+    //     video.play()
+    //   } catch (error) {
+    //     console.log(error);
+    //   }
+    // }
+  })
+})
+
+chatConnection.on('Calling', async (chatId: any) => {
   console.log(chatId);
 })
 
-chatConnection.on('JoinedCall', async (peerId: any) => {
+chatConnection.on('JoinCall', async (peerId: any) => {
+
   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
+
+  const video: HTMLVideoElement | null = document.querySelector('#from')
+
+  video!.srcObject = camera_stream
 
   peer.call(peerId, camera_stream)
 })
@@ -231,6 +279,11 @@ const itemSelect = async (item: SearchItem) => {
 </script>
 
 <style scoped>
+video {
+  width: 350px;
+  height: 150px;
+}
+
 .chats-main {
   height: 100%;
   display: grid;
@@ -238,17 +291,17 @@ const itemSelect = async (item: SearchItem) => {
 }
 
 .chats-wrap {
-  width: 500px;
+  width: 400px;
   max-width: 600px;
   min-width: 400px;
   background-color: var(--color-background);
 }
 
 .chat-content {
-  display: grid;
+  /* display: grid;
   overflow-y: hidden;
   grid-template-rows: 1fr 12fr auto;
-  border-left: 1px solid var(--color-border-dark)
+  border-left: 1px solid var(--color-border-dark) */
 }
 
 .chat-messages {

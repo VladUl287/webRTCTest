@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Web.Hubs.Core.Entities;
 using Web.Hubs.Core.Services;
 using Web.Hubs.Infrastructure.Database;
 
@@ -12,9 +14,28 @@ public sealed class CallService : ICallService
         this.unitOfWork = unitOfWork;
     }
 
-    public Task Add(Guid callId, long value)
+    public async Task Add(Guid callId, long value)
     {
-        throw new NotImplementedException();
+        var call = await unitOfWork.Calls.FirstOrDefaultAsync(c => c.ChatId == callId);
+
+        if (call is null)
+        {
+            call = new Call
+            {
+                ChatId = callId
+            };
+
+            await unitOfWork.Calls.AddAsync(call);
+        }
+
+        var callUser = new CallUser
+        {
+            CallId = call.ChatId,
+            UserId = value
+        };
+
+        await unitOfWork.CallsUsers.AddAsync(callUser);
+        await unitOfWork.SaveChangesAsync();
     }
 
     public Task<bool> HasValue(long value)

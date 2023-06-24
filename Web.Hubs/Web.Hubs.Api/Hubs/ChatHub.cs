@@ -36,19 +36,19 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        var callExists = await callService.HasKey(call.ChatId);
-        if (callExists)
-        {
-            return;
-        }
+        // var callExists = await callService.HasKey(call.ChatId);
+        // if (callExists)
+        // {
+        //     return;
+        // }
 
-        var userInCall = await callService.HasValue(userId);
-        if (userInCall)
-        {
-            return;
-        }
+        // var userInCall = await callService.HasValue(userId);
+        // if (userInCall)
+        // {
+        //     return;
+        // }
 
-        await callService.Add(call.ChatId, userId);
+        // await callService.Add(call.ChatId, userId);
 
         await NotifyUsers(call.ChatId, call.ChatId, nameof(Calling));
     }
@@ -57,13 +57,13 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        var userInCall = await callService.HasValue(userId);
-        if (userInCall)
-        {
-            return;
-        }
+        // var userInCall = await callService.HasValue(userId);
+        // if (userInCall)
+        // {
+        //     return;
+        // }
 
-        await callService.Add(join.ChatId, userId);
+        // await callService.Add(join.ChatId, userId);
 
         await NotifyUsers(join.ChatId, join.PeerUserId, nameof(JoinCall));
     }
@@ -72,7 +72,7 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        await callService.Delete(leave.ChatId, userId);
+        // await callService.Delete(leave.ChatId, userId);
 
         await NotifyUsers<object>(leave.ChatId, null, nameof(LeaveCall));
     }

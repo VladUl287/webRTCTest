@@ -1,7 +1,7 @@
 <template>
     <div class="chat-item" :data-time="getTime(chat.message?.date)" :class="{ 'active': active }">
         <div class="img-wrap">
-            <img :src="chat.image" @error="(event: Event) => imgError(event)" alt="Chat image" />
+            <!-- <img :src="chat.image" @error="(event: Event) => imgError(event)" alt="Chat image" /> -->
         </div>
         <div class="chat-info">
             <p>{{ chat.name }}</p>
