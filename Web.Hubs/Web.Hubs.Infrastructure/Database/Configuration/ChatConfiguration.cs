@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Web.Hubs.Infrastructure.Database.Configuration;
 
-public sealed class DialogConfiguration : IEntityTypeConfiguration<Chat>
+public sealed class ChatConfiguration : IEntityTypeConfiguration<Chat>
 {
     public void Configure(EntityTypeBuilder<Chat> builder)
     {

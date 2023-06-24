@@ -10,7 +10,7 @@ using Web.Hubs.Core.Services;
 
 namespace Web.Hubs.Api.Controllers;
 
-// [Authorize]
+[Authorize]
 [ApiController]
 [Route("api/[controller]/[action]")]
 public sealed class ChatsController : ControllerBase

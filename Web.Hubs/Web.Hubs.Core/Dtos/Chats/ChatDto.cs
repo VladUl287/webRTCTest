@@ -8,7 +8,7 @@ public sealed class ChatDto
 
     public required string Name { get; init; }
 
-    public required string Image { get; init; }
+    public string Image { get; init; } = string.Empty;
 
     public MessageDto? Message { get; init; }
 

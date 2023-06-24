@@ -16,13 +16,14 @@ public sealed class CallService : ICallService
 
     public async Task Add(Guid callId, long value)
     {
-        var call = await unitOfWork.Calls.FirstOrDefaultAsync(c => c.ChatId == callId);
+        var call = await unitOfWork.Calls
+            .FirstOrDefaultAsync(c => c.Id == callId);
 
         if (call is null)
         {
-            call = new Call
+            call = new()
             {
-                ChatId = callId
+                Id = callId
             };
 
             await unitOfWork.Calls.AddAsync(call);
@@ -30,7 +31,7 @@ public sealed class CallService : ICallService
 
         var callUser = new CallUser
         {
-            CallId = call.ChatId,
+            CallId = call.Id,
             UserId = value
         };
 
@@ -40,21 +41,26 @@ public sealed class CallService : ICallService
 
     public Task<bool> HasValue(long value)
     {
-        throw new NotImplementedException();
+        return unitOfWork.CallsUsers
+            .AnyAsync(cu => cu.UserId == value);
     }
 
     public Task<bool> Has(Guid callId, long value)
     {
-        throw new NotImplementedException();
+        return unitOfWork.CallsUsers
+            .AnyAsync(cu => cu.CallId == callId && cu.UserId == value);
     }
 
     public Task<bool> HasKey(Guid callId)
     {
-        throw new NotImplementedException();
+        return unitOfWork.CallsUsers
+            .AnyAsync(cu => cu.CallId == callId);
     }
 
     public Task Delete(Guid callId, long value)
     {
-        throw new NotImplementedException();
+        return unitOfWork.CallsUsers
+            .Where(cu => cu.CallId == callId && cu.UserId == value)
+            .ExecuteDeleteAsync();
     }
 }

@@ -17,7 +17,7 @@ internal static class ProjectionExtensions
                 Name = chat.Name,
                 Image = chat.Image,
 
-                Message = chat.Messages
+                Message = chat.Messages!
                     .OrderByDescending(m => m.Date)
                     .Select(m => new MessageDto
                     {
@@ -30,7 +30,7 @@ internal static class ProjectionExtensions
                     })
                     .FirstOrDefault(),
 
-                Unread = chat.Messages
+                Unread = chat.Messages!
                     .Count(msg => msg.UserId != userId && msg.Date >= chat.ChatUsers!
                         .Where(ch => ch.UserId == userId)
                         .Select(m => m.LastRead)

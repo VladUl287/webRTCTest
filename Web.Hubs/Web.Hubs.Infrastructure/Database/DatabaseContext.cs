@@ -25,9 +25,11 @@ public sealed class DatabaseContext : DbContext, IUnitOfWork
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.ApplyConfiguration(new DialogConfiguration());
+        builder.ApplyConfiguration(new ChatConfiguration());
         builder.ApplyConfiguration(new MessageConfiguration());
         builder.ApplyConfiguration(new ChatUserConfiguration());
+        builder.ApplyConfiguration(new CallConfiguration());
+        builder.ApplyConfiguration(new CallUserConfiguration());
 
         base.OnModelCreating(builder);
     }
