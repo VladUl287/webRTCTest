@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, type PropType } from 'vue'
+import { ref, watch, onMounted, type PropType } from 'vue'
 import peer from '@/peer'
 
 const dialog = ref<HTMLDialogElement>()
@@ -20,25 +20,27 @@ const emits = defineEmits<{
     (e: 'update:modelValue', value: Boolean): void
 }>()
 
-// peer.on('call', async (call) => {
-//     const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
+onMounted(() => {
+    peer.on('call', async (call) => {
+        const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
-//     call.answer(camera_stream)
-//     call.on('stream', userVideoStream => {
-//         const videos: HTMLElement | null = document.querySelector('#videos')
+        call.answer(camera_stream)
+        call.on('stream', userVideoStream => {
+            const videos: HTMLElement | null = document.querySelector('#videos')
 
-//         if (videos) {
-//             try {
-//                 const video = document.createElement('video')
-//                 video.srcObject = userVideoStream
+            if (videos) {
+                try {
+                    const video = document.createElement('video')
+                    video.srcObject = userVideoStream
 
-//                 videos.appendChild(video)
-//             } catch (error) {
-//                 console.log(error);
-//             }
-//         }
-//     })
-// })
+                    videos.appendChild(video)
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        })
+    })
+})
 
 watch(
     () => props.modelValue,
@@ -58,19 +60,14 @@ const openModal = async () => {
 
     if (videos) {
         try {
-            const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-
-            // const audio = new Audio()
-            // audio.srcObject = camera_stream
-            // await audio.play()
+            const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
             const video = document.createElement('video')
+            video.setAttribute('autoplay', 'true')
             video.srcObject = camera_stream
             videos.id = 'from'
 
             videos.appendChild(video)
-            video.play()
-            // videos.appendChild(audio)
         } catch (error) {
             console.log(error);
         }

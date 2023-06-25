@@ -182,22 +182,6 @@ peer.on('call', async (call) => {
     if (video) {
       video.srcObject = userVideoStream
     }
-    // const videos: HTMLElement | null = document.querySelector('#videos')
-
-    // if (videos) {
-    //   try {
-    //     const video = document.createElement('video')
-    //     console.log('stream', userVideoStream)
-    //     video.srcObject = userVideoStream
-    //     video.width = 350
-    //     video.height = 150
-
-    //     videos.appendChild(video)
-    //     video.play()
-    //   } catch (error) {
-    //     console.log(error);
-    //   }
-    // }
   })
 })
 
@@ -206,14 +190,20 @@ chatConnection.on('Calling', async (chatId: any) => {
 })
 
 chatConnection.on('JoinCall', async (peerId: any) => {
-
   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
   const video: HTMLVideoElement | null = document.querySelector('#from')
 
   video!.srcObject = camera_stream
 
-  peer.call(peerId, camera_stream)
+  const call = peer.call(peerId, camera_stream)
+
+  call.on('stream', userVideoStream => {
+    const video: HTMLVideoElement | null = document.querySelector('#to')
+    if (video) {
+      video.srcObject = userVideoStream
+    }
+  })
 })
 
 chatConnection.on('LeaveCall', async (peerId: any) => {
