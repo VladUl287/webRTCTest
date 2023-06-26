@@ -1,116 +1,98 @@
 <template>
   <section class="chats-main">
     <div class="chats-wrap">
-      <SearchField v-model="searchActive" :items="items" :loading="searching" @input="input" @select="itemSelect"
+      <SearchField v-model="searchActive" :items="searchItems" :loading="searching" @input="input" @select="itemSelect"
         @focusin="searchFocusIn" />
 
-      <ChatsList v-if="!searchActive" :chats="chatsStore.chats" :selected="chatId" :loading="chatsLoading"
+      <ChatsList v-if="!searchActive" :chats="chatStore.chats" :selected="chatId" :loading="chatsLoading"
         @select="chatSelect" />
-
-      <button @click="joinCall">join call</button>
     </div>
     <div class="chat-content" v-if="chatId">
-      <section id="videos">
-        <video autoplay id="from"></video>
-        <video autoplay id="to"></video>
-      </section>
-      <!-- <ChatHead :chat="chat" @start-call="startCall" />
+      <ChatHead :chat="chat" @start-call="startCall" />
 
       <section class="chat-messages">
         <ChatNotification @success="joinCall" />
 
-        <MessagesList v-if="user" :messages="messagesStore.messages" :userId="user.profile.sub"
+        <MessagesList v-if="user" :messages="messageStore.messages" :userId="user.profile.sub"
           :loading="messagesLoading" />
       </section>
 
-      <MessageNew :disabled="false" @send="sendMessage" /> -->
+      <MessageNew :disabled="false" @send="sendMessage" />
     </div>
   </section>
-  <CallModal v-model="call" />
+  <CallModal v-model="calling">
+    <section id="videos"></section>
+  </CallModal>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useChatsStore } from '@/stores/chats'
-import ChatHead from '@/components/ChatHead.vue'
 import ChatsList from '@/components/ChatsList.vue'
 import SearchField from '@/components/SearchField.vue'
 import MessagesList from '@/components/MessagesList.vue'
 import CallModal from '@/components/CallModal.vue'
+import ChatHead from '@/components/ChatHead.vue'
 import MessageNew from '@/components/MessageNew.vue'
 import ChatNotification from '@/components/ChatNotification.vue'
-import { useMessagesStore } from '@/stores/messages'
 import { useAuthStore } from '@/stores/auth'
+import { useChatStore } from '@/stores/chats'
+import { useMessageStore } from '@/stores/messages'
 import { getUsers } from '@/http/users'
 import type { User } from 'oidc-client'
-import type { Chat } from '@/types/chat'
+import type { Chat, Message } from '@/types/chat'
 import type { SearchItem } from '@/types/components'
 import peer from '@/peer'
-import chatConnection from '@/hubs/chat'
+import connection, { onSendMessage, onChatCreate, onJoinCall, onCalling, onChatUpdate } from '@/hubs/chat'
+import { debounce } from '@/helpers/debounce'
+
 
 const chat = ref<Chat>()
-const user = ref<User | null>()
-
 const chatId = ref<string>()
-const chatsLoading = ref<boolean>()
+const user = ref<User | null>()
+const searchItems = ref<SearchItem[]>([])
+
+const calling = ref<boolean>()
 const searching = ref<boolean>()
+const searchActive = ref<boolean>()
+
+const chatsLoading = ref<boolean>()
 const messagesLoading = ref<boolean>()
-const items = ref<SearchItem[]>([])
 
 const authStore = useAuthStore()
-const chatsStore = useChatsStore()
-const messagesStore = useMessagesStore()
-
-const searchActive = ref<boolean>()
-const call = ref<boolean>(false)
+const chatStore = useChatStore()
+const messageStore = useMessageStore()
 
 const route = useRoute()
 const router = useRouter()
 
 onMounted(() => {
+  // const observer = new MutationObserver((mutations) => {
+  //   mutations.forEach(() => {
+  //     console.log('style change');
+  //   })
+  // })
+
+  // const target = document.querySelector('.chats-wrap');
+  // observer.observe(target!, { attributes: true, attributeFilter: ['style'] });
+
   initialize()
 
   authStore.getUser()
-    .then(u => user.value = u)
+    .then(userValue => user.value = userValue)
 })
 
 watch(
   () => route.params,
-  () => {
-    initialize()
-  }
+  () => initialize()
 )
 
 const initialize = () => {
   chatId.value = route.query.id as string
 
   getMessages()
-
   getChats()
-
-  if (chatId.value) {
-    chatsStore.getChat(chatId.value)
-      .then(c => chat.value = c)
-  }
-}
-
-const searchFocusIn = () => searchActive.value = true
-
-const updateChat = () => {
-  if (chatId.value) {
-    chatConnection.send('updateUserChat', { chatId: chatId.value, lastRead: new Date() })
-  }
-}
-
-const getChats = async () => {
-  try {
-    chatsLoading.value = true
-
-    await chatsStore.getChats()
-  } finally {
-    chatsLoading.value = false
-  }
+  getChat()
 }
 
 const getMessages = async () => {
@@ -119,11 +101,34 @@ const getMessages = async () => {
 
     messagesLoading.value = true
 
-    await messagesStore.getMessages(chatId.value)
+    await messageStore.getMessages(chatId.value)
   } finally {
     messagesLoading.value = false
   }
 }
+
+const getChats = async () => {
+  try {
+    chatsLoading.value = true
+
+    await chatStore.getChats()
+  } finally {
+    chatsLoading.value = false
+  }
+}
+
+const getChat = () => {
+  if (!chatId.value) return
+
+  chatStore.getChat(chatId.value)
+    .then(chatValue => chat.value = chatValue)
+}
+
+const searchFocusIn = () => searchActive.value = true
+
+const setChatLastRead = debounce(() => {
+  connection.send('updateUserChat', { chatId: chatId.value, lastRead: new Date() })
+}, 500)
 
 const input = async (value: string) => {
   if (value && value.length > 2) {
@@ -132,7 +137,7 @@ const input = async (value: string) => {
 
       const users = await getUsers(value)
 
-      items.value = users.map((user) => ({
+      searchItems.value = users.map((user) => ({
         key: user.id,
         value: user.chatId,
         label: user.userName
@@ -142,130 +147,153 @@ const input = async (value: string) => {
     }
   }
   else {
-    items.value = []
+    searchItems.value = []
   }
 }
 
 const startCall = async () => {
-  call.value = true
+  // sendMessage('starting call')
 
-  chatConnection.send('Calling', { chatId: chatId.value, peerUserId: 'ed7594b7-6998-4d82-a552-4a09c2916307' })
-
-  sendMessage('starting call')
-}
-
-const sendMessage = (content: string) => {
-  if (chatId.value) {
-    chatConnection.send('sendMessage', { chatId: chatId.value, content })
-  }
-}
-
-const joinCall = () => {
-  console.log('start join call', {
+  await connection.invoke('calling', {
     chatId: chatId.value,
     peerUserId: peer.id
   })
-  return chatConnection.send('joinCall', {
+
+  calling.value = true
+}
+
+const sendMessage = async (content: string) => {
+  if (!chatId.value) return
+
+  return connection.send('sendMessage', { chatId: chatId.value, content })
+}
+
+const joinCall = async () => {
+  const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
+
+  appendVideo(camera_stream)
+
+  return connection.send('joinCall', {
     chatId: chatId.value,
     peerUserId: peer.id
   })
 }
 
 peer.on('call', async (call) => {
-  console.log('call');
-
   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
   call.answer(camera_stream)
-  call.on('stream', userVideoStream => {
-    const video: HTMLVideoElement | null = document.querySelector('#to')
-    if (video) {
-      video.srcObject = userVideoStream
-    }
-  })
+  call.on('stream', appendVideo)
 })
 
-chatConnection.on('Calling', async (chatId: any) => {
-  console.log(chatId);
+onCalling((chatId: string) => {
+  //get call
 })
 
-chatConnection.on('JoinCall', async (peerId: any) => {
+onJoinCall(async (peerId: string) => {
+  if (peerId === peer.id) return
+
   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
-  const video: HTMLVideoElement | null = document.querySelector('#from')
-
-  video!.srcObject = camera_stream
-
   const call = peer.call(peerId, camera_stream)
-
-  call.on('stream', userVideoStream => {
-    const video: HTMLVideoElement | null = document.querySelector('#to')
-    if (video) {
-      video.srcObject = userVideoStream
-    }
-  })
+  call.on('stream', appendVideo)
 })
 
-chatConnection.on('LeaveCall', async (peerId: any) => {
-  console.log(peerId);
+onSendMessage((message: Message) => {
+  if (!chatId.value) return
+
+  messageStore.addMessage(message)
+  chatStore.getChat(chatId.value)
 })
 
-chatConnection.on('receivedMessage', async (message: any) => {
-  messagesStore.messages.push(message)
-  await chatsStore.getChat(chatId.value!)
+onChatCreate(async (chatId: string) => {
+  const chat = await chatStore.getChat(chatId)
+  chat && chatStore.chats.push(chat)
 })
 
-chatConnection.on('deletedMessage', async (message: any) => {
-  messagesStore.messages = messagesStore.messages.filter(x => x.id != message.id)
-  await chatsStore.getChat(message.chatId)
-})
+onChatUpdate((chatId: string) => chatStore.getChat(chatId))
 
-chatConnection.on('updatedMessage', async (message: any) => {
-  const index = messagesStore.messages.findIndex(x => x.id === message.id)
-  if (index > -1) {
-    messagesStore.messages[index] = message
-    await chatsStore.getChat(message.chatId)
-  }
-})
+const appendVideo = (stream: MediaStream) => {
+  const video = document.createElement('video')
+  video.srcObject = stream
+  video.autoplay = true
 
-chatConnection.on('chatCreated', async (chatId: string) => {
-  const chat = await chatsStore.getChat(chatId)
+  const videos = document.querySelector('#videos')
 
-  if (chat) {
-    chatsStore.chats.push(chat)
-  }
-})
+  videos?.appendChild(video)
+}
 
-chatConnection.on('updatedChat', async (chatId: string) => {
-  console.log('updated')
-
-  await chatsStore.getChat(chatId)
-})
-
-const chatSelect = (chat: any) => {
-  router.push({ path: '/chat', query: { id: chat } })
+const chatSelect = (chatId: string) => {
+  router.push({ path: '/chat', query: { id: chatId } })
 }
 
 const itemSelect = async (item: SearchItem) => {
   searchActive.value = false
 
-  items.value = []
+  searchItems.value = []
 
   if (item.value) {
     return router.push({ path: '/chat', query: { id: item.value } })
   }
 
-  const chatId = await chatsStore.create({
-    name: item.label, image: '', userId: +user.value!.profile.sub, type: 1, users: [
-      { id: +user.value!.profile.sub },
+  const chatId = await chatStore.create({
+    name: '', image: '', userId: +user.value!.profile.sub, type: 1, users: [
+      { id: user.value!.profile.sub },
       { id: item.key }
     ]
   })
 
-  chatConnection.send('chatCreated', chatId)
+  connection.send('chatCreated', chatId)
 
   router.push({ path: '/chat', query: { id: chatId } })
 }
+
+// const startCall = async () => {
+//   call.value = true
+//   chatConnection.send('Calling', { chatId: chatId.value, peerUserId: 'ed7594b7-6998-4d82-a552-4a09c2916307' })
+//   sendMessage('starting call')
+// }
+// const sendMessage = (content: string) => {
+//   if (chatId.value) {
+//     chatConnection.send('sendMessage', { chatId: chatId.value, content })
+//   }
+// }
+// const joinCall = () => {
+//   console.log('start join call', {
+//     chatId: chatId.value,
+//     peerUserId: peer.id
+//   })
+//   return chatConnection.send('joinCall', {
+//     chatId: chatId.value,
+//     peerUserId: peer.id
+//   })
+// }
+// peer.on('call', async (call) => {
+//   console.log('call');
+//   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
+//   call.answer(camera_stream)
+//   call.on('stream', userVideoStream => {
+//     const video: HTMLVideoElement | null = document.querySelector('#to')
+//     if (video) {
+//       video.srcObject = userVideoStream
+//     }
+//   })
+// })
+// chatConnection.on('Calling', async (chatId: any) => {
+//   console.log(chatId);
+// })
+// chatConnection.on('JoinCall', async (peerId: any) => {
+//   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
+//   const video: HTMLVideoElement | null = document.querySelector('#from')
+//   video!.srcObject = camera_stream
+//   const call = peer.call(peerId, camera_stream)
+//   call.on('stream', userVideoStream => {
+//     const video: HTMLVideoElement | null = document.querySelector('#to')
+//     if (video) {
+//       video.srcObject = userVideoStream
+//     }
+//   })
+// })
 </script>
 
 <style scoped>
@@ -284,17 +312,20 @@ video {
   width: 400px;
   max-width: 600px;
   min-width: 400px;
+  overflow: hidden;
+  resize: horizontal;
   background-color: var(--color-background);
+  border-right: 1px solid var(--color-border-dark);
 }
 
 .chat-content {
-  /* display: grid;
+  display: grid;
   overflow-y: hidden;
   grid-template-rows: 1fr 12fr auto;
-  border-left: 1px solid var(--color-border-dark) */
 }
 
 .chat-messages {
+  overflow: hidden;
   position: relative;
 }
 </style>

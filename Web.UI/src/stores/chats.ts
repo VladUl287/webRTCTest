@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import instance from '@/http'
 import type { Chat } from '@/types/chat'
 
-export const useChatsStore = defineStore('chat', () => {
+export const useChatStore = defineStore('chat', () => {
     const chats = ref<Chat[]>([])
 
     const getChat = async (chatId: string): Promise<Chat | undefined> => {

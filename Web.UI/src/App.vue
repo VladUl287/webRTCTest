@@ -8,8 +8,13 @@
 import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import connection from '@/hubs/chat'
+import { useAuthStore } from './stores/auth'
+
+const authStore = useAuthStore()
 
 onMounted(() => {
+  authStore.getUser()
+
   connection.start()
 })
 

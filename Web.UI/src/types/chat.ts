@@ -2,6 +2,7 @@ export type Chat = {
     id: string,
     name: string,
     image: string,
+    date: string,
     message: LastMessage,
     unread: number
 }

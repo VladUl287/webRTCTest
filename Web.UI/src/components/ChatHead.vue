@@ -1,7 +1,7 @@
 <template>
     <div v-if="chat" class="chat-head">
         <section class="img-wrap">
-            <img :src="chat.image" @error="(event: Event) => imgError(event)" alt="Avatar" />
+            <img :src="chat.image" @error.once="imgError" alt="Chat avatar" />
         </section>
         <section>
             <p class="chat-name">{{ chat.name }}</p>
@@ -12,7 +12,7 @@
             </button>
         </section>
     </div>
-    <div v-else>
+    <div v-else class="chat-head">
         loading...
     </div>
 </template>
@@ -30,11 +30,10 @@ const emits = defineEmits<{
 }>()
 
 const imgError = (event: Event) => {
-    const image = (event.target as HTMLImageElement)
+    const imageElement = (event.target as HTMLImageElement)
 
-    if (image) {
-        image.src = 'https://html.com/wp-content/uploads/flamingo4x.jpg'
-        image.onerror = null
+    if (imageElement) {
+        imageElement.src = 'https://html.com/wp-content/uploads/flamingo4x.jpg'
     }
 }
 
@@ -43,6 +42,7 @@ const imgError = (event: Event) => {
 <style scoped>
 .chat-head {
     display: flex;
+    height: 100%;
     padding: 0 1em;
     column-gap: 1em;
     user-select: none;

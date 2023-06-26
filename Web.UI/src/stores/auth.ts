@@ -19,19 +19,20 @@ const config = {
 }
 
 export const useAuthStore = defineStore('auth', () => {
-    let userInstance: User | null
+    let user: User | null = null
 
     const userManager = new UserManager(config)
 
+
     const getUser = async () => {
-        if (!userInstance) {
+        if (!user) {
             console.log('getUser')
             console.time()
-            userInstance = await userManager.getUser()
+            user = await userManager.getUser()
             console.timeEnd()
         }
 
-        return userInstance
+        return user
     }
 
     const login = () => userManager.signinRedirect()
@@ -40,13 +41,13 @@ export const useAuthStore = defineStore('auth', () => {
 
     const signingRedirectCallback = (callback: () => void) => {
         userManager.signinRedirectCallback()
-            .then((user) => {
-                userInstance = user
+            .then((u) => {
+                user = u
                 callback()
             }).catch((err) => {
                 console.log(err)
             })
     }
 
-    return { getUser, login, logout, signingRedirectCallback }
+    return { user, getUser, login, logout, signingRedirectCallback }
 })

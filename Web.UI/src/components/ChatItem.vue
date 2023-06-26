@@ -1,7 +1,7 @@
 <template>
-    <div class="chat-item" :data-time="getTime(chat.message?.date)" :class="{ 'active': active }">
+    <div class="chat-item" :data-time="getTime(chat.message?.date || chat.date)" :class="{ 'active': active }">
         <div class="img-wrap">
-            <!-- <img :src="chat.image" @error="(event: Event) => imgError(event)" alt="Chat image" /> -->
+            <img :src="chat.image" @error.once="imgError" alt="Chat avatar" />
         </div>
         <div class="chat-info">
             <p>{{ chat.name }}</p>
@@ -43,11 +43,10 @@ const isToday = (date: Date) => {
 }
 
 const imgError = (event: Event) => {
-    const image = (event.target as HTMLImageElement)
+    const imageElement = (event.target as HTMLImageElement)
 
-    if (image) {
-        image.src = 'https://html.com/wp-content/uploads/flamingo4x.jpg'
-        image.onerror = null
+    if (imageElement) {
+        imageElement.src = 'https://html.com/wp-content/uploads/flamingo4x.jpg'
     }
 }
 </script>

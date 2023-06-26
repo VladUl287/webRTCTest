@@ -1,14 +1,19 @@
 <template>
     <dialog ref="dialog">
-        <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit!</p>
-        <!-- <section id="videos"></section> -->
-        <button @click="ok">ok</button>
+        <div class="wrap">
+            <section id="header">
+                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit!</p>
+            </section>
+            <slot></slot>
+            <section id="footer">
+                <button @click="ok">ok</button>
+            </section>
+        </div>
     </dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, type PropType } from 'vue'
-import peer from '@/peer'
+import { ref, watch } from 'vue'
 
 const dialog = ref<HTMLDialogElement>()
 
@@ -20,65 +25,47 @@ const emits = defineEmits<{
     (e: 'update:modelValue', value: Boolean): void
 }>()
 
-onMounted(() => {
-    peer.on('call', async (call) => {
-        const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
-
-        call.answer(camera_stream)
-        call.on('stream', userVideoStream => {
-            const videos: HTMLElement | null = document.querySelector('#videos')
-
-            if (videos) {
-                try {
-                    const video = document.createElement('video')
-                    video.srcObject = userVideoStream
-
-                    videos.appendChild(video)
-                } catch (error) {
-                    console.log(error);
-                }
-            }
-        })
-    })
-})
-
 watch(
     () => props.modelValue,
-    (dialogVisible) => {
-        if (dialogVisible) {
-            openModal()
-            return dialog.value?.showModal()
-        }
-        dialog.value?.close()
+    (visible) => {
+        visible ?
+            dialog.value?.showModal() :
+            dialog.value?.close()
     }
 )
 
 const ok = () => emits('update:modelValue', false)
-
-const openModal = async () => {
-    const videos: HTMLElement | null = document.querySelector('#videos')
-
-    if (videos) {
-        try {
-            const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
-
-            const video = document.createElement('video')
-            video.setAttribute('autoplay', 'true')
-            video.srcObject = camera_stream
-            videos.id = 'from'
-
-            videos.appendChild(video)
-        } catch (error) {
-            console.log(error);
-        }
-    }
-}
 </script>
 
 <style scoped>
 dialog {
+    width: 90%;
+    height: 70%;
     color: var(--color-text);
-    border-color: var(--color-border-light);
     background-color: var(--color-background);
+    border: 1px solid var(--color-border-light);
+}
+
+dialog::backdrop {
+    background-color: #000000cc;
+}
+
+.wrap {
+    height: 100%;
+    display: grid;
+    grid-template-rows: 1fr 11fr 1fr;
+}
+
+#header {
+    text-align: center;
+}
+
+#footer {
+    margin: 0 auto;
+    width: fit-content;
+}
+
+#footer button {
+    cursor: pointer;
 }
 </style>
