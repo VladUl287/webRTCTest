@@ -1,13 +1,12 @@
 <template>
     <div>
-        Loading...
+        Logout...
     </div>
 </template>
 
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
 
-useAuthStore()
-    .signingCallback(() => window.location.href = '../')
+useAuthStore().login()
 
 </script>

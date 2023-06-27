@@ -3,3 +3,8 @@
 #app {
     height: 100%;
 }
+
+button {
+    cursor: pointer;
+    user-select: none;
+}

@@ -15,4 +15,13 @@ instance.interceptors.request.use(async (config: any) => {
     return config;
 })
 
+instance.interceptors.response.use(
+    (config: any) => config,
+    (error: any) => {
+        if (error.response.status === 401) {
+            return useAuthStore().renew()
+        }
+        return Promise.reject(error);
+    })
+
 export default instance;

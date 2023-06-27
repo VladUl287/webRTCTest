@@ -14,7 +14,7 @@
 import { computed, onUpdated, ref, type PropType } from 'vue'
 import type { MessageAction, Message } from '@/types/chat'
 import MessageItem from '@/components/MessageItem.vue'
-import LoadingRing from '@/components/helpers/LoadingRing.vue'
+import LoadingRing from '@/components/controls/LoadingRing.vue'
 
 const props = defineProps({
     messages: {

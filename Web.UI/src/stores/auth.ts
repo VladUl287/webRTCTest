@@ -1,18 +1,19 @@
 import { defineStore } from 'pinia'
-import { User, UserManager, WebStorageStateStore } from 'oidc-client';
+import { User, UserManager, WebStorageStateStore, type UserManagerSettings } from 'oidc-client';
 
-const config = {
+const config: UserManagerSettings = {
     userStore: new WebStorageStateStore({ store: window.localStorage }),
-    authority: "https://localhost:7250",
+
+    authority: 'https://localhost:7250',
     client_id: 'vue-client',
-    offline_access: true,
+
     redirect_uri: 'http://127.0.0.1:5173/callback',
-    popup_redirect_uri: 'http://127.0.0.1:5173/callback.html',
-    automaticSilentRenew: true,
-    silent_redirect_uri: 'http://127.0.0.1:5173/silent-renew.html',
+    post_logout_redirect_uri: 'http://127.0.0.1:5173/logout',
+
     response_type: 'code',
-    scope: 'openid profile api1 email offline_access',
-    post_logout_redirect_uri: 'http://127.0.0.1:5173/',
+    scope: 'openid profile api1 offline_access',
+
+    automaticSilentRenew: true,
     filterProtocolClaims: true,
 
     loadUserInfo: false,
@@ -23,15 +24,20 @@ export const useAuthStore = defineStore('auth', () => {
 
     const userManager = new UserManager(config)
 
+    userManager.events.addSilentRenewError(() => {
+        userManager.signoutRedirect()
+    })
+
+    userManager.events.addAccessTokenExpired(() => {
+        renew()
+    })
 
     const getUser = async () => {
         if (!user) {
-            console.log('getUser')
-            console.time()
-            user = await userManager.getUser()
-            console.timeEnd()
-        }
+            console.log('get user');
 
+            user = await userManager.getUser()
+        }
         return user
     }
 
@@ -39,15 +45,21 @@ export const useAuthStore = defineStore('auth', () => {
 
     const logout = () => userManager.signoutRedirect()
 
-    const signingRedirectCallback = (callback: () => void) => {
+    const renew = async () => {
+        await userManager.signinSilent()
+
+        window.location.href = '../'
+    }
+
+    const signingCallback = (callback: () => void) => {
         userManager.signinRedirectCallback()
-            .then((u) => {
-                user = u
+            .then((userValue) => {
+                user = userValue
                 callback()
-            }).catch((err) => {
-                console.log(err)
+            }).catch((error) => {
+                console.log(error)
             })
     }
 
-    return { user, getUser, login, logout, signingRedirectCallback }
+    return { user, renew, getUser, login, logout, signingCallback }
 })

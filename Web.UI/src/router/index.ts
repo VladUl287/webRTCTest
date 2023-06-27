@@ -20,6 +20,11 @@ const router = createRouter({
       component: () => import('@/views/CallbackView.vue')
     },
     {
+      path: '/logout',
+      name: 'logout',
+      component: () => import('@/views/LogoutView.vue')
+    },
+    {
       path: '/:catchAll(.*)',
       redirect: {
         path: '/chat'
