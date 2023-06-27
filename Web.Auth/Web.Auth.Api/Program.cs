@@ -19,6 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddDefaultCors(builder.Configuration);
 
     builder.Services.AddHostedService<ClientsInitService>();
+    builder.Services.AddHostedService<UsersInitService>();
 
     builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 

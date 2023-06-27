@@ -26,19 +26,19 @@ public sealed class LoginModel : PageModel
 
     public async Task OnGetAsync(string? returnUrl = null)
     {
+        ReturnUrl = returnUrl ?? Url.Content("~/");
+
         if (!string.IsNullOrEmpty(ErrorMessage))
         {
             ModelState.AddModelError(string.Empty, ErrorMessage);
         }
 
         await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
-        ReturnUrl = returnUrl ?? Url.Content("~/");
     }
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
-        returnUrl ??= Url.Content("~/");
+        ReturnUrl = returnUrl ?? Url.Content("~/");
 
         if (ModelState.IsValid)
         {
@@ -46,7 +46,7 @@ public sealed class LoginModel : PageModel
 
             if (result.Succeeded)
             {
-                return LocalRedirect(returnUrl);
+                return LocalRedirect(ReturnUrl);
             }
 
             // if (result.RequiresTwoFactor)

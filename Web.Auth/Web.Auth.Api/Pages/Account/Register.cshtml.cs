@@ -27,10 +27,6 @@ public sealed class RegisterModel : PageModel
     [BindProperty]
     public required InputModel Input { get; set; }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     // public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
     public Task OnGetAsync(string? returnUrl = null)
@@ -44,13 +40,13 @@ public sealed class RegisterModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
-        returnUrl ??= Url.Content("~/");
+        ReturnUrl = returnUrl ?? Url.Content("~/");
 
         // ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
         if (ModelState.IsValid)
         {
-            var user = CreateUser();
+            var user = new Core.Entities.User();
 
             await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
             await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
@@ -61,26 +57,14 @@ public sealed class RegisterModel : PageModel
             {
                 var userId = await _userManager.GetUserIdAsync(user);
 
-                // var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                // code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                // var callbackUrl = Url.Page("/Account/ConfirmEmail", null, protocol: Request.Scheme,
-                //     values: new
-                //     {
-                //         // area = "Identity",
-                //         code = code,
-                //         userId = userId,
-                //         returnUrl = returnUrl
-                //     });
-                //await _emailSender.SendEmailAsync(Input.Email, "Confirm your email", $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
-                if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                {
-                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-                }
+                // if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                // {
+                //     return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+                // }
 
                 await _signInManager.SignInAsync(user, isPersistent: false);
 
-                return LocalRedirect(returnUrl);
+                return LocalRedirect(ReturnUrl);
             }
 
             foreach (var error in result.Errors)
@@ -100,18 +84,6 @@ public sealed class RegisterModel : PageModel
         }
 
         return (IUserEmailStore<User>)_userStore;
-    }
-
-    private static User CreateUser()
-    {
-        try
-        {
-            return Activator.CreateInstance<User>();
-        }
-        catch
-        {
-            throw new InvalidOperationException($"Can't create an instance of '{nameof(User)}'.");
-        }
     }
 
     public sealed class InputModel
