@@ -16,9 +16,16 @@ public sealed class UsersRepository : IUsersRepository
         this.context = context;
     }
 
-    public async Task<UserDto[]> GetUsers(UsersFilter? filter)
+    public Task<UserDto?> GetUser(long userId)
     {
-        return await context.Users.AsNoTracking()
+        return context.Users
+            .ProjectToType<UserDto>()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+    }
+
+    public Task<UserDto[]> GetUsers(UsersFilter? filter)
+    {
+        return context.Users
             .SetUsersFilters(filter)
             .ProjectToType<UserDto>()
             .ToArrayAsync();

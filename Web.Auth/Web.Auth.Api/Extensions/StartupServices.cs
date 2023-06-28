@@ -25,7 +25,7 @@ internal static class StartupServices
 
             options.UseOpenIddict();
 
-            options.LogTo(Console.WriteLine);
+            options.LogTo(Console.WriteLine, LogLevel.Information);
         });
     }
 
@@ -44,10 +44,16 @@ internal static class StartupServices
             })
             .AddServer(options =>
             {
+                options.SetAccessTokenLifetime(TimeSpan.FromMinutes(15));
+                // options.SetRefreshTokenLifetime(TimeSpan.FromDays(7));
+
+                // options.SetAccessTokenLifetime(TimeSpan.FromSeconds(70));
+                options.SetRefreshTokenLifetime(TimeSpan.FromDays(7));
+
                 options.SetAuthorizationEndpointUris("connect/authorize")
                     .SetTokenEndpointUris("connect/token")
                     .SetIntrospectionEndpointUris("connect/introspect")
-                    // .SetLogoutEndpointUris("connect/logout")
+                    .SetLogoutEndpointUris("connect/logout")
                     // .SetUserinfoEndpointUris("connect/userinfo")
                     ;
 
@@ -63,7 +69,7 @@ internal static class StartupServices
                     .EnableAuthorizationEndpointPassthrough()
                     .EnableStatusCodePagesIntegration()
                     .EnableTokenEndpointPassthrough()
-                    // .EnableLogoutEndpointPassthrough()
+                    .EnableLogoutEndpointPassthrough()
                     // .EnableUserinfoEndpointPassthrough()
                     ;
             })

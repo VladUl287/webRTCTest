@@ -122,6 +122,14 @@ public sealed class AuthorizeController : Controller
         return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
+    [HttpGet("~/connect/logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+
+        return SignOut(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
     #region Helpers
 
     private OpenIddictRequest GetOpenIdRequest()

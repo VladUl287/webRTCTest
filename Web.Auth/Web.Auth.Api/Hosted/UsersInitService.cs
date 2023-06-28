@@ -5,16 +5,19 @@ namespace Web.Auth.Api;
 
 public class UsersInitService : IHostedService
 {
-    private readonly UserManager<User> _userManager;
+    private readonly IServiceProvider serviceProvider;
 
-
-    public UsersInitService(UserManager<User> userManager)
+    public UsersInitService(IServiceProvider serviceProvider)
     {
-        _userManager = userManager;
+        this.serviceProvider = serviceProvider;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        using var scope = serviceProvider.CreateAsyncScope();
+
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+
         var emails = new[]
         {
             "first.01@mail.ru",
@@ -23,7 +26,7 @@ public class UsersInitService : IHostedService
 
         foreach (var email in emails)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await userManager.FindByEmailAsync(email);
 
             if (user is null)
             {
@@ -33,7 +36,7 @@ public class UsersInitService : IHostedService
                     UserName = email
                 };
 
-                await _userManager.CreateAsync(user, "testPassword1@");
+                await userManager.CreateAsync(user, "testPassword1@");
             }
         }
     }

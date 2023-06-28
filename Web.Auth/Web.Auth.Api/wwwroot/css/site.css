@@ -28,7 +28,7 @@ main {
 }
 
 .text-danger {
-    color: rgb(153, 8, 8);
+    color: rgb(177, 34, 34);
 }
 
 .field-validation-error {
@@ -38,7 +38,8 @@ main {
 }
 
 main .form-wrap {
-    max-width: 25%;
+    overflow: hidden;
+    max-width: 30%;
     margin: 0 auto;
 }
 
@@ -72,8 +73,10 @@ main .form-wrap {
 .form-field input {
     width: 100%;
     padding: .5em;
+    color: inherit;
     font-size: large;
     border: 1px solid;
+    background-color: transparent;
     border-color: transparent transparent rgba(128, 128, 128, 0.637) transparent;
 }
 
@@ -107,7 +110,7 @@ main .form-wrap {
     padding: 0 0 2em 0;
 }
 
-@media screen and (max-width: 1201px){
+@media screen and (max-width: 1301px){
     main .form-wrap {
         max-width: 35%;
     }
@@ -115,13 +118,13 @@ main .form-wrap {
 
 @media screen and (max-width: 1025px){
     main .form-wrap {
-        max-width: 40%;
+        max-width: 45%;
     }
 }
 
 @media screen and (max-width: 768px){
     main .form-wrap {
-        max-width: 60%;
+        max-width: 80%;
     }
 }
 

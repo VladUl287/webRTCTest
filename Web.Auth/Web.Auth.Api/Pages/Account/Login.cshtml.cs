@@ -67,15 +67,15 @@ public sealed class LoginModel : PageModel
 
     public sealed class InputModel
     {
-        [Required(ErrorMessage = "email обязателен")]
-        [EmailAddress]
+        [Required(ErrorMessage = "email required")]
+        [EmailAddress(ErrorMessage = "invalid email")]
         public required string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "пароль обязателен")]
+        [Required(ErrorMessage = "password required")]
         [DataType(DataType.Password)]
         public required string Password { get; set; } = string.Empty;
 
-        [Display(Name = "Запомнить меня")]
+        [Display(Name = "Remember me")]
         public bool RememberMe { get; set; }
     }
 }

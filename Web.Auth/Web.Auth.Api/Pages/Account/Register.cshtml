@@ -3,7 +3,7 @@
 @model Web.Auth.Api.Pages.Account.RegisterModel
 
 @{
-    ViewBag.Title = "Регистрация";
+    ViewBag.Title = "Registration";
 
     ViewData["Title"] = ViewBag.Title;
 }
@@ -27,10 +27,10 @@
             <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
         </div>
 
-        <button type="submit">Зарегистрироваться</button>
+        <button type="submit">Registration</button>
 
         <div class="form-additional">
-            <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Войти</a>
+            <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Login</a>
         </div>
 
         <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>

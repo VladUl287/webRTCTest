@@ -4,12 +4,13 @@ using Web.Auth.Core.Repositories;
 using Web.Auth.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using OpenIddict.Validation.AspNetCore;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Web.Auth.Api.Controllers;
 
-[Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
 [ApiController]
 [Route("/api/[controller]/[action]")]
+[Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
 public sealed class UsersController : ControllerBase
 {
     private readonly IUsersRepository usersRepository;
@@ -19,6 +20,19 @@ public sealed class UsersController : ControllerBase
     {
         this.usersRepository = usersRepository;
         this.hubApi = hubApi;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetUserInfo([FromQuery][BindRequired] long userId)
+    {
+        var user = await usersRepository.GetUser(userId);
+
+        if (user is null)
+        {
+            return NotFound(userId);
+        }
+
+        return Ok(user);
     }
 
     [HttpGet]
