@@ -39,39 +39,4 @@ public sealed class MessageService : IMessageService
 
         return message.Adapt<MessageDto>();
     }
-
-    public async Task<OneOf<MessageDto, NotFound>> Update(UpdateMessageDto update, long userId)
-    {
-        var message = await unitOfWork.Messages
-            .FirstOrDefaultAsync(m => m.Id == update.Id && m.UserId == userId);
-
-        if (message is null)
-        {
-            return new NotFound();
-        }
-
-        message.Content = update.Content;
-        message.Edit = true;
-
-        await unitOfWork.SaveChangesAsync();
-
-        return message.Adapt<MessageDto>();
-    }
-
-    public async Task<OneOf<MessageDto, NotFound>> Delete(Guid id, long userId)
-    {
-        var message = await unitOfWork.Messages
-            .AsNoTracking()
-            .FirstOrDefaultAsync(ms => ms.Id == id && ms.UserId == userId);
-
-        if (message is null)
-        {
-            return new NotFound();
-        }
-
-        unitOfWork.Messages.Remove(message);
-        await unitOfWork.SaveChangesAsync();
-
-        return message.Adapt<MessageDto>();
-    }
 }

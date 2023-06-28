@@ -16,6 +16,10 @@ internal static class ProjectionExtensions
                 Id = chat.Id,
                 Name = chat.Name,
                 Image = chat.Image,
+                Date = chat.Date,
+                LastRead = chat.ChatUsers!
+                    .First(cu => cu.UserId == userId)
+                    .LastRead,
 
                 Message = chat.Messages!
                     .OrderByDescending(m => m.Date)

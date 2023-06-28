@@ -67,6 +67,11 @@ public sealed class ChatService : IChatService
                     return new Error<string>("");
                 }
 
+                if (firstCollocutor.Id == secondCollocutor.Id)
+                {
+                    return new Error<string>("");
+                }
+
                 var chatId = await getDialogId(unitOfWork.Context, firstCollocutor.Id, secondCollocutor.Id);
 
                 if (chatId != default)

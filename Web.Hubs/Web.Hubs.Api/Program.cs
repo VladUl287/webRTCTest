@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddDatabase<DatabaseContext, IInfrastructureMarker>(builder.Configuration);
 
     builder.Services.AddSignalR();
-    //.AddMessagePackProtocol();
+        //.AddMessagePackProtocol();
 
     builder.Services.AddOpenIdAuthentication();
 

@@ -10,6 +10,10 @@ public sealed class ChatDto
 
     public string Image { get; init; } = string.Empty;
 
+    public DateTime Date { get; init; }
+
+    public DateTime? LastRead { get; init; }
+
     public MessageDto? Message { get; init; }
 
     public int? Unread { get; init; }
