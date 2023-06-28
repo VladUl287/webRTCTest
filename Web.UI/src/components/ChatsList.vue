@@ -37,6 +37,7 @@ const select = (chatId: string) => emits('select', chatId)
 <style>
 .list-wrap {
     padding: 0 .5em;
+    max-width: 100%;
 }
 
 .item {

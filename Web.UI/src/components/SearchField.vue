@@ -1,22 +1,20 @@
 <template>
-    <input type="text" id="search" placeholder="search" ref="search" autocomplete="off" @input="search">
+    <input type="text" id="search" placeholder="search" autocomplete="off" @input="search">
 </template>
 
 <script setup lang="ts">
-import type { SearchItem } from '@/types/components'
 
-const emits = defineEmits<{
-    (e: 'input', value: string): void,
-    (e: 'select', value: SearchItem): void
+const emit = defineEmits<{
+    (e: 'input', value: string): void
 }>()
 
-let timeout: number
+let timeout: number | undefined
 const search = (event: Event) => {
     clearTimeout(timeout)
 
     timeout = setTimeout(() => {
         const input = (event.target as HTMLInputElement)
-        emits('input', input.value)
+        emit('input', input.value)
     }, 600)
 }
 </script>

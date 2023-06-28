@@ -10,15 +10,21 @@ export const useChatStore = defineStore('chat', () => {
         try {
             const result = await instance.get<Chat>('/api/chats/getchat', { params: { chatId } })
 
+            console.time()
+
             const index = chats.value.findIndex(chat => chat.id === result.data.id)
 
             if (index > -1) {
                 chats.value[index] = result.data
             }
 
+            console.timeEnd()
+
             return result.data
         } catch (error) {
             console.log(error);
+            
+            throw new Error("Error getting chat")
         }
     }
 

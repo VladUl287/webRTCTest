@@ -22,13 +22,10 @@ defineEmits<{
 
 <style scoped>
 .chat-notification {
-    display: flex;
-    user-select: none;
-    align-items: center;
-    position: absolute;
     width: 100%;
-    z-index: 999;
-    padding: 0 1em;
+    display: flex;
+    padding: 0 .5em;
+    align-items: center;
     background-color: var(--color-active-light);
 }
 

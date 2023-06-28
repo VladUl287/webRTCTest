@@ -1,7 +1,7 @@
-export const debounce = (callback: () => void, delay: number = 300) => {
+export const debounce = (callback: (...args: any[]) => void, delay: number = 300) => {
     let timeout: number
-    return () => {
+    return (...args: any[]) => {
         clearTimeout(timeout)
-        timeout = setTimeout(() => callback(), delay)
+        timeout = setTimeout(() => callback(args), delay)
     }
 }

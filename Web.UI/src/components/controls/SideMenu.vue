@@ -1,7 +1,7 @@
 <template>
     <div class="side-menu" :class="{ 'active': active }">
-        <section class="controls">
-            <slot name="controls"></slot>
+        <section class="control">
+            <slot name="control"></slot>
         </section>
         <slot name="content"></slot>
     </div>
@@ -15,23 +15,22 @@ defineProps({
 
 <style scoped>
 .side-menu {
-    inset: 0;
-    /* display: none; */
     position: absolute;
+    z-index: 1;
+    inset: 0;
     transform: translateX(-100%);
     transition: transform 150ms linear;
     background-color: var(--color-background)
 }
 
 .side-menu.active {
-    /* display: block; */
     transform: unset;
 }
 
-.side-menu .controls {
+.side-menu .control {
     width: fit-content;
     position: absolute;
     right: .5em;
-    top: 10px;
+    top: .5em;
 }
 </style>

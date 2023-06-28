@@ -4,15 +4,17 @@
             <LoadingRing />
         </div>
         <div v-else class="messages-list" ref="list">
-            <MessageItem v-for="message of messagesReverse" :key="message.id" :message="message"
+            <MessageItem v-for="message of messagesReverse" :key="message.id" :id="message.id" :message="message"
                 :right="userId == message.userId" />
+
+            <span>{{ scrollToLastReaded() }}</span>
         </div>
     </section>
 </template>
   
 <script setup lang="ts">
-import { computed, onUpdated, ref, type PropType } from 'vue'
-import type { MessageAction, Message } from '@/types/chat'
+import { computed, onUpdated, ref, type PropType, watch } from 'vue'
+import type { MessageAction, Message, Chat } from '@/types/chat'
 import MessageItem from '@/components/MessageItem.vue'
 import LoadingRing from '@/components/controls/LoadingRing.vue'
 
@@ -21,25 +23,72 @@ const props = defineProps({
         type: Object as PropType<Message[]>,
         required: true
     },
+    chat: Object as PropType<Chat>,
     userId: String,
     loading: Boolean
 })
 
-defineEmits<{
-    (e: 'action', content: { message: Message, messageAction: MessageAction }): void
+const emit = defineEmits<{
+    (e: 'action', content: { message: Message, messageAction: MessageAction }): void,
+    (e: 'lastReaded', date: string): void
 }>()
+
+const options = {
+    root: document.querySelector(".messages-list"),
+    rootMargin: "0px",
+    threshold: 1.0,
+}
+
+watch(
+    () => props.chat?.lastRead,
+    () => {
+        checkLastMessage()
+    })
 
 const messagesReverse = computed(() => [...props.messages].reverse())
 
 const list = ref<HTMLElement>()
 
-onUpdated(() => {
-    scrollToBottom()
-})
+let first = true
+const scrollToLastReaded = () => {
+    if (list.value && props.chat && first) {
+        first = false
+
+        const lastElement = checkLastMessage()
+
+        lastElement?.scrollIntoView({ block: "start" })
+    }
+}
+
+const checkLastMessage = () => {
+    const chat = props.chat
+
+    if (!chat || !list.value) return
+
+    const message = props.messages.find(message => new Date(message.date) >= new Date(chat.date))
+
+    if (!message) return
+
+    const element = list.value.querySelector(`#${message.id}`)
+
+    if (!element) return
+
+    const observer = new IntersectionObserver(() => {
+        // emit('lastReaded', message?.date)
+        console.log(message?.date)
+        observer.disconnect()
+    }, options);
+
+    observer.observe(element)
+
+    return element
+}
+
+onUpdated(() => scrollToBottom())
 
 const scrollToBottom = () => {
-    if (list.value) {
-        list.value.scrollTop = -1
+    if (list.value && list.value.scrollTop >= -55) {
+        list.value.scrollTop = 0
     }
 }
 </script>

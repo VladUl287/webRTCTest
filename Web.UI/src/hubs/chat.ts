@@ -13,9 +13,11 @@ const connection = new HubConnectionBuilder()
     // .withHubProtocol(new signalRMsgpack.MessagePackHubProtocol())
     .build()
 
+export const callSendMessage = (body: { chatId: string, content: string }) => connection.send('sendMessage', body)
+
 export const onSendMessage = (callback: (...args: any[]) => void) => connection.on('sendMessage', callback)
 
-export const onChatCreate = (callback: (...args: any[]) => void) => connection.on('chatCreated', callback)
+export const onChatCreated = (callback: (...args: any[]) => void) => connection.on('chatCreated', callback)
 
 export const onChatUpdate = (callback: (...args: any[]) => void) => connection.on('updateChat', callback)
 

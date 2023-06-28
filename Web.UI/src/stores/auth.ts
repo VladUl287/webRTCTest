@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { User, UserManager, WebStorageStateStore, type UserManagerSettings } from 'oidc-client';
+import { computed } from 'vue';
 
 const config: UserManagerSettings = {
     userStore: new WebStorageStateStore({ store: window.localStorage }),
@@ -20,7 +21,9 @@ const config: UserManagerSettings = {
 }
 
 export const useAuthStore = defineStore('auth', () => {
-    let user: User | null = null
+    let userInstance: User | null = null
+
+    const user = computed(() => userInstance)
 
     const userManager = new UserManager(config)
 
@@ -29,37 +32,42 @@ export const useAuthStore = defineStore('auth', () => {
     })
 
     userManager.events.addAccessTokenExpired(() => {
-        renew()
+        silentRenew()
     })
 
     const getUser = async () => {
-        if (!user) {
+        if (!userInstance) {
             console.log('get user');
-
-            user = await userManager.getUser()
+            
+            userInstance = await userManager.getUser()
         }
-        return user
+        return userInstance
+    }
+
+    const silentRenew = async () => {
+        try {
+            await userManager.signinSilent()
+
+            window.location.href = '../'
+        } catch {
+            logout()
+        }
+
     }
 
     const login = () => userManager.signinRedirect()
 
     const logout = () => userManager.signoutRedirect()
 
-    const renew = async () => {
-        await userManager.signinSilent()
-
-        window.location.href = '../'
-    }
-
     const signingCallback = (callback: () => void) => {
         userManager.signinRedirectCallback()
             .then((userValue) => {
-                user = userValue
+                userInstance = userValue
                 callback()
             }).catch((error) => {
                 console.log(error)
             })
     }
 
-    return { user, renew, getUser, login, logout, signingCallback }
+    return { user, silentRenew, getUser, login, logout, signingCallback }
 })

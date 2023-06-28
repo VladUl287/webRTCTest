@@ -1,30 +1,29 @@
 <template>
   <section class="chats-main">
-    <div class="chats-wrap">
+    <section class="chats-wrap">
       <SideMenu :active="menuActive">
-        <template #controls>
-          <button class="chat-control" @click="hideMenu">
+        <template #control>
+          <button class="chat-control" @click="toggleMenu">
             <span class="material-symbols-outlined">more_vert</span>
           </button>
         </template>
         <template #content>
-          <AccountCard :user="user" />
-          <AccountControls @logout="() => { }" />
+          <AccountCard :user="authStore.user" />
+          <AccountControls @logout="authStore.logout" />
         </template>
       </SideMenu>
 
       <section class="chats-header">
-        <section>
+        <div>
           <button v-if="searchActive" class="chat-control" @click="disableSearch">
             <span class="material-symbols-outlined">arrow_back</span>
           </button>
-
-          <button v-else class="chat-control" @click="showMenu">
+          <button v-else class="chat-control" @click="toggleMenu">
             <span class="material-symbols-outlined">more_vert</span>
           </button>
-        </section>
+        </div>
 
-        <SearchField :active="searchActive" @input="input" @focusin="searchFocusIn" />
+        <SearchField :active="searchActive" @input="inputSearch" @focusin="enableSearch" />
       </section>
 
       <section>
@@ -32,20 +31,20 @@
 
         <ChatsList v-else :select="chatId" :chats="chatStore.chats" :loading="chatsLoading" @select="chatSelect" />
       </section>
-    </div>
+    </section>
 
-    <div class="chat-content" v-if="chatId">
+    <section class="chat-content" v-if="chatId">
       <ChatHead :chat="chat" @start-call="startCall" />
 
-      <section class="chat-messages">
-        <ChatNotification @success="joinCall" />
+      <div class="chat-messages" v-if="authStore.user">
+        <ChatNotification @success="joinCall" class="notification" />
 
-        <MessagesList v-if="user" :messages="messageStore.messages" :userId="user.profile.sub"
-          :loading="messagesLoading" />
-      </section>
+        <MessagesList :chat="chat" :messages="messageStore.messages" :userId="authStore.user.profile.sub"
+          :loading="messagesLoading" @lastReaded="setChatLastRead" />
+      </div>
 
       <MessageNew :disabled="false" @send="sendMessage" />
-    </div>
+    </section>
 
   </section>
   <CallModal v-model="calling">
@@ -69,18 +68,17 @@ import ChatNotification from '@/components/ChatNotification.vue'
 import AccountControls from '@/components/AccountControls.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '@/stores/chats'
-import { useMessageStore } from '@/stores/messages'
 import { getUsers } from '@/http/users'
-import type { User } from 'oidc-client'
 import type { Chat, Message } from '@/types/chat'
+import { useMessageStore } from '@/stores/messages'
 import type { SearchItem } from '@/types/components'
 import peer from '@/peer'
-import connection, { onSendMessage, onChatCreate, onJoinCall, onCalling, onChatUpdate } from '@/hubs/chat'
 import { debounce } from '@/helpers/debounce'
+import connection, { callSendMessage, onSendMessage, onChatCreated, onJoinCall, onCalling, onChatUpdate } from '@/hubs/chat'
 
 const chat = ref<Chat>()
 const chatId = ref<string>()
-const user = ref<User | null>()
+// const user = ref<User | null>()
 const searchItems = ref<SearchItem[]>([])
 
 const calling = ref<boolean>()
@@ -98,44 +96,20 @@ const messageStore = useMessageStore()
 const route = useRoute()
 const router = useRouter()
 
-const disableSearch = () => searchActive.value = false
-
-const logout = () => authStore.logout()
-
-const showMenu = () => {
-  menuActive.value = true
-}
-
-const hideMenu = () => {
-  menuActive.value = false
-}
-
 onMounted(() => {
-  // const observer = new MutationObserver((mutations) => {
-  //   mutations.forEach(() => {
-  //     console.log('style change');
-  //   })
-  // })
-
-  // const target = document.querySelector('.chats-wrap');
-  // observer.observe(target!, { attributes: true, attributeFilter: ['style'] });
-
-  initialize()
-
-  authStore.getUser()
-    .then(userValue => user.value = userValue)
+  initializeChat()
+  getChats()
 })
 
 watch(
   () => route.params,
-  () => initialize()
+  () => initializeChat()
 )
 
-const initialize = () => {
+const initializeChat = () => {
   chatId.value = route.query.id as string
 
   getMessages()
-  getChats()
   getChat()
 }
 
@@ -161,43 +135,39 @@ const getChats = async () => {
   }
 }
 
-const getChat = () => {
-  if (!chatId.value) return
+const getChat = async () => {
+  try {
+    if (!chatId.value) return
 
-  chatStore.getChat(chatId.value)
-    .then(chatValue => chat.value = chatValue)
+    chat.value = await chatStore.getChat(chatId.value)
+  } catch {
+    router.replace({ path: '/chat' })
+  }
 }
 
-const searchFocusIn = () => searchActive.value = true
-
-const setChatLastRead = debounce(() => {
-  connection.send('updateUserChat', { chatId: chatId.value, lastRead: new Date() })
+const setChatLastRead = debounce((date: string) => {
+  connection.send('updateChat', { chatId: chatId.value, lastRead: date[0] })
 }, 500)
 
-const input = async (value: string) => {
-  if (value && value.length > 2) {
-    try {
-      itemsLoading.value = true
+const inputSearch = async (value: string) => {
+  if (!value || value.length < 3) searchItems.value = []
 
-      const users = await getUsers(value)
+  try {
+    itemsLoading.value = true
 
-      searchItems.value = users.map((user) => ({
-        key: user.id,
-        value: user.chatId,
-        label: user.userName
-      }))
-    } finally {
-      itemsLoading.value = false
-    }
-  }
-  else {
-    searchItems.value = []
+    const users = await getUsers(value)
+
+    searchItems.value = users.map(user => ({
+      key: user.id,
+      value: user.chatId,
+      label: user.userName
+    }))
+  } finally {
+    itemsLoading.value = false
   }
 }
 
 const startCall = async () => {
-  // sendMessage('starting call')
-
   await connection.invoke('calling', {
     chatId: chatId.value,
     peerUserId: peer.id
@@ -206,21 +176,43 @@ const startCall = async () => {
   calling.value = true
 }
 
-const sendMessage = async (content: string) => {
-  if (!chatId.value) return
-
-  return connection.send('sendMessage', { chatId: chatId.value, content })
+const sendMessage = (content: string) => {
+  return chatId.value && callSendMessage({
+    chatId: chatId.value,
+    content
+  })
 }
 
 const joinCall = async () => {
   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
-
   appendVideo(camera_stream)
 
   return connection.send('joinCall', {
     chatId: chatId.value,
     peerUserId: peer.id
   })
+}
+
+const chatSelect = (chatId: string) => router.push({ path: '/chat', query: { id: chatId } })
+
+const itemSelect = async (item: SearchItem) => {
+  searchActive.value = false
+  searchItems.value = []
+
+  if (item.value) {
+    return router.push({ path: '/chat', query: { id: item.value } })
+  }
+
+  const chatId = await chatStore.create({
+    name: authStore.user?.profile.name || 'test name', image: '', userId: +authStore.user!.profile.sub, type: 1, users: [
+      { id: authStore.user!.profile.sub },
+      { id: item.key }
+    ]
+  })
+
+  connection.send('chatCreated', chatId)
+
+  router.push({ path: '/chat', query: { id: chatId } })
 }
 
 peer.on('call', async (call) => {
@@ -230,27 +222,23 @@ peer.on('call', async (call) => {
   call.on('stream', appendVideo)
 })
 
-onCalling((chatId: string) => {
-  //get call
-})
+onCalling((chatId: string) => { })
 
 onJoinCall(async (peerId: string) => {
   if (peerId === peer.id) return
 
   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
-
   const call = peer.call(peerId, camera_stream)
   call.on('stream', appendVideo)
 })
 
 onSendMessage((message: Message) => {
-  if (!chatId.value) return
+  chatId.value && messageStore.addMessage(message)
 
-  messageStore.addMessage(message)
-  chatStore.getChat(chatId.value)
+  chatStore.getChat(message.chatId)
 })
 
-onChatCreate(async (chatId: string) => {
+onChatCreated(async (chatId: string) => {
   const chat = await chatStore.getChat(chatId)
   chat && chatStore.chats.push(chat)
 })
@@ -263,87 +251,63 @@ const appendVideo = (stream: MediaStream) => {
   video.autoplay = true
 
   const videos = document.querySelector('#videos')
-
   videos?.appendChild(video)
 }
 
-const chatSelect = (chatId: string) => {
-  router.push({ path: '/chat', query: { id: chatId } })
-}
+const enableSearch = () => searchActive.value = true
+const disableSearch = () => searchActive.value = false
 
-const itemSelect = async (item: SearchItem) => {
-  searchActive.value = false
-
-  searchItems.value = []
-
-  if (item.value) {
-    return router.push({ path: '/chat', query: { id: item.value } })
-  }
-
-  const chatId = await chatStore.create({
-    name: '', image: '', userId: +user.value!.profile.sub, type: 1, users: [
-      { id: user.value!.profile.sub },
-      { id: item.key }
-    ]
-  })
-
-  connection.send('chatCreated', chatId)
-
-  router.push({ path: '/chat', query: { id: chatId } })
-}
+const toggleMenu = () => menuActive.value = !menuActive.value
 </script>
 
 <style scoped>
-.chats-wrap {
+.chats-main {
+  height: 100%;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-columns: auto 1fr
+}
 
+.chats-wrap {
+  width: 500px;
   max-width: 600px;
   min-width: 400px;
   position: relative;
-  resize: horizontal;
   background-color: var(--color-background);
   border-right: 1px solid var(--color-border-dark);
-}
-
-.chats-header {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  padding: .5em;
-  column-gap: .5em;
-  align-items: center;
+  /* resize */
+  overflow: hidden;
+  resize: horizontal;
 }
 
 .chat-control {
-  padding: .5em;
   display: flex;
-  cursor: pointer;
-  user-select: none;
+  padding: .6em;
   border-radius: 50%;
   background-color: transparent;
   color: var(--color-placeholder);
   border: 1px solid var(--color-border-dark);
 }
 
-video {
-  width: 350px;
-  height: 150px;
-}
-
-.chats-main {
-  height: 100%;
-  display: grid;
-  grid-template-columns: auto 1fr;
+.chats-header {
+  display: flex;
+  padding: .5em;
+  column-gap: .5em;
+  align-items: center;
 }
 
 .chat-content {
   display: grid;
-  overflow-y: hidden;
-  grid-template-rows: 1fr 12fr auto;
+  overflow: hidden;
+  grid-template-rows: auto 1fr auto;
 }
 
 .chat-messages {
   overflow: hidden;
   position: relative;
+}
+
+.notification {
+  position: absolute;
+  z-index: 1;
 }
 </style>

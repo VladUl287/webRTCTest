@@ -41,6 +41,7 @@ const select = (item: SearchItem) => {
 <style scoped>
 .content {
     height: 100%;
+    padding: 0 .5em;
     overflow-y: auto;
 }
 

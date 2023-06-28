@@ -53,11 +53,11 @@ const imgError = (event: Event) => {
   
 <style scoped>
 .chat-item {
+    position: relative;
     display: flex;
     padding: .5em;
     cursor: pointer;
     column-gap: .5em;
-    position: relative;
     align-items: center;
     border-radius: .3em;
     border: 1px solid var(--color-border-light);

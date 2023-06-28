@@ -30,6 +30,7 @@ const getTime = (dateString: string) => dateString && timeFormat.format(new Date
     padding: .5em 1em;
     border-radius: 1em;
     width: fit-content;
+    scroll-margin-top: .5em;
     background-color: var(--vt-c-indigo);
 }
 

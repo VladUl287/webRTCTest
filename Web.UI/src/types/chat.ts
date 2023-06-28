@@ -3,6 +3,7 @@ export type Chat = {
     name: string,
     image: string,
     date: string,
+    lastRead: string,
     message: LastMessage,
     unread: number
 }
@@ -11,6 +12,7 @@ export type Message = {
     id: string,
     content: string,
     userId: string,
+    chatId: string,
     date: string,
     edit: boolean
 }

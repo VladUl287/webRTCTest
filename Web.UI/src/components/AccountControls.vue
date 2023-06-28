@@ -25,7 +25,7 @@ defineEmits<{
 <style scoped>
 .account-controls {
     width: 100%;
-    padding: 0 .5em;
+    padding: .5em;
 }
 
 .account-controls button {
