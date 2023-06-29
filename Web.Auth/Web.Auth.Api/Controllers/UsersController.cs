@@ -1,7 +1,7 @@
 ﻿using Web.Auth.Core.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Web.Auth.Core.Repositories;
-using Web.Auth.Infrastructure.Services;
+using Web.Auth.Infrastructure.Proxies;
 using Microsoft.AspNetCore.Authorization;
 using OpenIddict.Validation.AspNetCore;
 using Microsoft.AspNetCore.Mvc.ModelBinding;

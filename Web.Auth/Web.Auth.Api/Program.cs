@@ -6,7 +6,7 @@ using Web.Auth.Core.Repositories;
 using Web.Auth.Infrastructure;
 using Web.Auth.Infrastructure.Database;
 using Web.Auth.Infrastructure.Repositories;
-using Web.Auth.Infrastructure.Services;
+using Web.Auth.Infrastructure.Proxies;
 
 var builder = WebApplication.CreateBuilder(args);
 {

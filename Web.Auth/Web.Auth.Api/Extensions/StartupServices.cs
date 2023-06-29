@@ -54,10 +54,10 @@ internal static class StartupServices
                     .SetTokenEndpointUris("connect/token")
                     .SetIntrospectionEndpointUris("connect/introspect")
                     .SetLogoutEndpointUris("connect/logout")
-                    // .SetUserinfoEndpointUris("connect/userinfo")
+                    .SetUserinfoEndpointUris("connect/userinfo")
                     ;
 
-                options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.Roles);
+                options.RegisterScopes(Scopes.Profile);
 
                 options.AllowAuthorizationCodeFlow()
                     .AllowRefreshTokenFlow();
@@ -70,7 +70,7 @@ internal static class StartupServices
                     .EnableStatusCodePagesIntegration()
                     .EnableTokenEndpointPassthrough()
                     .EnableLogoutEndpointPassthrough()
-                    // .EnableUserinfoEndpointPassthrough()
+                    .EnableUserinfoEndpointPassthrough()
                     ;
             })
             .AddValidation(options =>

@@ -33,7 +33,8 @@ public class UsersInitService : IHostedService
                 user = new User
                 {
                     Email = email,
-                    UserName = email
+                    UserName = email,
+                    Image = "https://html.com/wp-content/uploads/flamingo4x.jpg"
                 };
 
                 await userManager.CreateAsync(user, "testPassword1@");

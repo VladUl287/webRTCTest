@@ -89,7 +89,7 @@ internal sealed class ClientsInitService : IHostedService
 
                     Permissions.GrantTypes.RefreshToken,
                     Permissions.GrantTypes.AuthorizationCode,
-                    
+
                     Permissions.Prefixes.Scope + "api1"
                 },
                 Requirements =

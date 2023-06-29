@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Primitives;
 using Microsoft.AspNetCore.Authentication;
 using static OpenIddict.Abstractions.OpenIddictConstants;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Web.Auth.Api.Controllers;
 
@@ -122,6 +123,34 @@ public sealed class AuthorizeController : Controller
         return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
+    [HttpGet("~/connect/userinfo")]
+    [Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> UserInfo()
+    {
+        var subject = User.GetClaim(Claims.Subject) ?? string.Empty;
+
+        var user = await _userManager.FindByIdAsync(subject);
+
+        if (user is null)
+        {
+            var props = new Dictionary<string, string?>
+            {
+                [OpenIddictServerAspNetCoreConstants.Properties.Error] = OpenIddictConstants.Errors.InvalidToken,
+                [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "Account no longer exists."
+            };
+
+            return Challenge(new AuthenticationProperties(props), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        }
+
+        var claims = new Dictionary<string, string>()
+        {
+            [OpenIddictConstants.Claims.Subject] = await _userManager.GetUserIdAsync(user),
+            [CustomClaims.Image] = user.Image
+        };
+
+        return Ok(claims);
+    }
+
     [HttpGet("~/connect/logout")]
     public async Task<IActionResult> Logout()
     {
@@ -146,10 +175,12 @@ public sealed class AuthorizeController : Controller
         var email = await _userManager.GetEmailAsync(user);
         var roles = await _userManager.GetRolesAsync(user);
 
-        identity.SetClaim(Claims.Subject, subject)
+        identity
+                .SetClaim(Claims.Subject, subject)
                 .SetClaim(Claims.Name, name)
-                .SetClaim(Claims.Email, email)
-                .SetClaims(Claims.Role, roles.ToImmutableArray());
+                // .SetClaim(Claims.Email, email)
+                // .SetClaims(Claims.Role, roles.ToImmutableArray())
+                ;
 
         identity.SetScopes(scopes);
 
@@ -177,9 +208,10 @@ public sealed class AuthorizeController : Controller
         var roles = await _userManager.GetRolesAsync(user);
 
         identity.SetClaim(Claims.Subject, subject)
-                .SetClaim(Claims.Email, name)
-                .SetClaim(Claims.Name, email)
-                .SetClaims(Claims.Role, roles.ToImmutableArray());
+                .SetClaim(Claims.Name, name)
+                // .SetClaim(Claims.Email, name)
+                // .SetClaims(Claims.Role, roles.ToImmutableArray())
+                ;
 
         identity.SetDestinations(GetDestinations);
 
