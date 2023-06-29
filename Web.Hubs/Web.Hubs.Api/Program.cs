@@ -26,6 +26,8 @@ var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddHostedService<RedisFlushService>();
 
+    builder.Services.AddRefit();
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 }

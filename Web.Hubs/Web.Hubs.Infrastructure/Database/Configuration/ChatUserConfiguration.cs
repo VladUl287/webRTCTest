@@ -13,6 +13,14 @@ public sealed class ChatUserConfiguration : IEntityTypeConfiguration<ChatUser>
         builder.Property(x => x.LastRead)
             .IsRequired();
 
+        builder.Property(x => x.Name)
+            .HasMaxLength(255)
+            .IsRequired(false);
+
+        builder.Property(x => x.Image)
+            .HasMaxLength(255)
+            .IsRequired(false);
+
         builder.HasOne(x => x.Chat)
             .WithMany(x => x.ChatUsers)
             .HasForeignKey(x => x.ChatId)

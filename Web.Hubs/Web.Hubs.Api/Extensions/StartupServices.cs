@@ -1,3 +1,4 @@
+using Refit;
 using Web.Hubs.Core.Services;
 using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Configuration;
@@ -5,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Web.Hubs.Infrastructure.Database;
 using Web.Hubs.Infrastructure.Services;
 using Web.Hubs.Infrastructure.Repositories;
+using Web.Hubs.Api.HttpHandlers;
+using Web.Hubs.Infrastructure.Proxies;
 
 namespace Web.Hubs.Api.Extensions;
 
@@ -95,7 +98,21 @@ internal static class StartupServices
         services.AddScoped<ICallService, CallService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IUserChatService, UserChatService>();
-        
+
         services.AddSingleton<IStorage<long>, StorageDictionary>();
+    }
+
+    public static void AddRefit(this IServiceCollection services)
+    {
+        services.AddHttpContextAccessor();
+
+        services.AddTransient<AuthHeaderHandler>();
+
+        services.AddRefitClient<IAuthApi>()
+            .ConfigureHttpClient(config =>
+            {
+                config.BaseAddress = new Uri("https://localhost:7250/api");
+            })
+            .AddHttpMessageHandler<AuthHeaderHandler>();
     }
 }

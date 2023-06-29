@@ -1,4 +1,5 @@
-﻿using Web.Hubs.Core.Dtos.Chats;
+﻿using Web.Hubs.Core.Dtos;
+using Web.Hubs.Core.Dtos.Chats;
 using Web.Hubs.Core.Dtos.Messages;
 using Web.Hubs.Core.Entities;
 
@@ -14,9 +15,11 @@ internal static class ProjectionExtensions
             chat => new ChatDto
             {
                 Id = chat.Id,
-                Name = chat.Name,
-                Image = chat.Image,
                 Date = chat.Date,
+                Name = chat.Type == Core.Enums.ChatType.Dialog ? chat.ChatUsers!.First(x => x.UserId == userId).Name : chat.Name,
+                Image = chat.Type == Core.Enums.ChatType.Dialog ? chat.ChatUsers!.First(x => x.UserId == userId).Image : chat.Image,
+                UserId = chat.UserId,
+
                 LastRead = chat.ChatUsers!
                     .First(cu => cu.UserId == userId)
                     .LastRead,
@@ -35,7 +38,7 @@ internal static class ProjectionExtensions
                     .FirstOrDefault(),
 
                 Unread = chat.Messages!
-                    .Count(msg => msg.UserId != userId && msg.Date >= chat.ChatUsers!
+                    .Count(msg => msg.UserId != userId && msg.Date > chat.ChatUsers!
                         .Where(ch => ch.UserId == userId)
                         .Select(m => m.LastRead)
                         .FirstOrDefault()
