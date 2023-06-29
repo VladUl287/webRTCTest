@@ -17,9 +17,9 @@ export const useChatStore = defineStore('chat', () => {
             if (index > -1) {
                 chats.value[index] = result.data
             }
-
+            
             console.timeEnd()
-
+          
             return result.data
         } catch (error) {
             console.log(error);

@@ -21,8 +21,3 @@ export type LastMessage = {
     date: string,
     content: string
 }
-
-export enum MessageAction {
-    Update,
-    Delete,
-}

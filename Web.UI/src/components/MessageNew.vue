@@ -3,7 +3,7 @@
         <div class="textarea-wrap">
             <div class="textarea" contenteditable data-placeholder="message" ref="textarea"></div>
         </div>
-        <button @click="send">
+        <button @click="sendMessage">
             <span class="material-symbols-outlined">
                 send
             </span>
@@ -24,33 +24,32 @@ const emits = defineEmits<{
 
 const textarea = ref<HTMLElement>()
 
-const send = () => {
+const sendMessage = () => {
     if (textarea.value && textarea.value.innerText) {
         emits('send', textarea.value.innerText)
     }
 }
-
 </script>
   
 <style>
 .message-new {
-    margin: 0 auto;
-    padding: .5em 0;
-    width: fit-content;
+    width: 100%;
+    display: grid;
+    align-items: center;
+    grid-template-columns: 1fr auto;
 }
 
 .textarea-wrap {
     padding: .7em 1em;
-    border-radius: 5em;
+    border-radius: .5em;
     display: inline-block;
     border: 1px solid var(--color-border-light);
 }
 
 .textarea {
-    padding: 0 .5em 0 0;
-    width: 20rem;
     resize: none;
     outline: none;
+    max-width: 20rem;
     overflow-y: auto;
     max-height: 20rem;
 }

@@ -1,6 +1,6 @@
+import { computed } from 'vue'
 import { defineStore } from 'pinia'
-import { User, UserManager, WebStorageStateStore, type UserManagerSettings } from 'oidc-client';
-import { computed } from 'vue';
+import { User, UserManager, WebStorageStateStore, type UserManagerSettings } from 'oidc-client'
 
 const config: UserManagerSettings = {
     userStore: new WebStorageStateStore({ store: window.localStorage }),
@@ -15,15 +15,13 @@ const config: UserManagerSettings = {
     scope: 'openid profile api1 offline_access',
 
     automaticSilentRenew: true,
-    filterProtocolClaims: true,
-
-    loadUserInfo: false,
+    filterProtocolClaims: true
 }
 
 export const useAuthStore = defineStore('auth', () => {
-    let userInstance: User | null = null
+    let user: User | null = null
 
-    const user = computed(() => userInstance)
+    const profile = computed(() => user?.profile)
 
     const userManager = new UserManager(config)
 
@@ -36,12 +34,10 @@ export const useAuthStore = defineStore('auth', () => {
     })
 
     const getUser = async () => {
-        if (!userInstance) {
-            console.log('get user');
-            
-            userInstance = await userManager.getUser()
+        if (!user) {
+            user = await userManager.getUser()
         }
-        return userInstance
+        return user
     }
 
     const silentRenew = async () => {
@@ -62,12 +58,12 @@ export const useAuthStore = defineStore('auth', () => {
     const signingCallback = (callback: () => void) => {
         userManager.signinRedirectCallback()
             .then((userValue) => {
-                userInstance = userValue
+                user = userValue
                 callback()
             }).catch((error) => {
                 console.log(error)
             })
     }
 
-    return { user, silentRenew, getUser, login, logout, signingCallback }
+    return { profile, silentRenew, getUser, login, logout, signingCallback }
 })

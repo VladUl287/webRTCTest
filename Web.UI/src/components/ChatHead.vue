@@ -41,9 +41,8 @@ const imgError = (event: Event) => {
   
 <style scoped>
 .chat-head {
+    padding: .5em;
     display: flex;
-    height: 100%;
-    padding: 1em;
     column-gap: 1em;
     user-select: none;
     align-items: center;

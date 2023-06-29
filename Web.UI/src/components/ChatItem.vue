@@ -1,7 +1,7 @@
 <template>
-    <div class="chat-item" :data-time="getTime(chat.message?.date || chat.date)" :class="{ 'active': active }">
+    <div class="chat-item" :class="{ 'active': active }" :data-time="getTime(chat.message?.date || chat.date)">
         <div class="img-wrap">
-            <img :src="chat.image" @error.once="imgError" alt="Chat avatar" />
+            <AvatarImg :src="chat.image" alter="https://html.com/wp-content/uploads/flamingo4x.jpg" />
         </div>
         <div class="chat-info">
             <p>{{ chat.name }}</p>
@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 import type { Chat } from '@/types/chat';
+import AvatarImg from '@/components/controls/AvatarImg.vue'
 
 defineProps({
     chat: {
@@ -40,14 +41,6 @@ const getTime = (dateString: string): string | undefined => {
 
 const isToday = (date: Date) => {
     return new Date().toDateString() === date.toDateString()
-}
-
-const imgError = (event: Event) => {
-    const imageElement = (event.target as HTMLImageElement)
-
-    if (imageElement) {
-        imageElement.src = 'https://html.com/wp-content/uploads/flamingo4x.jpg'
-    }
 }
 </script>
   

@@ -3,97 +3,122 @@
         <div v-if="loading" class="loading">
             <LoadingRing />
         </div>
-        <div v-else class="messages-list" ref="list">
-            <MessageItem v-for="message of messagesReverse" :key="message.id" :id="message.id" :message="message"
-                :right="userId == message.userId" />
-
-            <span>{{ scrollToLastReaded() }}</span>
+        <div v-else class="messages-list" ref="messagesList">
+            <MessageItem v-for="message of messagesReverse" :key="message.id" :id="normalizeId(message.id)"
+                :message="message" :right="userId == message.userId"
+                :class="{ 'active': message.userId != userId && message.date > chat.lastRead }" />
         </div>
     </section>
 </template>
   
 <script setup lang="ts">
-import { computed, onUpdated, ref, type PropType, watch } from 'vue'
-import type { MessageAction, Message, Chat } from '@/types/chat'
+import { computed, ref, type PropType, watch, onMounted } from 'vue'
+import type { Message, Chat } from '@/types/chat'
 import MessageItem from '@/components/MessageItem.vue'
 import LoadingRing from '@/components/controls/LoadingRing.vue'
+
+const messagesList = ref<HTMLElement>()
 
 const props = defineProps({
     messages: {
         type: Object as PropType<Message[]>,
         required: true
     },
-    chat: Object as PropType<Chat>,
-    userId: String,
+    chat: {
+        type: Object as PropType<Chat>,
+        required: true
+    },
+    userId: {
+        type: String,
+        required: true
+    },
     loading: Boolean
 })
 
 const emit = defineEmits<{
-    (e: 'action', content: { message: Message, messageAction: MessageAction }): void,
-    (e: 'lastReaded', date: string): void
+    (e: 'messageCheck', date: string): void
 }>()
 
-const options = {
-    root: document.querySelector(".messages-list"),
-    rootMargin: "0px",
-    threshold: 1.0,
-}
+watch(
+    () => messagesList.value?.childNodes,
+    () => {
+        scrollToLastReaded()
+    })
+
+watch(
+    () => props.messages,
+    (messages: Message[]) => {
+        const lastMessage = messages[messages.length - 1]
+
+        if (lastMessage.userId == props.userId) {
+            scrollToBottom()
+        }
+    })
 
 watch(
     () => props.chat?.lastRead,
     () => {
-        checkLastMessage()
+        observeLastMessage()
     })
 
 const messagesReverse = computed(() => [...props.messages].reverse())
 
-const list = ref<HTMLElement>()
+const options = {
+    root: document.querySelector(".messages-list"),
+    threshold: .5
+}
 
-let first = true
 const scrollToLastReaded = () => {
-    if (list.value && props.chat && first) {
-        first = false
+    const message = getUnreadMessage()
+    if (message) {
+        const element = getMessageElement(message.id)
 
-        const lastElement = checkLastMessage()
+        element?.scrollIntoView({ block: "end" })
 
-        lastElement?.scrollIntoView({ block: "start" })
+        observeLastMessage()
     }
 }
 
-const checkLastMessage = () => {
-    const chat = props.chat
+const observeLastMessage = (): void => {
+    const message = getUnreadMessage()
 
-    if (!chat || !list.value) return
+    if (message) {
+        const element = getMessageElement(message.id)
 
-    const message = props.messages.find(message => new Date(message.date) >= new Date(chat.date))
+        const observer = new IntersectionObserver(() => {
+            emit('messageCheck', message?.date)
+            observer.disconnect()
+        }, options);
 
-    if (!message) return
-
-    const element = list.value.querySelector(`#${message.id}`)
-
-    if (!element) return
-
-    const observer = new IntersectionObserver(() => {
-        // emit('lastReaded', message?.date)
-        console.log(message?.date)
-        observer.disconnect()
-    }, options);
-
-    observer.observe(element)
-
-    return element
+        element && observer.observe(element)
+    }
 }
 
-onUpdated(() => scrollToBottom())
+const getMessageElement = (id: string) => {
+    return messagesList.value?.querySelector('#' + normalizeId(id))
+}
+
+const getUnreadMessage = () => {
+    if (props.chat) {
+        const chatLastReadDate = new Date(props.chat.lastRead)
+
+        return props.messages.find(
+            (message) => message.userId != props.userId && new Date(message.date) > chatLastReadDate)
+    }
+}
 
 const scrollToBottom = () => {
-    if (list.value && list.value.scrollTop >= -55) {
-        list.value.scrollTop = 0
-    }
+    messagesList.value && (messagesList.value.scrollTop = 0)
 }
+
+const normalizeId = (value: string) => `a${value}`
 </script>
   
 <style scoped>
+.active {
+    background-color: violet;
+}
+
 .messages-wrap {
     height: 100%;
     padding: 0 5px;
@@ -106,7 +131,7 @@ const scrollToBottom = () => {
     display: flex;
     row-gap: .5em;
     overflow-y: auto;
-    padding: 0 10px 0 0;
+    padding: .5em .5em 0 0;
     flex-direction: column-reverse;
 }
 

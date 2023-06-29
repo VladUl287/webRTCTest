@@ -5,7 +5,7 @@
             <button class="success" @click="$emit('success')">
                 <span class="material-symbols-outlined">call</span>
             </button>
-            <button class="danger">
+            <button class="danger" @click="$emit('reject')">
                 <span class="material-symbols-outlined">call_end</span>
             </button>
         </div>
@@ -15,7 +15,8 @@
 <script setup lang="ts">
 
 defineEmits<{
-    (e: 'success'): void
+    (e: 'accept'): void,
+    (e: 'reject'): void
 }>()
 
 </script>
@@ -37,7 +38,7 @@ defineEmits<{
     border: none;
     padding: .5em;
     cursor: pointer;
-    margin-right: .5em;
+    margin-right: 1em;
     border-radius: 50%;
     display: inline-flex;
     color: var(--color-text)

@@ -6,8 +6,8 @@
             </div>
         </div>
         <div v-else>
-            <ChatItem v-for="chat of chats" :key="chat.id" :chat="chat" @click="select(chat.id)"
-                :active="select === chat.id" class="item" />
+            <ChatItem v-for="chat of chats" :key="chat.id" :chat="chat" :active="chat.id === select"
+                @click="select(chat.id)" class="item" />
         </div>
     </section>
 </template>
@@ -23,8 +23,8 @@ defineProps({
         type: Object as PropType<Chat[]>,
         required: true
     },
-    select: String,
-    loading: Boolean
+    loading: Boolean,
+    select: String
 })
 
 const emits = defineEmits<{
@@ -36,7 +36,6 @@ const select = (chatId: string) => emits('select', chatId)
   
 <style>
 .list-wrap {
-    padding: 0 .5em;
     max-width: 100%;
 }
 

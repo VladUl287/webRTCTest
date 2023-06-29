@@ -1,28 +1,33 @@
 <template>
-    <input type="text" id="search" placeholder="search" autocomplete="off" @input="search">
+    <input type="text" id="search" placeholder="search" autocomplete="off" :value="modelValue" @input="search">
 </template>
 
 <script setup lang="ts">
+import { debounce } from '@/helpers/debounce'
+
+defineProps({
+    modelValue: String
+})
 
 const emit = defineEmits<{
+    (e: 'update:modelValue', value: string): void,
     (e: 'input', value: string): void
 }>()
 
-let timeout: number | undefined
 const search = (event: Event) => {
-    clearTimeout(timeout)
+    const input = (event.target as HTMLInputElement)
 
-    timeout = setTimeout(() => {
-        const input = (event.target as HTMLInputElement)
-        emit('input', input.value)
-    }, 600)
+    emit('update:modelValue', input.value)
+    searchDebounce(input.value)
 }
+
+const searchDebounce = debounce((value: string) => emit('input', value), 500)
 </script>
 
 <style scoped>
 #search {
     width: 100%;
-    padding: .8em 1em;
+    padding: .8em;
     font-size: medium;
     border-radius: 5em;
     color: var(--color-text);

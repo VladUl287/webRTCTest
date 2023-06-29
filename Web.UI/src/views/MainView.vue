@@ -8,8 +8,8 @@
           </button>
         </template>
         <template #content>
-          <AccountCard :user="authStore.user" />
-          <AccountControls @logout="authStore.logout" />
+          <ProfileCard :profile="authStore.profile" />
+          <ProfileControls @logout="authStore.logout" />
         </template>
       </SideMenu>
 
@@ -23,10 +23,10 @@
           </button>
         </div>
 
-        <SearchField :active="searchActive" @input="inputSearch" @focusin="enableSearch" />
+        <SearchField v-model="searchText" @input="inputSearch" @focusin="enableSearch" />
       </section>
 
-      <section>
+      <section class="chats-content">
         <SearchList v-if="searchActive" :items="searchItems" :loading="itemsLoading" @select="itemSelect" />
 
         <ChatsList v-else :select="chatId" :chats="chatStore.chats" :loading="chatsLoading" @select="chatSelect" />
@@ -36,14 +36,16 @@
     <section class="chat-content" v-if="chatId">
       <ChatHead :chat="chat" @start-call="startCall" />
 
-      <div class="chat-messages" v-if="authStore.user">
+      <div class="chat-messages" v-if="authStore.profile && chat">
         <ChatNotification @success="joinCall" class="notification" />
 
-        <MessagesList :chat="chat" :messages="messageStore.messages" :userId="authStore.user.profile.sub"
-          :loading="messagesLoading" @lastReaded="setChatLastRead" />
+        <MessagesList :chat="chat" :messages="messageStore.messages" :userId="authStore.profile.sub"
+          :loading="messagesLoading" @messageCheck="setChatLastRead" />
       </div>
 
-      <MessageNew :disabled="false" @send="sendMessage" />
+      <section class="message-new-wrap">
+        <MessageNew :disabled="false" @send="sendMessage" />
+      </section>
     </section>
 
   </section>
@@ -58,14 +60,14 @@ import { useRoute, useRouter } from 'vue-router'
 import ChatsList from '@/components/ChatsList.vue'
 import SearchField from '@/components/SearchField.vue'
 import MessagesList from '@/components/MessagesList.vue'
-import AccountCard from '@/components/AccountCard.vue'
 import SearchList from '@/components/SearchList.vue'
 import CallModal from '@/components/CallModal.vue'
 import ChatHead from '@/components/ChatHead.vue'
 import MessageNew from '@/components/MessageNew.vue'
 import SideMenu from '@/components/controls/SideMenu.vue'
 import ChatNotification from '@/components/ChatNotification.vue'
-import AccountControls from '@/components/AccountControls.vue'
+import ProfileCard from '@/components/ProfileCard.vue'
+import ProfileControls from '@/components/ProfileControls.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '@/stores/chats'
 import { getUsers } from '@/http/users'
@@ -78,7 +80,7 @@ import connection, { callSendMessage, onSendMessage, onChatCreated, onJoinCall, 
 
 const chat = ref<Chat>()
 const chatId = ref<string>()
-// const user = ref<User | null>()
+const searchText = ref<string>()
 const searchItems = ref<SearchItem[]>([])
 
 const calling = ref<boolean>()
@@ -110,7 +112,7 @@ const initializeChat = () => {
   chatId.value = route.query.id as string
 
   getMessages()
-  getChat()
+  getChat(chatId.value)
 }
 
 const getMessages = async () => {
@@ -135,34 +137,45 @@ const getChats = async () => {
   }
 }
 
-const getChat = async () => {
+const getChat = async (chatId: string) => {
   try {
-    if (!chatId.value) return
+    if (!chatId) return
 
-    chat.value = await chatStore.getChat(chatId.value)
+    chat.value = await chatStore.getChat(chatId)
   } catch {
     router.replace({ path: '/chat' })
   }
 }
 
-const setChatLastRead = debounce((date: string) => {
+const setChatLastRead = (date: string) => {
+  if (chat.value) {
+    // setLastRead(chat.value.lastRead)
+  }
+}
+
+const setLastRead = debounce((date: string) => {
   connection.send('updateChat', { chatId: chatId.value, lastRead: date[0] })
-}, 500)
+}, 5000)
 
 const inputSearch = async (value: string) => {
-  if (!value || value.length < 3) searchItems.value = []
-
   try {
-    itemsLoading.value = true
+    if (value && value.length > 2) {
+      itemsLoading.value = true
 
-    const users = await getUsers(value)
+      const users = await getUsers(value)
 
-    searchItems.value = users.map(user => ({
-      key: user.id,
-      value: user.chatId,
-      label: user.userName
-    }))
-  } finally {
+      searchItems.value = users.map(user => ({
+        key: user.id,
+        image: user.image,
+        value: user.chatId,
+        label: user.userName
+      }))
+    }
+    else {
+      searchItems.value = []
+    }
+  }
+  finally {
     itemsLoading.value = false
   }
 }
@@ -198,21 +211,24 @@ const chatSelect = (chatId: string) => router.push({ path: '/chat', query: { id:
 const itemSelect = async (item: SearchItem) => {
   searchActive.value = false
   searchItems.value = []
+  clearSearchField()
 
   if (item.value) {
     return router.push({ path: '/chat', query: { id: item.value } })
   }
 
-  const chatId = await chatStore.create({
-    name: authStore.user?.profile.name || 'test name', image: '', userId: +authStore.user!.profile.sub, type: 1, users: [
-      { id: authStore.user!.profile.sub },
-      { id: item.key }
-    ]
-  })
+  if (authStore.profile) {
+    const chatId = await chatStore.create({
+      name: authStore.profile.name || 'test name', image: '', userId: +authStore.profile.sub, type: 1, users: [
+        { id: authStore.profile.sub },
+        { id: item.key }
+      ]
+    })
 
-  connection.send('chatCreated', chatId)
+    connection.send('chatCreated', chatId)
 
-  router.push({ path: '/chat', query: { id: chatId } })
+    router.push({ path: '/chat', query: { id: chatId } })
+  }
 }
 
 peer.on('call', async (call) => {
@@ -243,7 +259,11 @@ onChatCreated(async (chatId: string) => {
   chat && chatStore.chats.push(chat)
 })
 
-onChatUpdate((chatId: string) => chatStore.getChat(chatId))
+onChatUpdate((chatId: string) => {
+  console.log('chat udpated');
+
+  getChat(chatId)
+})
 
 const appendVideo = (stream: MediaStream) => {
   const video = document.createElement('video')
@@ -255,9 +275,15 @@ const appendVideo = (stream: MediaStream) => {
 }
 
 const enableSearch = () => searchActive.value = true
-const disableSearch = () => searchActive.value = false
+const disableSearch = () => {
+  searchActive.value = false
+  searchItems.value = []
+  clearSearchField()
+}
 
 const toggleMenu = () => menuActive.value = !menuActive.value
+
+const clearSearchField = () => searchText.value = ''
 </script>
 
 <style scoped>
@@ -295,6 +321,10 @@ const toggleMenu = () => menuActive.value = !menuActive.value
   align-items: center;
 }
 
+.chats-content {
+  padding: 0 .5em;
+}
+
 .chat-content {
   display: grid;
   overflow: hidden;
@@ -309,5 +339,11 @@ const toggleMenu = () => menuActive.value = !menuActive.value
 .notification {
   position: absolute;
   z-index: 1;
+}
+
+.message-new-wrap {
+  width: 50%;
+  margin: 0 auto;
+  padding: .5em 0;
 }
 </style>

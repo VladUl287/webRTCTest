@@ -1,13 +1,17 @@
 <template>
-    <div class="content">
-        <section v-if="items && items.length > 0" class="items-list">
-            <button v-for="item of items" :key="item.key" @click="select(item)">{{ item.label }}</button>
-        </section>
-        <section v-else-if="loading" class="loading">
+    <div>
+        <section v-if="loading" class="list-body loading">
             <LoadingRing />
         </section>
-        <section v-else class="empty-list">
-            <span>empty</span>
+        <section v-else-if="items.length === 0" class="list-body">
+            <span>¯\_(ツ)_/¯</span>
+            <p>empty</p>
+        </section>
+        <section v-else class="items-list">
+            <button v-for="item of items" :key="item.key" @click="$emit('select', item)">
+                <AvatarImg :src="item.image" alter="" />
+                {{ item.label }}
+            </button>
         </section>
     </div>
 </template>
@@ -15,58 +19,53 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 import type { SearchItem } from '@/types/components'
+import AvatarImg from '@/components/controls/AvatarImg.vue'
 import LoadingRing from '@/components/controls/LoadingRing.vue'
 
 defineProps({
-    active: Boolean,
-    items: Object as PropType<SearchItem[]>,
-    loading: Boolean
+    items: {
+        type: Object as PropType<SearchItem[]>,
+        required: true
+    },
+    loading: Boolean,
+    visible: Boolean
 })
 
-const emits = defineEmits<{
-    (e: 'input', value: string): void,
+defineEmits<{
     (e: 'select', value: SearchItem): void
 }>()
-
-const select = (item: SearchItem) => {
-    emits('select', item)
-
-    const searchInput = document.querySelector('#search') as HTMLInputElement
-    if (searchInput) {
-        searchInput.value = ''
-    }
-}
 </script>
   
 <style scoped>
-.content {
-    height: 100%;
-    padding: 0 .5em;
-    overflow-y: auto;
+p {
+    margin: .2em;
+    font-size: x-large;
+    text-align: center;
 }
 
-.items-list>button {
-    width: 100%;
-    padding: 1em;
-    cursor: pointer;
-    text-align: left;
-    user-select: none;
-    margin: .5em 0 0 0;
-    border-radius: .5em;
-    color: var(--color-text);
-    background-color: transparent;
-    border: 1px solid var(--color-border-dark);
-}
-
-.loading,
-.empty-list {
+.list-body {
+    font-size: xx-large;
+    margin: 50% auto;
     user-select: none;
     width: fit-content;
-    margin: 50% auto 0 auto;
 }
 
 .loading {
     width: 4em;
     height: 4em;
+}
+
+.items-list>button {
+    width: 100%;
+    display: flex;
+    padding: .5em;
+    column-gap: .5em;
+    font-size: medium;
+    margin: .5em 0 0 0;
+    align-items: center;
+    border-radius: .5em;
+    color: var(--color-text);
+    background-color: transparent;
+    border: 1px solid var(--color-border-dark);
 }
 </style>

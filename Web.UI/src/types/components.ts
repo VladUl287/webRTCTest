@@ -1,5 +1,6 @@
 export type SearchItem = {
     key: string,
-    value: string | null,
-    label: string
+    label: string,
+    value?: string,
+    image?: string
 }
