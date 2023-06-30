@@ -1,8 +1,6 @@
 <template>
     <div class="message-new">
-        <div class="textarea-wrap">
-            <div class="textarea" contenteditable data-placeholder="message" ref="textarea"></div>
-        </div>
+        <div class="textarea" contenteditable data-placeholder="message" ref="textarea"></div>
         <button @click="sendMessage">
             <span class="material-symbols-outlined">
                 send
@@ -31,40 +29,34 @@ const sendMessage = () => {
 }
 </script>
   
-<style>
+<style scoped>
 .message-new {
     width: 100%;
     display: grid;
     align-items: center;
+    padding: var(--section-gap) 0;
+    column-gap: var(--section-gap);
     grid-template-columns: 1fr auto;
-}
-
-.textarea-wrap {
-    padding: .7em 1em;
-    border-radius: .5em;
-    display: inline-block;
-    border: 1px solid var(--color-border-light);
 }
 
 .textarea {
     resize: none;
-    outline: none;
-    max-width: 20rem;
+    padding: .7em;
     overflow-y: auto;
     max-height: 20rem;
+    border-radius: .5em;
+    border: 1px solid var(--color-border-light);
 }
 
-.textarea[contenteditable]:empty::before {
+.textarea:empty::before {
     content: attr(data-placeholder);
     color: var(--color-placeholder);
 }
 
-.message-new button {
-    display: inline-flex;
-    margin: .5em;
+button {
+    display: flex;
     padding: .7em;
-    cursor: pointer;
-    border-radius: 5em;
+    border-radius: 50%;
     background-color: transparent;
     color: var(--color-placeholder);
     border: 1px solid var(--color-border-dark);

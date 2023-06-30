@@ -4,7 +4,7 @@ export type Chat = {
     image: string,
     date: string,
     lastRead: string,
-    message: LastMessage,
+    lastMessage: LastMessage,
     unread: number
 }
 

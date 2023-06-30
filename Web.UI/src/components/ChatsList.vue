@@ -6,8 +6,8 @@
             </div>
         </div>
         <div v-else>
-            <ChatItem v-for="chat of chats" :key="chat.id" :chat="chat" :active="chat.id === select"
-                @click="select(chat.id)" class="item" />
+            <ChatItem v-for="chat of chats" :key="chat.id" :chat="chat" :active="active(chat.id)" @click="select(chat.id)"
+                class="item" />
         </div>
     </section>
 </template>
@@ -18,7 +18,7 @@ import type { Chat } from '@/types/chat'
 import ChatItem from '@/components/ChatItem.vue'
 import SkeletonLoad from '@/components/controls/SkeletonLoad.vue'
 
-defineProps({
+const props = defineProps({
     chats: {
         type: Object as PropType<Chat[]>,
         required: true
@@ -26,6 +26,8 @@ defineProps({
     loading: Boolean,
     select: String
 })
+
+const active = (chatId: string) => !!props.select && props.select === chatId
 
 const emits = defineEmits<{
     (e: 'select', chatId: string): void

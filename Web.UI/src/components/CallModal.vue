@@ -42,8 +42,8 @@ dialog {
     width: 90%;
     height: 70%;
     color: var(--color-text);
-    background-color: var(--color-background);
     border: 1px solid var(--color-border-light);
+    background-color: var(--color-background-dark);
 }
 
 dialog::backdrop {

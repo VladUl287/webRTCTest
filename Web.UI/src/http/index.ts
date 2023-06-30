@@ -19,8 +19,6 @@ instance.interceptors.response.use(
     (config: any) => config,
     (error: any) => {
         if (error.response.status === 401) {
-            console.log('401');
-            
             return useAuthStore().silentRenew()
         }
         return Promise.reject(error);

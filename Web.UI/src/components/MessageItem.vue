@@ -31,7 +31,7 @@ const getTime = (dateString: string) => dateString && timeFormat.format(new Date
     border-radius: 1em;
     width: fit-content;
     scroll-margin-top: .5em;
-    background-color: var(--vt-c-indigo);
+    background-color: var(--indigo);
 }
 
 .message-item p {
@@ -47,6 +47,6 @@ const getTime = (dateString: string) => dateString && timeFormat.format(new Date
 
 .right {
     margin-left: auto;
-    background-color: var(--color-main);
+    background-color: var(--color-main-dark);
 }
 </style>

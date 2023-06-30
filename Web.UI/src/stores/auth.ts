@@ -14,6 +14,8 @@ const config: UserManagerSettings = {
     response_type: 'code',
     scope: 'openid profile api1 offline_access',
 
+    silentRequestTimeout: 1000,
+
     automaticSilentRenew: true,
     filterProtocolClaims: true
 }
@@ -42,10 +44,10 @@ export const useAuthStore = defineStore('auth', () => {
 
     const silentRenew = async () => {
         try {
-            await userManager.signinSilent()
+            await userManager.signinSilent({ timeout: 1000 })
 
             window.location.href = '../'
-        } catch {
+        } catch {            
             logout()
         }
 

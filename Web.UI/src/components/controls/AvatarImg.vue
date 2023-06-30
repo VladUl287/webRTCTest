@@ -1,6 +1,6 @@
 <template>
     <section class="img-wrap">
-        <img :src="src" @error.once="error" alt="Avatar" />
+        <img :src="src + '?width=50&height=50'" @error.once="error" alt="Avatar" />
     </section>
 </template>
 
@@ -11,6 +11,8 @@ const props = defineProps({
 })
 
 const error = (event: Event) => {
+    console.log('event', props.src);
+    
     const imgElement = (event.target as HTMLImageElement)
 
     if (imgElement && props.alter) {

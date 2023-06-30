@@ -6,13 +6,13 @@
         <div v-else class="messages-list" ref="messagesList">
             <MessageItem v-for="message of messagesReverse" :key="message.id" :id="normalizeId(message.id)"
                 :message="message" :right="userId == message.userId"
-                :class="{ 'active': message.userId != userId && message.date > chat.lastRead }" />
+                :class="{ 'active': userId && message.userId != userId && chat && message.date > chat.lastRead }" />
         </div>
     </section>
 </template>
   
 <script setup lang="ts">
-import { computed, ref, type PropType, watch, onMounted } from 'vue'
+import { computed, ref, type PropType, watch } from 'vue'
 import type { Message, Chat } from '@/types/chat'
 import MessageItem from '@/components/MessageItem.vue'
 import LoadingRing from '@/components/controls/LoadingRing.vue'
@@ -24,14 +24,11 @@ const props = defineProps({
         type: Object as PropType<Message[]>,
         required: true
     },
-    chat: {
-        type: Object as PropType<Chat>,
-        required: true
-    },
     userId: {
         type: String,
         required: true
     },
+    chat: Object as PropType<Chat>,
     loading: Boolean
 })
 
@@ -48,10 +45,12 @@ watch(
 watch(
     () => props.messages,
     (messages: Message[]) => {
-        const lastMessage = messages[messages.length - 1]
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1]
 
-        if (lastMessage.userId == props.userId) {
-            scrollToBottom()
+            if (lastMessage.userId == props.userId) {
+                scrollToBottom()
+            }
         }
     })
 
@@ -129,9 +128,9 @@ const normalizeId = (value: string) => `a${value}`
 .messages-list {
     height: 100%;
     display: flex;
-    row-gap: .5em;
     overflow-y: auto;
     padding: .5em .5em 0 0;
+    row-gap: var(--section-gap);
     flex-direction: column-reverse;
 }
 

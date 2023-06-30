@@ -36,10 +36,10 @@
     <section class="chat-content" v-if="chatId">
       <ChatHead :chat="chat" @start-call="startCall" />
 
-      <div class="chat-messages" v-if="authStore.profile && chat">
+      <div class="chat-messages" v-if="authStore.profile">
         <ChatNotification @success="joinCall" class="notification" />
 
-        <MessagesList :chat="chat" :messages="messageStore.messages" :userId="authStore.profile.sub"
+        <MessagesList  :chat="chat" :messages="messageStore.messages" :userId="authStore.profile.sub"
           :loading="messagesLoading" @messageCheck="setChatLastRead" />
       </div>
 
@@ -298,7 +298,7 @@ const clearSearchField = () => searchText.value = ''
   max-width: 600px;
   min-width: 400px;
   position: relative;
-  background-color: var(--color-background);
+  background-color: var(--color-background-dark);
   border-right: 1px solid var(--color-border-dark);
   /* resize */
   overflow: hidden;
@@ -328,7 +328,7 @@ const clearSearchField = () => searchText.value = ''
 .chat-content {
   display: grid;
   overflow: hidden;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: minmax(70px, auto) 1fr auto;
 }
 
 .chat-messages {

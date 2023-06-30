@@ -20,7 +20,7 @@ defineProps({
     inset: 0;
     transform: translateX(-100%);
     transition: transform 150ms linear;
-    background-color: var(--color-background)
+    background-color: var(--color-background-dark)
 }
 
 .side-menu.active {

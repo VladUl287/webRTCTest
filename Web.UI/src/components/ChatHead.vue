@@ -1,7 +1,7 @@
 <template>
     <div v-if="chat" class="chat-head">
         <section class="img-wrap">
-            <img :src="chat.image" @error.once="imgError" alt="Chat avatar" />
+            <AvatarImg :src="chat.image" alter="https://html.com/wp-content/uploads/flamingo4x.jpg" />
         </section>
         <section>
             <p class="chat-name">{{ chat.name }}</p>
@@ -18,8 +18,9 @@
 </template>
   
 <script setup lang="ts">
-import type { PropType } from 'vue';
-import type { Chat } from '@/types/chat';
+import type { PropType } from 'vue'
+import type { Chat } from '@/types/chat'
+import AvatarImg from './controls/AvatarImg.vue'
 
 defineProps({
     chat: Object as PropType<Chat>
@@ -28,15 +29,6 @@ defineProps({
 const emits = defineEmits<{
     (e: 'startCall'): void
 }>()
-
-const imgError = (event: Event) => {
-    const imageElement = (event.target as HTMLImageElement)
-
-    if (imageElement) {
-        imageElement.src = 'https://html.com/wp-content/uploads/flamingo4x.jpg'
-    }
-}
-
 </script>
   
 <style scoped>
@@ -46,7 +38,7 @@ const imgError = (event: Event) => {
     column-gap: 1em;
     user-select: none;
     align-items: center;
-    background-color: var(--color-background);
+    background-color: var(--color-background-dark);
 }
 
 .img-wrap {

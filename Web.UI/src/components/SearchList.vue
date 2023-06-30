@@ -5,7 +5,6 @@
         </section>
         <section v-else-if="items.length === 0" class="list-body">
             <span>¯\_(ツ)_/¯</span>
-            <p>empty</p>
         </section>
         <section v-else class="items-list">
             <button v-for="item of items" :key="item.key" @click="$emit('select', item)">
@@ -37,22 +36,16 @@ defineEmits<{
 </script>
   
 <style scoped>
-p {
-    margin: .2em;
-    font-size: x-large;
-    text-align: center;
-}
-
 .list-body {
-    font-size: xx-large;
     margin: 50% auto;
     user-select: none;
+    font-size: x-large;
     width: fit-content;
 }
 
 .loading {
-    width: 4em;
-    height: 4em;
+    width: 70px;
+    height: 70px;
 }
 
 .items-list>button {
@@ -64,6 +57,7 @@ p {
     margin: .5em 0 0 0;
     align-items: center;
     border-radius: .5em;
+    overflow-y: auto;
     color: var(--color-text);
     background-color: transparent;
     border: 1px solid var(--color-border-dark);
