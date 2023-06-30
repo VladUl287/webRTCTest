@@ -8,11 +8,9 @@ internal static class StartupServices
 {
     public static void AddImageProcessor(this IServiceCollection services, IWebHostEnvironment environment)
     {
-        string ImagesBasePath = Path.Combine(environment.ContentRootPath, ImagesConfiguration.Directory);
-
-        if (!Directory.Exists(ImagesBasePath))
+        if (!Directory.Exists(environment.WebRootPath))
         {
-            Directory.CreateDirectory(ImagesBasePath);
+            Directory.CreateDirectory(environment.WebRootPath);
         }
 
         services.AddImageSharp(options =>
@@ -23,15 +21,15 @@ internal static class StartupServices
             })
             .Configure<PhysicalFileSystemCacheOptions>(options =>
             {
-                options.CacheRootPath = ImagesBasePath;
                 options.CacheFolder = "is-cache";
                 options.CacheFolderDepth = 8;
             })
-            .Configure<PhysicalFileSystemProviderOptions>(options =>
-            {
-                options.ProviderRootPath = ImagesBasePath;
-            })
-            .AddProvider<PhysicalFileSystemProvider>();
+            // .Configure<PhysicalFileSystemProviderOptions>(options =>
+            // {
+            //     options.ProviderRootPath = ImagesBasePath;
+            // })
+            // .AddProvider<PhysicalFileSystemProvider>()
+            ;
     }
 
     public static void AddOpenIdAuthentication(this IServiceCollection services)

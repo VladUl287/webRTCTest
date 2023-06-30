@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 
 namespace Web.Files.Controllers;
 
-// [Authorize]
 [ApiController]
 [Route("[controller]/[action]")]
 public sealed class ImageController : ControllerBase
@@ -28,7 +27,7 @@ public sealed class ImageController : ControllerBase
 
         try
         {
-            var imagesBasePath = Path.Combine(webHostEnvironment.ContentRootPath, ImagesConfiguration.Directory);
+            var imagesBasePath = webHostEnvironment.WebRootPath;
 
             using var memoryStream = new MemoryStream();
             await image.CopyToAsync(memoryStream);
@@ -42,6 +41,8 @@ public sealed class ImageController : ControllerBase
             return BadRequest("Возникла ошибка при добавлении изображения.");
         }
 
-        return Ok();
+        var pathToImage = HttpContext.Request.Scheme + "://" + HttpContext.Request.Host + "/" + image.FileName;
+
+        return Ok(pathToImage);
     }
 }
