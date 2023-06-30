@@ -7,9 +7,9 @@ using Web.Hubs.Core.Entities;
 using Web.Hubs.Core.Dtos.Chats;
 using Web.Hubs.Core.Repositories;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 using Web.Hubs.Infrastructure.Proxies;
 using Web.Hubs.Infrastructure.Database;
+using Web.Hubs.Infrastructure.Database.Queries;
 
 namespace Web.Hubs.Infrastructure.Services;
 
@@ -17,8 +17,8 @@ public sealed class ChatService : IChatService
 {
     private readonly IAuthApi authApi;
     private readonly IUnitOfWork unitOfWork;
-    private readonly IChatPresenter chatPresenter;
     private readonly ILogger<ChatService> logger;
+    private readonly IChatPresenter chatPresenter;
 
     public ChatService(IUnitOfWork unitOfWork, IChatPresenter chatPresenter, IAuthApi authApi, ILogger<ChatService> logger)
     {
@@ -30,28 +30,16 @@ public sealed class ChatService : IChatService
 
     public async Task<OneOf<Guid, Error<string>>> Create(CreateChatDto chat)
     {
-        if (chat is null)
-        {
-            return new Error<string>("");
-        }
-
         try
         {
             if (chat is { Type: ChatType.Monolog })
             {
-                if (chat is { Users.Length: not 1 })
+                if (!ValidMonolog(chat))
                 {
-                    return new Error<string>("");
+                    return new Error<string>("Not correct data");
                 }
 
-                var user = chat.Users[0];
-
-                if (user is null || user.Id != chat.UserId)
-                {
-                    return new Error<string>("");
-                }
-
-                var chatId = await getMonologId(unitOfWork.Context, user.Id);
+                var chatId = await ChatQueries.GetMonologId(unitOfWork.Context, chat.UserId);
 
                 if (chatId != default)
                 {
@@ -60,25 +48,14 @@ public sealed class ChatService : IChatService
             }
             else if (chat is { Type: ChatType.Dialog })
             {
-                if (chat.Users is { Length: not 2 })
+                if (!ValidDialog(chat))
                 {
-                    return new Error<string>("");
+                    return new Error<string>("Not correct data");
                 }
 
                 var firstCollocutor = chat.Users[0];
                 var secondCollocutor = chat.Users[1];
-
-                if (firstCollocutor is null || secondCollocutor is null)
-                {
-                    return new Error<string>("");
-                }
-
-                if (firstCollocutor.Id == secondCollocutor.Id)
-                {
-                    return new Error<string>("");
-                }
-
-                var chatId = await getChatId(unitOfWork.Context, firstCollocutor.Id, secondCollocutor.Id);
+                var chatId = await ChatQueries.GetDialogId(unitOfWork.Context, firstCollocutor.Id, secondCollocutor.Id);
 
                 if (chatId != default)
                 {
@@ -92,7 +69,7 @@ public sealed class ChatService : IChatService
         {
             logger.LogError(ex.Message, chat);
 
-            return new Error<string>("");
+            return new Error<string>("Chat creation error");
         }
     }
 
@@ -101,8 +78,6 @@ public sealed class ChatService : IChatService
         var chat = create.Adapt<Chat>();
 
         await unitOfWork.Chats.AddAsync(chat);
-
-        var chatUsers = new List<ChatUser>(create.Users.Length);
 
         foreach (var user in create.Users)
         {
@@ -114,53 +89,68 @@ public sealed class ChatService : IChatService
 
             if (chat.Type is ChatType.Dialog)
             {
-                var infoId = create.Users[0].Id;
-
+                var firstCollocutor = create.Users[0].Id;
                 var secondCollocutor = create.Users[1].Id;
 
-                if (infoId == chatUser.UserId)
+                var userInfoId = firstCollocutor;
+
+                if (firstCollocutor == chatUser.UserId)
                 {
-                    infoId = secondCollocutor;
+                    firstCollocutor = secondCollocutor;
                 }
 
-                var userInfo = await authApi.GetUserInfo(infoId);
+                var userInfo = await authApi.GetUserInfo(userInfoId);
 
                 chatUser.Name = userInfo.Content?.UserName ?? string.Empty;
                 chatUser.Image = userInfo.Content?.Image ?? string.Empty;
             }
 
-            chatUsers.Add(chatUser);
+            await unitOfWork.ChatsUsers.AddAsync(chatUser);
         }
-
-        await unitOfWork.ChatsUsers.AddRangeAsync(chatUsers);
 
         await unitOfWork.SaveChangesAsync();
 
         return chat.Id;
     }
 
-    #region
 
-    private static readonly Func<DatabaseContext, long, Task<Guid>> getMonologId =
-        EF.CompileAsyncQuery((DatabaseContext context, long userId) =>
-            context.ChatsUsers
-                .Where(cu => cu.UserId == userId && cu.Chat!.Type == ChatType.Monolog)
-                .Select(cu => cu.ChatId)
-                .FirstOrDefault()
-        );
+    public bool ValidMonolog(CreateChatDto chat)
+    {
+        if (chat is { Users.Length: not 1 })
+        {
+            return false;
+        }
 
-    private static readonly Func<DatabaseContext, long, long, Task<Guid>> getChatId =
-        EF.CompileAsyncQuery((DatabaseContext context, long firstCollocutor, long secondCollocutor) =>
-            context.ChatsUsers
-                .Where(cu => cu.Chat!.Type == ChatType.Dialog && cu.UserId == firstCollocutor)
-                .Select(cu => cu.ChatId)
-                      .Intersect(
-                        context.ChatsUsers
-                            .Where(cu => cu.Chat!.Type == ChatType.Dialog && cu.UserId == secondCollocutor)
-                            .Select(cu => cu.ChatId)
-                        )
-                .FirstOrDefault()
-        );
+        var user = chat.Users[0];
 
-    #endregion
+        if (user is null || user.Id != chat.UserId)
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    public bool ValidDialog(CreateChatDto chat)
+    {
+        if (chat.Users is { Length: not 2 })
+        {
+            return false;
+        }
+
+        var firstCollocutor = chat.Users[0];
+        var secondCollocutor = chat.Users[1];
+
+        if (firstCollocutor is null || secondCollocutor is null)
+        {
+            return false;
+        }
+
+        if (firstCollocutor.Id == secondCollocutor.Id)
+        {
+            return false;
+        }
+
+        return true;
+    }
 }

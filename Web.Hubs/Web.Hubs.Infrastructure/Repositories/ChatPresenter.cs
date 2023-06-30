@@ -1,12 +1,12 @@
 ﻿using OneOf;
 using OneOf.Types;
+using Web.Hubs.Core.Enums;
 using Web.Hubs.Core.Dtos.Chats;
 using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Filters;
 using Microsoft.EntityFrameworkCore;
 using Web.Hubs.Infrastructure.Database;
 using Web.Hubs.Infrastructure.Extensions;
-using Web.Hubs.Core.Enums;
 
 namespace Web.Hubs.Infrastructure.Repositories;
 
@@ -21,6 +21,54 @@ public sealed class ChatPresenter : IChatPresenter
 
     public async Task<OneOf<ChatDto, NotFound>> GetChat(Guid chatId, long userId)
     {
+        // var chatUser = await dbcontext.ChatsUsers
+        //     .AsNoTracking()
+        //     .FirstOrDefaultAsync(cu => cu.ChatId == chatId && cu.UserId == userId);
+
+        // if (chatUser is null)
+        // {
+        //     return new NotFound();
+        // }
+
+        // var chat = await dbcontext.Chats
+        //     .AsNoTracking()
+        //     .FirstOrDefaultAsync(c => c.Id == chatId);
+
+        // if (chat is null)
+        // {
+        //     return new NotFound();
+        // }
+
+        // var result = new ChatDto
+        // {
+        //     Id = chat.Id,
+        //     Date = chat.Date,
+        //     Name = chat.Name,
+        //     Image = chat.Image,
+        //     UserId = chat.UserId,
+        //     LastRead = chatUser.LastRead,
+        //     Unread = await dbcontext.Messages
+        //         .CountAsync(m => m.UserId != userId && m.Date > chatUser.LastRead),
+
+        //     LastMessage = await dbcontext.Messages
+        //         .Where(m => m.ChatId == chat.Id)
+        //         .OrderByDescending(m => m.Date)
+        //         .Select(m => new LastMessageDto
+        //         {
+        //             Content = m.Content,
+        //             Date = m.Date
+        //         })
+        //         .FirstOrDefaultAsync()
+        // };
+
+        // if (chat.Type is ChatType.Dialog)
+        // {
+        //     chat.Name = chatUser.Name;
+        //     chat.Image = chatUser.Image;
+        // }
+
+        // return result;
+
         var result = await dbcontext.ChatsUsers
             .Where(cu => cu.ChatId == chatId && cu.UserId == userId)
             .Select(cu => cu.Chat!)
