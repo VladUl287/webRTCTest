@@ -6,7 +6,8 @@
             </section>
             <slot></slot>
             <section id="footer">
-                <button @click="ok">ok</button>
+                <button @click="close">close</button>
+                <button @click="endCall">endcall</button>
             </section>
         </div>
     </dialog>
@@ -22,7 +23,8 @@ const props = defineProps({
 })
 
 const emits = defineEmits<{
-    (e: 'update:modelValue', value: Boolean): void
+    (e: 'update:modelValue', value: Boolean): void,
+    (e: 'endcall'): void
 }>()
 
 watch(
@@ -34,15 +36,18 @@ watch(
     }
 )
 
-const ok = () => emits('update:modelValue', false)
+const close = () => emits('update:modelValue', false)
+
+const endCall = () => emits('endcall')
 </script>
 
 <style scoped>
 dialog {
     width: 90%;
     height: 70%;
+    border-radius: .5em;
     color: var(--color-text);
-    border: 1px solid var(--color-border-light);
+    border: 1px solid var(--color-border-dark);
     background-color: var(--color-background-dark);
 }
 
@@ -52,11 +57,13 @@ dialog::backdrop {
 
 .wrap {
     height: 100%;
+    row-gap: 1em;
     display: grid;
-    grid-template-rows: 1fr 11fr 1fr;
+    grid-template-rows: 1fr auto 1fr;
 }
 
 #header {
+    margin: 0;
     text-align: center;
 }
 
@@ -66,6 +73,6 @@ dialog::backdrop {
 }
 
 #footer button {
-    cursor: pointer;
+    padding: .5em;
 }
 </style>

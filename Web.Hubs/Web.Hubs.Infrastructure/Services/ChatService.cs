@@ -96,7 +96,7 @@ public sealed class ChatService : IChatService
 
                 if (firstCollocutor == chatUser.UserId)
                 {
-                    firstCollocutor = secondCollocutor;
+                    userInfoId = secondCollocutor;
                 }
 
                 var userInfo = await authApi.GetUserInfo(userInfoId);

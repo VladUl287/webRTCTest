@@ -39,7 +39,7 @@
       <div class="chat-messages" v-if="authStore.profile">
         <ChatNotification @success="joinCall" class="notification" />
 
-        <MessagesList  :chat="chat" :messages="messageStore.messages" :userId="authStore.profile.sub"
+        <MessagesList :chat="chat" :messages="messageStore.messages" :userId="authStore.profile.sub"
           :loading="messagesLoading" @messageCheck="setChatLastRead" />
       </div>
 
@@ -49,7 +49,7 @@
     </section>
 
   </section>
-  <CallModal v-model="calling">
+  <CallModal v-model="calling" @endcall="endCall">
     <section id="videos"></section>
   </CallModal>
 </template>
@@ -186,6 +186,9 @@ const startCall = async () => {
     peerUserId: peer.id
   })
 
+  const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
+  appendVideo(camera_stream, peer.id)
+
   calling.value = true
 }
 
@@ -198,7 +201,7 @@ const sendMessage = (content: string) => {
 
 const joinCall = async () => {
   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
-  appendVideo(camera_stream)
+  appendVideo(camera_stream, peer.id)
 
   return connection.send('joinCall', {
     chatId: chatId.value,
@@ -231,21 +234,34 @@ const itemSelect = async (item: SearchItem) => {
   }
 }
 
+const endCall = () => {
+  // peer.removeAllListeners()
+  peer.disconnect()
+}
+
 peer.on('call', async (call) => {
   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
   call.answer(camera_stream)
-  call.on('stream', appendVideo)
+  call.on('stream', stream => appendVideo(stream, call.peer))
+})
+
+peer.on('disconnected', (event) => {
+  console.log('disconnected', event);
+  
+  removeVideo(event)
 })
 
 onCalling((chatId: string) => { })
 
 onJoinCall(async (peerId: string) => {
-  if (peerId === peer.id) return
+  // if (peerId === peer.id) return
+
+  calling.value = true
 
   const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
   const call = peer.call(peerId, camera_stream)
-  call.on('stream', appendVideo)
+  call.on('stream', stream => appendVideo(stream, peerId))
 })
 
 onSendMessage((message: Message) => {
@@ -265,13 +281,25 @@ onChatUpdate((chatId: string) => {
   getChat(chatId)
 })
 
-const appendVideo = (stream: MediaStream) => {
+const appendVideo = (stream: MediaStream, id: string) => {
+  const videos = document.querySelector('#videos')
+
+  if (videos?.querySelector('#' + 'a' + id)) {
+    return
+  }
+
   const video = document.createElement('video')
   video.srcObject = stream
   video.autoplay = true
+  video.id = 'a' + id
 
-  const videos = document.querySelector('#videos')
   videos?.appendChild(video)
+}
+
+const removeVideo = (id: string) => {
+  const videos = document.querySelector('#videos')
+
+  videos?.querySelector('#' + 'a' + id)?.remove()
 }
 
 const enableSearch = () => searchActive.value = true
@@ -286,7 +314,24 @@ const toggleMenu = () => menuActive.value = !menuActive.value
 const clearSearchField = () => searchText.value = ''
 </script>
 
-<style scoped>
+<style>
+#videos {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  overflow-y: auto;
+  column-gap: 1em;
+  align-items: center;
+  justify-content: center;
+}
+
+#videos video {
+  padding: 2em 0;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: .5em;
+}
+
 .chats-main {
   height: 100%;
   display: grid;
