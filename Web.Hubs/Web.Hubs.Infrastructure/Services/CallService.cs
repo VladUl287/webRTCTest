@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Web.Hubs.Core.Dtos;
 using Web.Hubs.Core.Entities;
 using Web.Hubs.Core.Services;
 using Web.Hubs.Infrastructure.Database;
@@ -12,6 +13,19 @@ public sealed class CallService : ICallService
     public CallService(IUnitOfWork unitOfWork)
     {
         this.unitOfWork = unitOfWork;
+    }
+
+    public Task<CallDto> Get(Guid callId)
+    {
+        return unitOfWork.Calls
+            .Where(c => c.Id == callId)
+            .Select(c => new CallDto
+            {
+                ChatId = c.Id,
+                Name = "Call Name",
+                Users = new long[] { 1, 2 }
+            })
+            .FirstOrDefaultAsync();
     }
 
     public async Task Add(Guid callId, long value)

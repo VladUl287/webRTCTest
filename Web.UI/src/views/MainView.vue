@@ -37,19 +37,19 @@
       <ChatHead :chat="chat" @start-call="startCall" />
 
       <div class="chat-messages" v-if="authStore.profile">
-        <ChatNotification @success="joinCall" class="notification" />
+        <ChatNotification v-if="call" @success="join" class="notification" />
 
         <MessagesList :chat="chat" :messages="messageStore.messages" :userId="authStore.profile.sub"
           :loading="messagesLoading" @messageCheck="setChatLastRead" />
       </div>
 
       <section class="message-new-wrap">
-        <MessageNew :disabled="false" @send="sendMessage" />
+        <MessageNew :disabled="false" @send="send" />
       </section>
     </section>
 
   </section>
-  <CallModal v-model="calling" @endcall="endCall">
+  <CallModal v-model="callActive" @endcall="leave">
     <section id="videos"></section>
   </CallModal>
 </template>
@@ -76,14 +76,15 @@ import { useMessageStore } from '@/stores/messages'
 import type { SearchItem } from '@/types/components'
 import peer from '@/peer'
 import { debounce } from '@/helpers/debounce'
-import connection, { callSendMessage, onSendMessage, onChatCreated, onJoinCall, onCalling, onChatUpdate } from '@/hubs/chat'
+import connection, { calling, sendMessage, onSendMessage, onChatCreated, joinCall, onJoinCall, onCalling, onChatUpdate, onLeaveCall, leaveCall } from '@/hubs/chat'
+import type { MediaConnection } from 'peerjs'
 
 const chat = ref<Chat>()
 const chatId = ref<string>()
 const searchText = ref<string>()
 const searchItems = ref<SearchItem[]>([])
 
-const calling = ref<boolean>()
+const callActive = ref<boolean>()
 const itemsLoading = ref<boolean>()
 const searchActive = ref<boolean>()
 const menuActive = ref<boolean>()
@@ -180,33 +181,120 @@ const inputSearch = async (value: string) => {
   }
 }
 
-const startCall = async () => {
-  await connection.invoke('calling', {
-    chatId: chatId.value,
-    peerUserId: peer.id
-  })
-
-  const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
-  appendVideo(camera_stream, peer.id)
-
-  calling.value = true
-}
-
-const sendMessage = (content: string) => {
-  return chatId.value && callSendMessage({
+const send = (content: string) => {
+  return chatId.value && sendMessage({
     chatId: chatId.value,
     content
   })
 }
 
-const joinCall = async () => {
-  const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
-  appendVideo(camera_stream, peer.id)
+//call 
 
-  return connection.send('joinCall', {
-    chatId: chatId.value,
-    peerUserId: peer.id
-  })
+const call = ref<any>()
+
+let camera_stream: MediaStream
+const peerConnections: MediaConnection[] = []
+
+const getStream = async () => {
+  if (camera_stream) {
+    return camera_stream
+  }
+
+  camera_stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+  return camera_stream
+}
+
+const startCall = async () => {
+  if (chatId.value && peer.id) {
+    callActive.value = true
+
+    await calling({
+      chatId: chatId.value,
+      peerUserId: peer.id
+    })
+
+    const camera_stream = await getStream()
+    appendVideo(camera_stream, peer.id, true)
+  }
+}
+
+onCalling(async (chatid: string) => {
+  if (chatId.value === chatid) {
+    call.value = await connection.invoke('getCall', chatid)
+  }
+})
+
+const join = async () => {
+  if (chatId.value && peer.id) {
+    const camera_stream = await getStream()
+    appendVideo(camera_stream, peer.id, true)
+
+    callActive.value = true
+
+    return joinCall({
+      chatId: chatId.value,
+      peerUserId: peer.id
+    })
+  }
+}
+
+onJoinCall(async (peerId: string) => {
+  if (peerId === peer.id) return
+
+  const camera_stream = await getStream()
+  const call = peer.call(peerId, camera_stream)
+  call.on('stream', stream => appendVideo(stream, peerId))
+
+  // peerConnections.push(call)
+})
+
+const leave = async () => {
+  if (chatId.value && peer.id) {
+    // peerConnections.forEach(connection => connection.close())
+    peer.destroy()
+
+    const camera_stream = await getStream()
+
+    camera_stream.getTracks().forEach(track => track.stop())
+
+    removeVideo(peer.id)
+
+    leaveCall({
+      peerId: peer.id,
+      chatId: chatId.value,
+      userId: +authStore.profile!.sub
+    })
+
+    // callActive.value = false
+  }
+}
+
+onLeaveCall((peerId: string) => removeVideo(peerId))
+
+peer.on('call', async (call) => {
+  call.answer(camera_stream)
+  call.on('stream', stream => appendVideo(stream, call.peer))
+})
+
+const appendVideo = (stream: MediaStream, id: string, muted: boolean = false) => {
+  const videos = document.querySelector('#videos')
+  const video = videos?.querySelector('#a' + id)
+
+  if (!videos || video) return
+
+  const newVideo = document.createElement('video')
+  newVideo.srcObject = stream
+  newVideo.autoplay = true
+  newVideo.muted = muted
+  newVideo.id = 'a' + id
+
+  videos.appendChild(newVideo)
+}
+
+const removeVideo = (id: string) => {
+  const videos = document.querySelector('#videos')
+
+  videos?.querySelector('#a' + id)?.remove()
 }
 
 const chatSelect = (chatId: string) => router.push({ path: '/chat', query: { id: chatId } })
@@ -234,36 +322,6 @@ const itemSelect = async (item: SearchItem) => {
   }
 }
 
-const endCall = () => {
-  // peer.removeAllListeners()
-  peer.disconnect()
-}
-
-peer.on('call', async (call) => {
-  const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
-
-  call.answer(camera_stream)
-  call.on('stream', stream => appendVideo(stream, call.peer))
-})
-
-peer.on('disconnected', (event) => {
-  console.log('disconnected', event);
-  
-  removeVideo(event)
-})
-
-onCalling((chatId: string) => { })
-
-onJoinCall(async (peerId: string) => {
-  // if (peerId === peer.id) return
-
-  calling.value = true
-
-  const camera_stream = await navigator.mediaDevices.getUserMedia({ video: true })
-  const call = peer.call(peerId, camera_stream)
-  call.on('stream', stream => appendVideo(stream, peerId))
-})
-
 onSendMessage((message: Message) => {
   chatId.value && messageStore.addMessage(message)
 
@@ -280,27 +338,6 @@ onChatUpdate((chatId: string) => {
 
   getChat(chatId)
 })
-
-const appendVideo = (stream: MediaStream, id: string) => {
-  const videos = document.querySelector('#videos')
-
-  if (videos?.querySelector('#' + 'a' + id)) {
-    return
-  }
-
-  const video = document.createElement('video')
-  video.srcObject = stream
-  video.autoplay = true
-  video.id = 'a' + id
-
-  videos?.appendChild(video)
-}
-
-const removeVideo = (id: string) => {
-  const videos = document.querySelector('#videos')
-
-  videos?.querySelector('#' + 'a' + id)?.remove()
-}
 
 const enableSearch = () => searchActive.value = true
 const disableSearch = () => {

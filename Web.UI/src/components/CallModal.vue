@@ -6,8 +6,8 @@
             </section>
             <slot></slot>
             <section id="footer">
-                <button @click="close">close</button>
-                <button @click="endCall">endcall</button>
+                <button @click="turn">turn</button>
+                <button @click="discard">discard</button>
             </section>
         </div>
     </dialog>
@@ -36,9 +36,9 @@ watch(
     }
 )
 
-const close = () => emits('update:modelValue', false)
+const turn = () => emits('update:modelValue', false)
 
-const endCall = () => emits('endcall')
+const discard = () => emits('endcall')
 </script>
 
 <style scoped>

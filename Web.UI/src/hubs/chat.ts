@@ -13,7 +13,7 @@ const connection = new HubConnectionBuilder()
     // .withHubProtocol(new signalRMsgpack.MessagePackHubProtocol())
     .build()
 
-export const callSendMessage = (body: { chatId: string, content: string }) => connection.send('sendMessage', body)
+export const sendMessage = (body: { chatId: string, content: string }) => connection.send('sendMessage', body)
 
 export const onSendMessage = (callback: (...args: any[]) => void) => connection.on('sendMessage', callback)
 
@@ -21,9 +21,16 @@ export const onChatCreated = (callback: (...args: any[]) => void) => connection.
 
 export const onChatUpdate = (callback: (...args: any[]) => void) => connection.on('updateChat', callback)
 
+export const calling = (body: { chatId: string, peerUserId: string }) => connection.invoke('calling', body)
+
 export const onCalling = (callback: (...args: any[]) => void) => connection.on('calling', callback)
 
+export const joinCall = (body: { chatId: string, peerUserId: string }) => connection.send('joinCall', body)
+
 export const onJoinCall = (callback: (...args: any[]) => void) => connection.on('joinCall', callback)
+
+export const leaveCall = (body: { peerId: string, chatId: string, userId: number }) =>
+    connection.send('leaveCall', body)
 
 export const onLeaveCall = (callback: (...args: any[]) => void) => connection.on('leaveCall', callback)
 
