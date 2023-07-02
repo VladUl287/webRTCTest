@@ -18,7 +18,7 @@
           <button v-if="searchActive" class="chat-control" @click="disableSearch">
             <span class="material-symbols-outlined">arrow_back</span>
           </button>
-          <button v-else class="chat-control" @click="toggleMenu">
+          <button v-else class="chat-control" @click="startCall">
             <span class="material-symbols-outlined">more_vert</span>
           </button>
         </div>
@@ -49,9 +49,10 @@
     </section>
 
   </section>
-  <CallModal v-model="callActive" @endcall="leave">
+  <CallView v-model="callActive" header="test header" />
+  <!-- <CallModal v-model="callActive" @endcall="leave">
     <section id="videos"></section>
-  </CallModal>
+  </CallModal> -->
 </template>
 
 <script setup lang="ts">
@@ -68,6 +69,7 @@ import SideMenu from '@/components/controls/SideMenu.vue'
 import ChatNotification from '@/components/ChatNotification.vue'
 import ProfileCard from '@/components/ProfileCard.vue'
 import ProfileControls from '@/components/ProfileControls.vue'
+import CallView from '@/views/CallView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '@/stores/chats'
 import { getUsers } from '@/http/users'
@@ -205,17 +207,18 @@ const getStream = async () => {
 }
 
 const startCall = async () => {
-  if (chatId.value && peer.id) {
-    callActive.value = true
+  callActive.value = true
+  // if (chatId.value && peer.id) {
+  //   callActive.value = true
 
-    await calling({
-      chatId: chatId.value,
-      peerUserId: peer.id
-    })
+  //   await calling({
+  //     chatId: chatId.value,
+  //     peerUserId: peer.id
+  //   })
 
-    const camera_stream = await getStream()
-    appendVideo(camera_stream, peer.id, true)
-  }
+  //   const camera_stream = await getStream()
+  //   appendVideo(camera_stream, peer.id, true)
+  // }
 }
 
 onCalling(async (chatid: string) => {
@@ -351,8 +354,8 @@ const toggleMenu = () => menuActive.value = !menuActive.value
 const clearSearchField = () => searchText.value = ''
 </script>
 
-<style>
-#videos {
+<style scoped>
+/* #videos {
   width: 100%;
   height: 100%;
   display: flex;
@@ -367,7 +370,7 @@ const clearSearchField = () => searchText.value = ''
   max-width: 100%;
   max-height: 100%;
   border-radius: .5em;
-}
+} */
 
 .chats-main {
   height: 100%;
