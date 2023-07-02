@@ -11,6 +11,7 @@
                     <video></video>
                     <video></video>
                     <video></video>
+                    <video></video>
                 </div>
                 <!-- <video></video> -->
             </section>
@@ -140,27 +141,24 @@ dialog::backdrop {
 }
 
 #body {
-    /* display: flex; */
-    /* align-items: center; */
+    padding: 50px;
+    overflow: hidden;
     background-color: blue;
 }
 
 #videos {
-    padding: 50px 100px;
-    height: 100%;
     row-gap: .5em;
-    column-gap: .5em;
     display: flex;
     flex-wrap: wrap;
+    column-gap: .5em;
     align-items: center;
     justify-content: center;
-    /* display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); */
     background-color: yellow;
 }
 
-#videos video {
-    flex: 1 1 0;
+#videos > * {
+    min-width: 250px;
+    min-height: 150px;
     background-color: lawngreen;
 }
 
