@@ -129,14 +129,17 @@ const normalizeId = (value: string) => `a${value}`
     height: 100%;
     display: flex;
     overflow-y: auto;
-    padding: .5em .5em 0 0;
     row-gap: var(--section-gap);
     flex-direction: column-reverse;
+    padding: var(--section-gap) var(--section-gap) 0 0;
 }
 
 .loading {
     width: 4em;
     height: 4em;
-    margin: 50% auto 0 auto;
+    top: 50%;
+    left: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
 }
 </style>

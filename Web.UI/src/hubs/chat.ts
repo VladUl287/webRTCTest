@@ -17,11 +17,13 @@ export const sendMessage = (body: { chatId: string, content: string }) => connec
 
 export const onSendMessage = (callback: (...args: any[]) => void) => connection.on('sendMessage', callback)
 
+export const сhatCreated = (chatId: string) => connection.send('chatCreated', chatId)
+
 export const onChatCreated = (callback: (...args: any[]) => void) => connection.on('chatCreated', callback)
 
 export const onChatUpdate = (callback: (...args: any[]) => void) => connection.on('updateChat', callback)
 
-export const calling = (body: { chatId: string, peerUserId: string }) => connection.invoke('calling', body)
+export const calling = (body: { chatId: string }) => connection.invoke('calling', body)
 
 export const onCalling = (callback: (...args: any[]) => void) => connection.on('calling', callback)
 

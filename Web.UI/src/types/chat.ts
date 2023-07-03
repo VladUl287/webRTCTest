@@ -8,6 +8,11 @@ export type Chat = {
     unread: number
 }
 
+export enum ChatType {
+    monolog,
+    dialog
+}
+
 export type Message = {
     id: string,
     content: string,

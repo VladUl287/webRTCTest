@@ -17,6 +17,7 @@
 
 :root {
   --section-gap: .5em;
+  --section-gap-medium: 1em;
 
   --color-text: var(--white-soft);
   --color-placeholder: var(--text-dark);

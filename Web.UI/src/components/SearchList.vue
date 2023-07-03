@@ -8,7 +8,7 @@
         </section>
         <section v-else class="items-list">
             <button v-for="item of items" :key="item.key" @click="$emit('select', item)">
-                <AvatarImg :src="item.image" alter="" />
+                <AvatarImg :src="item.image" alter="https://html.com/wp-content/uploads/flamingo4x.jpg" />
                 {{ item.label }}
             </button>
         </section>

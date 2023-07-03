@@ -1,59 +1,61 @@
 <template>
     <dialog ref="dialog">
         <div class="content-wrap">
-            <section id="header">
-                <p>{{ header }}</p>
-            </section>
-
             <section id="body">
-                <div id="videos">
-                    <video></video>
-                    <video></video>
-                    <video></video>
-                    <video></video>
-                    <video></video>
-                </div>
-                <!-- <video></video> -->
+                <div id="videos"></div>
             </section>
 
             <section id="footer">
-                <button @click="turn">turn</button>
-                <button @click="discard">discard</button>
+                <button @click="collapse">
+                    <span class="material-symbols-outlined">collapse_all</span>
+                </button>
+                <button @click="discard">
+                    <span class="material-symbols-outlined">call_end</span>
+                </button>
             </section>
         </div>
     </dialog>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
+import { joinCall, leaveCall, onJoinCall, onLeaveCall } from '@/hubs/chat'
+import { useAuthStore } from '@/stores/auth'
 import { createPeer } from '@/peer'
 import type Peer from 'peerjs'
+
+const authStore = useAuthStore()
 
 const peer = ref<Peer>()
 const dialog = ref<HTMLDialogElement>()
 
 const props = defineProps({
     modelValue: Boolean,
-    header: String
+    chatId: {
+        type: String,
+        required: true
+    }
 })
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: Boolean): void
 }>()
 
-onMounted(() => {
-
-})
+watch(
+    () => props.chatId,
+    () => {
+        discard()
+        initPeer()
+    }
+)
 
 watch(
     () => props.modelValue,
     (visible) => {
-        if (visible && (!peer.value || peer.value.destroyed)) {
+        if (visible) {
             dialog.value?.showModal()
 
-            peer.value = createPeer()
-
-            initialize(peer.value.id)
+            initPeer()
         }
         else {
             dialog.value?.close()
@@ -61,37 +63,105 @@ watch(
     }
 )
 
-const initialize = async (id: string) => {
-    const stream = await getStream()
+const initPeer = () => {
+    if (!peer.value || peer.value.destroyed) {
+        peer.value = createPeer('')
 
-    // appendVideo(stream, id, true)
+        peer.value.on('open', async (id: string) => {
+            const stream = await getStream()
+
+            appendVideo(stream, id, true)
+
+            joinCall({
+                chatId: props.chatId,
+                peerUserId: id
+            })
+        })
+
+        peer.value.on('call', async (call) => {
+            const camera_stream = await getStream()
+            call.answer(camera_stream)
+            call.on('stream', stream => appendVideo(stream, call.peer))
+        })
+    }
 }
 
-let camera_stream: MediaStream
+onJoinCall(async (peerId: string) => {
+    if (!peer.value || peerId === peer.value.id) return
 
-const getStream = async () => {
-    if (camera_stream) {
+    const camera_stream = await getStream()
+    const call = peer.value.call(peerId, camera_stream)
+    call.on('stream', stream => appendVideo(stream, peerId))
+})
+
+
+onLeaveCall((peerId: string) => {
+    if (peer.value && peer.value.id === peerId) {
+        return discard()
+    }
+    removeVideo(peerId)
+})
+
+const getStreamMake = () => {
+    let camera_stream: MediaStream
+
+    const getCameraStream = async () => {
+        if (camera_stream) {
+            return camera_stream
+        }
+
+        camera_stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
         return camera_stream
     }
 
-    camera_stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-    return camera_stream
+    return getCameraStream
 }
 
-const turn = () => {
+const getStream = getStreamMake()
+
+const stopStream = async () => {
+    const camera_stream = await getStream()
+
+    camera_stream.getTracks().forEach(track => track.stop())
+}
+
+const collapse = () => {
     emit('update:modelValue', false)
 }
 
 const discard = () => {
+    stopStream()
+
+    if (peer.value?.id && props.chatId && authStore.profile) {
+        leaveCall({
+            chatId: props.chatId,
+            peerId: peer.value.id,
+            userId: +authStore.profile.sub
+        })
+    }
+
     peer.value?.destroy()
+
+    clearVideos()
+
+    collapse()
+}
+
+const clearVideos = () => {
+    const videos = document.querySelector('#videos')
+
+    if (videos) {
+        videos.innerHTML = ''
+    }
 }
 
 const appendVideo = (stream: MediaStream, id: string, muted: boolean = false) => {
-    const body = document.querySelector('#body')
+    const videos = document.querySelector('#videos')
 
-    if (!body) return
+    if (!videos) return
 
-    const videoExists = body.querySelector('#' + normilizeId(id))
+    const videoExists = videos.querySelector('#' + normilizeId(id))
 
     if (videoExists) return
 
@@ -99,9 +169,9 @@ const appendVideo = (stream: MediaStream, id: string, muted: boolean = false) =>
     video.srcObject = stream
     video.autoplay = true
     video.muted = muted
-    video.id = 'a' + id
+    video.id = normilizeId(id)
 
-    body.appendChild(video)
+    videos.appendChild(video)
 }
 
 const removeVideo = (id: string) => {
@@ -110,16 +180,17 @@ const removeVideo = (id: string) => {
 
 const normilizeId = (value: string) => 'a' + value
 
+window.onbeforeunload = discard
+
+onUnmounted(discard)
 </script>
 
 <style scoped>
 dialog {
-    padding: 0;
     width: 90%;
     height: 80%;
     overflow: hidden;
     border-radius: .5em;
-    color: var(--color-text);
     border: 1px solid var(--color-border-dark);
     background-color: var(--color-background-dark);
 }
@@ -131,44 +202,42 @@ dialog::backdrop {
 .content-wrap {
     height: 100%;
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    background-color: red;
-}
-
-#header {
-    margin: 0;
-    text-align: center;
+    grid-template-rows: 1fr auto;
 }
 
 #body {
-    padding: 50px;
+    display: flex;
     overflow: hidden;
-    background-color: blue;
+    align-items: center;
 }
 
 #videos {
-    row-gap: .5em;
+    width: 100%;
     display: flex;
-    flex-wrap: wrap;
+    row-gap: .5em;
+    overflow: hidden;
     column-gap: .5em;
     align-items: center;
     justify-content: center;
-    background-color: yellow;
 }
 
-#videos > * {
-    min-width: 250px;
-    min-height: 150px;
-    background-color: lawngreen;
+#videos>>>video {
+    flex-basis: 400px;
+    background-color: #000;
 }
 
 #footer {
-    padding: .5em 0;
     margin: 0 auto;
-    width: fit-content;
+    padding: var(--section-gap) 0;
 }
 
 #footer button {
-    padding: .5em;
+    display: inline-flex;
+    border-radius: 50%;
+    background-color: transparent;
+    color: var(--color-placeholder);
+    margin: 0 var(--section-gap);
+    padding: var(--section-gap-medium);
+    border: 1px solid var(--color-border-dark);
 }
 </style>
