@@ -53,7 +53,7 @@ public sealed class ChatHub : Hub
             await callService.Add(call.ChatId, userId);
         }
 
-        // await callService.Add(call.ChatId, userId);
+        await callService.Add(call.ChatId, userId);
 
         await NotifyUsers(call.ChatId, call.ChatId, nameof(Calling));
     }
@@ -78,6 +78,13 @@ public sealed class ChatHub : Hub
         var userId = Context.User.GetUserId<long>();
 
         await callService.Delete(leave.ChatId, userId);
+
+        var count = await callService.Count(leave.ChatId);
+
+        if (count < 2)
+        {
+            await callService.Delete(leave.ChatId);
+        }
 
         await NotifyUsers<string>(leave.ChatId, leave.PeerId, nameof(LeaveCall));
     }
@@ -139,6 +146,23 @@ public sealed class ChatHub : Hub
         var userId = Context.User.GetUserId<long>();
 
         await userConnections.Delete(userId, Context.ConnectionId);
+
+        if (await callService.HasValue(userId))
+        {
+            var chatId = await callService.Delete(userId);
+
+            if (chatId.HasValue)
+            {
+                var count = await callService.Count(chatId.Value);
+
+                if (count < 2)
+                {
+                    await callService.Delete(chatId.Value);
+                }
+            }
+
+            _ = NotifyUsers(chatId.Value, chatId.Value, "LeaveCall");
+        }
 
         await base.OnDisconnectedAsync(exception);
     }

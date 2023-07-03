@@ -53,12 +53,6 @@ public sealed class CallService : ICallService
         await unitOfWork.SaveChangesAsync();
     }
 
-    public Task<bool> HasValue(long value)
-    {
-        return unitOfWork.CallsUsers
-            .AnyAsync(cu => cu.UserId == value);
-    }
-
     public Task<bool> Has(Guid callId, long value)
     {
         return unitOfWork.CallsUsers
@@ -71,10 +65,45 @@ public sealed class CallService : ICallService
             .AnyAsync(cu => cu.CallId == callId);
     }
 
+    public Task<bool> HasValue(long value)
+    {
+        return unitOfWork.CallsUsers
+            .AnyAsync(cu => cu.UserId == value);
+    }
+
     public Task Delete(Guid callId, long value)
     {
         return unitOfWork.CallsUsers
             .Where(cu => cu.CallId == callId && cu.UserId == value)
             .ExecuteDeleteAsync();
+    }
+
+    public Task Delete(Guid callId)
+    {
+        return unitOfWork.Calls
+            .Where(cu => cu.Id == callId)
+            .ExecuteDeleteAsync();
+    }
+
+    public async Task<Guid?> Delete(long value)
+    {
+        var callUser = await unitOfWork.CallsUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cu => cu.UserId == value);
+
+        if (callUser is not null)
+        {
+            unitOfWork.CallsUsers.Remove(callUser);
+
+            await unitOfWork.SaveChangesAsync();
+        }
+
+        return callUser?.CallId;
+    }
+
+    public Task<int> Count(Guid callId)
+    {
+        return unitOfWork.CallsUsers
+            .CountAsync(cu => cu.CallId == callId);
     }
 }
