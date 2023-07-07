@@ -12,18 +12,27 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddImageProcessor(builder.Environment);
 
     builder.Services.AddOpenIdAuthentication();
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
 }
 
 var app = builder.Build();
 {
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
     app.UseHttpsRedirection();
 
     // app.UseAuthentication();
     // app.UseAuthorization();
 
-    // app.UseStaticFiles();
-
     app.UseImageSharp();
+
+    app.UseStaticFiles();
 
     app.MapControllers();
 }
