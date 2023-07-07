@@ -71,10 +71,12 @@ internal sealed class ClientsInitService : IHostedService
                 DisplayName = "Vue client application",
                 PostLogoutRedirectUris =
                 {
-                    new Uri("http://127.0.0.1:5173/logout")
+                    new Uri("http://localhost:5173/logout"),
+                    new Uri("http://127.0.0.1:5173/logout"),
                 },
                 RedirectUris =
                 {
+                    new Uri("http://localhost:5173/callback"),
                     new Uri("http://127.0.0.1:5173/callback")
                 },
                 Permissions =
