@@ -12,7 +12,7 @@ namespace Web.Hubs.Api.Hubs;
 [Authorize]
 public sealed class ChatHub : Hub
 {
-    private readonly IStorage<long> userConnections;
+    private readonly IStorage<long> connections;
     private readonly ICallService callService;
     private readonly IChatPresenter chatPresenter;
     private readonly IMessageService messageService;
@@ -25,52 +25,52 @@ public sealed class ChatHub : Hub
         IMessageService messageService,
         IUserChatService userChatService)
     {
-        this.userConnections = storage;
+        this.connections = storage;
         this.callService = callService;
         this.chatPresenter = chatPresenter;
         this.messageService = messageService;
         this.userChatService = userChatService;
     }
 
-    public Task<CallDto> GetCall(Guid chatId)
-    {
-        return callService.Get(chatId);
-    }
-
-    public async Task Calling(StartCall call)
+    public async Task StartCall(StartCall startCall)
     {
         var userId = Context.User.GetUserId<long>();
 
-        var userInCall = await callService.HasValue(userId);
-        if (userInCall)
+        if (startCall.UserId != userId)
         {
             return;
         }
 
-        var callExists = await callService.HasKey(call.ChatId);
-        if (!callExists)
+        var userExists = await callService.HasValue(userId);
+        if (userExists)
         {
-            await callService.Add(call.ChatId, userId);
+            return;
         }
 
-        await callService.Add(call.ChatId, userId);
+        var callExists = await callService.HasKey(startCall.ChatId);
+        if (callExists)
+        {
+            return;
+        }
 
-        await NotifyUsers(call.ChatId, call.ChatId, nameof(Calling));
+        await callService.Add(startCall.ChatId, userId);
+
+        await NotifyUsers(startCall.ChatId, new { chatId = startCall.ChatId, userId = userId }, nameof(StartCall));
     }
 
     public async Task JoinCall(JoinCall join)
     {
         var userId = Context.User.GetUserId<long>();
 
-        var userInCall = await callService.HasValue(userId);
-        if (userInCall)
+        var userExists = await callService.HasValue(userId);
+        if (userExists)
         {
             return;
         }
 
         await callService.Add(join.ChatId, userId);
 
-        await NotifyUsers(join.ChatId, join.PeerUserId, nameof(JoinCall));
+        await NotifyUsers(join.ChatId, join, nameof(JoinCall));
     }
 
     public async Task LeaveCall(LeaveCall leave)
@@ -79,14 +79,16 @@ public sealed class ChatHub : Hub
 
         await callService.Delete(leave.ChatId, userId);
 
-        var count = await callService.Count(leave.ChatId);
+        await NotifyUsers(leave.ChatId, leave, nameof(LeaveCall));
+    }
 
-        if (count < 2)
-        {
-            await callService.Delete(leave.ChatId);
-        }
+    public async Task EndCall(Guid chatId)
+    {
+        var userId = Context.User.GetUserId<long>();
 
-        await NotifyUsers<string>(leave.ChatId, leave.PeerId, nameof(LeaveCall));
+        await callService.Delete(chatId);
+
+        await NotifyUsers(chatId, chatId, nameof(EndCall));
     }
 
     public async Task SendMessage(CreateMessageDto message)
@@ -125,7 +127,7 @@ public sealed class ChatHub : Hub
 
         if (users?.Length > 0)
         {
-            var connections = await userConnections.Get(users);
+            var connections = await this.connections.Get(users);
 
             await Clients.Clients(connections)
                 .SendAsync(method, message);
@@ -136,7 +138,7 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        await userConnections.Add(userId, Context.ConnectionId);
+        await connections.Add(userId, Context.ConnectionId);
 
         await base.OnConnectedAsync();
     }
@@ -145,23 +147,13 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        await userConnections.Delete(userId, Context.ConnectionId);
+        await connections.Delete(userId, Context.ConnectionId);
 
-        if (await callService.HasValue(userId))
+        var callId = await callService.Delete(userId);
+
+        if (callId.HasValue)
         {
-            var chatId = await callService.Delete(userId);
-
-            if (chatId.HasValue)
-            {
-                var count = await callService.Count(chatId.Value);
-
-                if (count < 2)
-                {
-                    await callService.Delete(chatId.Value);
-                }
-            }
-
-            _ = NotifyUsers(chatId.Value, chatId.Value, "LeaveCall");
+            await NotifyUsers(callId.Value, callId.Value, nameof(LeaveCall));
         }
 
         await base.OnDisconnectedAsync(exception);

@@ -10,12 +10,14 @@ public sealed class CallService : ICallService
 {
     private readonly IUnitOfWork unitOfWork;
 
+    private const int CallUsersMinCount = 2;
+
     public CallService(IUnitOfWork unitOfWork)
     {
         this.unitOfWork = unitOfWork;
     }
 
-    public Task<CallDto> Get(Guid callId)
+    public Task<CallDto?> Get(Guid callId)
     {
         return unitOfWork.Calls
             .Where(c => c.Id == callId)
@@ -53,12 +55,6 @@ public sealed class CallService : ICallService
         await unitOfWork.SaveChangesAsync();
     }
 
-    public Task<bool> Has(Guid callId, long value)
-    {
-        return unitOfWork.CallsUsers
-            .AnyAsync(cu => cu.CallId == callId && cu.UserId == value);
-    }
-
     public Task<bool> HasKey(Guid callId)
     {
         return unitOfWork.CallsUsers
@@ -71,18 +67,31 @@ public sealed class CallService : ICallService
             .AnyAsync(cu => cu.UserId == value);
     }
 
-    public Task Delete(Guid callId, long value)
+    public async Task Delete(Guid callId, long value)
     {
-        return unitOfWork.CallsUsers
-            .Where(cu => cu.CallId == callId && cu.UserId == value)
-            .ExecuteDeleteAsync();
-    }
+        var callUser = await unitOfWork.CallsUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cu => cu.CallId == callId && cu.UserId == value);
 
-    public Task Delete(Guid callId)
-    {
-        return unitOfWork.Calls
-            .Where(cu => cu.Id == callId)
-            .ExecuteDeleteAsync();
+        if (callUser is not null)
+        {
+            using var transaction = await unitOfWork.Context.Database.BeginTransactionAsync();
+
+            unitOfWork.CallsUsers.Remove(callUser);
+
+            await unitOfWork.SaveChangesAsync();
+
+            var callUsersCount = await unitOfWork.CallsUsers.CountAsync(cu => cu.CallId == callUser.CallId);
+
+            if (callUsersCount < CallUsersMinCount)
+            {
+                await unitOfWork.Calls
+                    .Where(c => c.Id == callUser.CallId)
+                    .ExecuteDeleteAsync();
+            }
+
+            await transaction.CommitAsync();
+        }
     }
 
     public async Task<Guid?> Delete(long value)
@@ -93,17 +102,31 @@ public sealed class CallService : ICallService
 
         if (callUser is not null)
         {
+            using var transaction = await unitOfWork.Context.Database.BeginTransactionAsync();
+
             unitOfWork.CallsUsers.Remove(callUser);
 
             await unitOfWork.SaveChangesAsync();
+
+            var callUsersCount = await unitOfWork.CallsUsers.CountAsync(cu => cu.CallId == callUser.CallId);
+
+            if (callUsersCount < CallUsersMinCount)
+            {
+                await unitOfWork.Calls
+                    .Where(c => c.Id == callUser.CallId)
+                    .ExecuteDeleteAsync();
+            }
+
+            await transaction.CommitAsync();
         }
 
         return callUser?.CallId;
     }
 
-    public Task<int> Count(Guid callId)
+    public Task Delete(Guid callId)
     {
-        return unitOfWork.CallsUsers
-            .CountAsync(cu => cu.CallId == callId);
+        return unitOfWork.Calls
+            .Where(c => c.Id == callId)
+            .ExecuteDeleteAsync();
     }
 }

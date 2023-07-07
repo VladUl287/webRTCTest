@@ -4,13 +4,9 @@ namespace Web.Hubs.Core.Services;
 
 public interface ICallService
 {
-    Task<CallDto> Get(Guid callId);
-
-    Task<int> Count(Guid callId);
+    Task<CallDto?> Get(Guid callId);
 
     Task Add(Guid callId, long value);
-
-    Task<bool> Has(Guid callId, long value);
 
     Task<bool> HasKey(Guid callId);
 

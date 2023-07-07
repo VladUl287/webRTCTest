@@ -26,7 +26,7 @@ internal static class StartupServices
                     options =>
                     {
                         options.MigrationsAssembly(typeof(TAssemblyMarker).Assembly.FullName);
-                        options.EnableRetryOnFailure(EnableRetryOnFailure);
+                        // options.EnableRetryOnFailure(EnableRetryOnFailure);
                     });
                 // options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
                 options.LogTo(Console.WriteLine, LogLevel.Information);

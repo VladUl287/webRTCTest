@@ -9,5 +9,10 @@ public sealed class CallUserConfiguration : IEntityTypeConfiguration<CallUser>
     public void Configure(EntityTypeBuilder<CallUser> builder)
     {
         builder.HasKey(x => new { x.CallId, x.UserId });
+
+        builder.HasOne(x => x.Call)
+            .WithMany(x => x.CallUsers)
+            .HasForeignKey(x => x.CallId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
