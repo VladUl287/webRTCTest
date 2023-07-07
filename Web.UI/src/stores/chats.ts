@@ -22,7 +22,7 @@ export const useChatStore = defineStore('chat', () => {
 
             return result.data
         } catch (error) {
-            console.log(error);
+            console.log(error)
 
             throw new Error("Error getting chat")
         }
@@ -30,20 +30,20 @@ export const useChatStore = defineStore('chat', () => {
 
     const getChats = async (): Promise<void> => {
         try {
-            const result = await instance.get<Chat[]>('/api/chats/getchats');
+            const result = await instance.get<Chat[]>('/api/chats/getchats')
             chats.value = result.data
         } catch (error) {
-            console.log(error);
+            console.log(error)
         }
     }
 
     const create = async (chat: { name: string, image: string, userId: string, type: ChatType, users: { id: string }[] }): Promise<string | undefined> => {
         try {
-            const result = await instance.post<string>('/api/chats/create', chat);
+            const result = await instance.post<string>('/api/chats/create', chat)
 
             return result.data
         } catch (error) {
-            console.log(error);
+            console.log(error)
         }
     }
 

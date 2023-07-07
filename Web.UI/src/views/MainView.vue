@@ -1,15 +1,15 @@
 <template>
-  <section class="chats-main">
-    <section class="chats-wrap">
+  <section class="chats-main h-100">
+    <section class="chats-list">
       <SideMenu :active="menuActive">
-        <template #control>
+        <template #toggle>
           <button class="chat-control" @click="toggleMenu">
             <span class="material-symbols-outlined">more_vert</span>
           </button>
         </template>
         <template #content>
-          <ProfileCard :profile="authStore.profile" />
-          <ProfileControls @logout="authStore.logout" />
+          <ProfileCard />
+          <ProfileControls />
         </template>
       </SideMenu>
 
@@ -34,17 +34,17 @@
     </section>
 
     <section class="chat-content" v-if="chatId">
-      <ChatHead :chat="chat" @start-call="startCall" />
+      <ChatHead :chat="chat" @startCall="startCall" />
 
-      <div class="chat-messages" v-if="authStore.profile">
-        <ChatNotification v-if="call" @success="joinCall" class="notification" />
+      <div class="chat-messages" v-if="userId">
+        <ChatNotification v-if="call" @success="accept" @reject="endCall(call.chatId)" class="notification" />
 
-        <MessagesList :chat="chat" :messages="messageStore.messages" :userId="authStore.profile.sub"
-          :loading="messagesLoading" @messageCheck="setChatLastRead" />
+        <MessagesList :chat="chat" :messages="messageStore.messages" :userId="userId" :loading="messagesLoading"
+          @messageCheck="setChatLastRead" />
       </div>
 
       <section class="message-new-wrap">
-        <MessageNew :disabled="false" @send="send" />
+        <MessageNew @send="send" />
       </section>
     </section>
 
@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ChatsList from '@/components/ChatsList.vue'
 import SearchField from '@/components/SearchField.vue'
@@ -65,15 +65,16 @@ import SideMenu from '@/components/controls/SideMenu.vue'
 import ProfileCard from '@/components/ProfileCard.vue'
 import ProfileControls from '@/components/ProfileControls.vue'
 import ChatNotification from '@/components/ChatNotification.vue'
-import CallView from '@/views/CallView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '@/stores/chats'
 import { getUsers } from '@/http/users'
-import { ChatType, type Chat, type Message } from '@/types/chat'
+import { ChatType, type Chat } from '@/types/chat'
 import { useMessageStore } from '@/stores/messages'
 import type { SearchItem } from '@/types/components'
-import { debounce } from '@/helpers/debounce'
-import connection, { sendMessage, onSendMessage, onChatCreated, onChatUpdate, calling, onCalling, сhatCreated, onLeaveCall } from '@/hubs/chat'
+import { useCallStore } from '@/stores/calls'
+import { sendMessage, onSendMessage, onChatCreated, sendStartCall, onStartCall, sendChatCreated, onLeaveCall, onEndCall, updateChat, onUpdateChat, sendEndCall } from '@/hubs/chat'
+
+const CallView = defineAsyncComponent(() => import('@/views/CallView.vue'))
 
 const chat = ref<Chat>()
 const call = ref<any>()
@@ -81,14 +82,15 @@ const chatId = ref<string>()
 const searchText = ref<string>()
 const searchItems = ref<SearchItem[]>([])
 
+const menuActive = ref<boolean>()
 const callActive = ref<boolean>()
 const itemsLoading = ref<boolean>()
 const searchActive = ref<boolean>()
-const menuActive = ref<boolean>()
 
 const chatsLoading = ref<boolean>()
 const messagesLoading = ref<boolean>()
 
+const callStore = useCallStore()
 const authStore = useAuthStore()
 const chatStore = useChatStore()
 const messageStore = useMessageStore()
@@ -97,35 +99,31 @@ const route = useRoute()
 const router = useRouter()
 
 onMounted(() => {
-  initializeChat()
-  getChats()
+  getChatsList()
+  initChatInfo()
 })
 
 watch(
   () => route.params,
-  () => initializeChat()
+  () => initChatInfo()
 )
 
-const initializeChat = () => {
+const userId = computed(() => {
+  if (authStore.profile) {
+    return +authStore.profile.sub
+  }
+  return undefined
+})
+
+const initChatInfo = () => {
   chatId.value = route.query.id as string
 
-  getMessages()
   getChat(chatId.value)
+  getCall(chatId.value)
+  getMessages()
 }
 
-const getMessages = async () => {
-  try {
-    if (!chatId.value) return
-
-    messagesLoading.value = true
-
-    await messageStore.getMessages(chatId.value)
-  } finally {
-    messagesLoading.value = false
-  }
-}
-
-const getChats = async () => {
+const getChatsList = async () => {
   try {
     chatsLoading.value = true
 
@@ -137,27 +135,38 @@ const getChats = async () => {
 
 const getChat = async (chatId: string) => {
   try {
-    if (!chatId) return
-
-    chat.value = await chatStore.getChat(chatId)
+    if (chatId) {
+      chat.value = await chatStore.getChat(chatId)
+    }
   } catch {
     router.replace({ path: '/chat' })
   }
 }
 
 const getCall = async (chatId: string) => {
-  call.value = await connection.invoke('getCall', chatId)
-}
-
-const setChatLastRead = (date: string) => {
-  if (chat.value) {
-    // setLastRead(chat.value.lastRead)
+  if (chatId) {
+    call.value = await callStore.getCall(chatId)
   }
 }
 
-const setLastRead = debounce((date: string) => {
-  connection.send('updateChat', { chatId: chatId.value, lastRead: date[0] })
-}, 5000)
+const getMessages = async () => {
+  try {
+    if (chatId.value) {
+      messagesLoading.value = true
+
+      await messageStore.getMessages(chatId.value)
+    }
+  } finally {
+    messagesLoading.value = false
+  }
+}
+
+const setChatLastRead = (date: string) => {
+  // chatId.value && updateChat({
+  //   chatId: chatId.value,
+  //   lastRead: new Date(date)
+  // })
+}
 
 const inputSearch = async (value: string) => {
   try {
@@ -189,29 +198,26 @@ const send = (content: string) => {
   })
 }
 
-const startCall = async () => {
-  if (chatId.value) {
-    callActive.value = true
-
-    calling({ chatId: chatId.value })
+const startCall = () => {
+  if (chatId.value && userId.value) {
+    sendStartCall({ chatId: chatId.value, userId: userId.value })
   }
 }
 
-const joinCall = () => callActive.value = true
+const endCall = (chatId: string) => sendEndCall(chatId)
 
-// const leave = () => {}
+const accept = () => callActive.value = true
 
-onCalling((chatid: string) => {
-  if (chatId.value && chatId.value == chatid) {
-    getCall(chatId.value)
+onStartCall(({ userId: user, chatId }) => {
+  if (user && user === userId.value) {
+    callActive.value = true
   }
+  chatId && getCall(chatId)
 })
 
-onLeaveCall((chatid: string) => {
-  if (chatId.value && chatId.value == chatid) {
-    getCall(chatId.value)
-  }
-})
+onLeaveCall(({ chatId }) => getCall(chatId))
+
+onEndCall(getCall)
 
 const chatSelect = (chatId: string) => router.push({ path: '/chat', query: { id: chatId } })
 
@@ -232,20 +238,20 @@ const itemSelect = async (item: SearchItem) => {
     })
 
     if (chatId) {
-      сhatCreated(chatId)
+      sendChatCreated(chatId)
       chatSelect(chatId)
     }
   }
 }
 
-onSendMessage((message: Message) => {
+onSendMessage((message) => {
   chatId.value && messageStore.addMessage(message)
 
   chatStore.getChat(message.chatId)
 })
 
 onChatCreated(getChat)
-onChatUpdate(getChat)
+onUpdateChat(getChat)
 
 const enableSearch = () => searchActive.value = true
 const disableSearch = () => {
@@ -259,12 +265,11 @@ const toggleMenu = () => menuActive.value = !menuActive.value
 
 <style scoped>
 .chats-main {
-  height: 100%;
   display: grid;
   grid-template-columns: auto 1fr
 }
 
-.chats-wrap {
+.chats-list {
   width: 500px;
   max-width: 600px;
   min-width: 400px;
@@ -287,13 +292,13 @@ const toggleMenu = () => menuActive.value = !menuActive.value
 
 .chats-header {
   display: flex;
-  padding: .5em;
-  column-gap: .5em;
   align-items: center;
+  padding: var(--section-gap);
+  column-gap: var(--section-gap);
 }
 
 .chats-content {
-  padding: 0 .5em;
+  padding: 0 var(--section-gap);
 }
 
 .chat-content {
@@ -315,6 +320,6 @@ const toggleMenu = () => menuActive.value = !menuActive.value
 .message-new-wrap {
   width: 50%;
   margin: 0 auto;
-  padding: .5em 0;
+  padding: var(--section-gap) 0;
 }
 </style>

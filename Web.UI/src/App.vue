@@ -1,5 +1,5 @@
 <template>
-  <main>
+  <main class="h-100">
     <RouterView />
   </main>
 </template>
@@ -12,9 +12,3 @@ import connection from '@/hubs/chat'
 onMounted(() => connection.start())
 
 </script>
-
-<style>
-main {
-  height: 100%;
-}
-</style>

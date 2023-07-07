@@ -1,9 +1,9 @@
 import Peer from "peerjs";
 
-export const createPeer = (id: string) => {
-    return new Peer(id, {
-        host: '/',
-        port: 9000,
-        path: '/myapp'
-    })
+const options = {
+    host: '/',
+    port: 9000,
+    path: '/myapp'
 }
+
+export const createPeer = (id: string) => new Peer(id, options)

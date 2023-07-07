@@ -1,17 +1,17 @@
 <template>
     <div class="account-controls">
-        <button @click="$emit('logout')">
+        <button @click="logout">
             <span class="material-symbols-outlined">move_item</span>
             Logout
         </button>
     </div>
 </template>
 <script setup lang="ts">
+import { useAuthStore } from '@/stores/auth'
 
-defineEmits<{
-    (e: 'logout'): void
-}>()
+const authStore = useAuthStore()
 
+const logout = () => authStore.logout()
 </script>
 
 <style scoped>

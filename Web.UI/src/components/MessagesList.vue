@@ -3,21 +3,24 @@
         <div v-if="loading" class="loading">
             <LoadingRing />
         </div>
-        <div v-else class="messages-list" ref="messagesList">
-            <MessageItem v-for="message of messagesReverse" :key="message.id" :id="normalizeId(message.id)"
+        <div v-else class="messages-list" ref="messagesNode">
+            <MessageItem v-for="message of messagesReverse" :key="message.id" :id="normalizeNodeId(message.id)"
                 :message="message" :right="userId == message.userId"
-                :class="{ 'active': userId && message.userId != userId && chat && message.date > chat.lastRead }" />
+                :class="{ 'active': active(message.userId, message.date) }" />
         </div>
     </section>
 </template>
   
 <script setup lang="ts">
 import { computed, ref, type PropType, watch } from 'vue'
-import type { Message, Chat } from '@/types/chat'
+import type { Chat } from '@/types/chat'
+import type { Message } from '@/types/message'
+import { debounce } from '@/helpers/debounce'
 import MessageItem from '@/components/MessageItem.vue'
 import LoadingRing from '@/components/controls/LoadingRing.vue'
+import { normalizeNodeId } from '@/helpers/nodes'
 
-const messagesList = ref<HTMLElement>()
+const messagesNode = ref<HTMLElement>()
 
 const props = defineProps({
     messages: {
@@ -25,7 +28,7 @@ const props = defineProps({
         required: true
     },
     userId: {
-        type: String,
+        type: Number,
         required: true
     },
     chat: Object as PropType<Chat>,
@@ -37,7 +40,7 @@ const emit = defineEmits<{
 }>()
 
 watch(
-    () => messagesList.value?.childNodes,
+    () => messagesNode.value?.childNodes,
     () => {
         scrollToLastReaded()
     })
@@ -62,6 +65,10 @@ watch(
 
 const messagesReverse = computed(() => [...props.messages].reverse())
 
+const active = (userId: number, date: string) => {
+    return props.userId && props.userId != userId && props.chat && props.chat.lastRead < date
+}
+
 const options = {
     root: document.querySelector(".messages-list"),
     threshold: .5
@@ -85,7 +92,7 @@ const observeLastMessage = (): void => {
         const element = getMessageElement(message.id)
 
         const observer = new IntersectionObserver(() => {
-            emit('messageCheck', message?.date)
+            message && messageCheck(message.date)
             observer.disconnect()
         }, options);
 
@@ -93,8 +100,10 @@ const observeLastMessage = (): void => {
     }
 }
 
+const messageCheck = debounce((value: string) => emit('messageCheck', value), 5000)
+
 const getMessageElement = (id: string) => {
-    return messagesList.value?.querySelector('#' + normalizeId(id))
+    return messagesNode.value?.querySelector('#' + normalizeNodeId(id))
 }
 
 const getUnreadMessage = () => {
@@ -107,10 +116,8 @@ const getUnreadMessage = () => {
 }
 
 const scrollToBottom = () => {
-    messagesList.value && (messagesList.value.scrollTop = 0)
+    messagesNode.value && (messagesNode.value.scrollTop = 0)
 }
-
-const normalizeId = (value: string) => `a${value}`
 </script>
   
 <style scoped>

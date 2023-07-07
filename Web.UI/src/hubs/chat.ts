@@ -1,5 +1,8 @@
-import { useAuthStore } from './../stores/auth';
 import { HubConnectionBuilder } from "@microsoft/signalr"
+import { useAuthStore } from '@/stores/auth'
+import type { JoinCall, LeaveCall, StartCall } from '@/types/call'
+import type { Message } from '@/types/message'
+import type { ChatUpdate } from "@/types/chat"
 
 const connection = new HubConnectionBuilder()
     .withUrl("https://localhost:7010/hubs/chat", {
@@ -13,27 +16,32 @@ const connection = new HubConnectionBuilder()
     // .withHubProtocol(new signalRMsgpack.MessagePackHubProtocol())
     .build()
 
-export const sendMessage = (body: { chatId: string, content: string }) => connection.send('sendMessage', body)
+const SendMessageMethod = 'SendMessage'
+export const sendMessage = (body: { chatId: string, content: string }) => connection.send(SendMessageMethod, body)
+export const onSendMessage = (callback: (result: Message) => void) => connection.on(SendMessageMethod, callback)
 
-export const onSendMessage = (callback: (...args: any[]) => void) => connection.on('sendMessage', callback)
+const ChatCreatedMethod = 'ChatCreated'
+export const sendChatCreated = (chatId: string) => connection.send(ChatCreatedMethod, chatId)
+export const onChatCreated = (callback: (chatId: string) => void) => connection.on(ChatCreatedMethod, callback)
 
-export const сhatCreated = (chatId: string) => connection.send('chatCreated', chatId)
+const ChatUpdateMethod = 'UpdateChat'
+export const updateChat = (body: ChatUpdate) => connection.send(ChatUpdateMethod, body)
+export const onUpdateChat = (callback: (chatId: string) => void) => connection.on(ChatUpdateMethod, callback)
 
-export const onChatCreated = (callback: (...args: any[]) => void) => connection.on('chatCreated', callback)
+const StartCallMethod = 'StartCall'
+export const sendStartCall = (body: StartCall) => connection.send(StartCallMethod, body)
+export const onStartCall = (callback: (result: StartCall) => void) => connection.on(StartCallMethod, callback)
 
-export const onChatUpdate = (callback: (...args: any[]) => void) => connection.on('updateChat', callback)
+const JoinCallMethod = 'JoinCall'
+export const sendJoinCall = (body: JoinCall) => connection.send(JoinCallMethod, body)
+export const onJoinCall = (callback: (result: JoinCall) => void) => connection.on(JoinCallMethod, callback)
 
-export const calling = (body: { chatId: string }) => connection.invoke('calling', body)
+const LeaveCallMethod = 'LeaveCall'
+export const sendLeaveCall = (body: LeaveCall) => connection.send(LeaveCallMethod, body)
+export const onLeaveCall = (callback: (result: LeaveCall) => void) => connection.on(LeaveCallMethod, callback)
 
-export const onCalling = (callback: (...args: any[]) => void) => connection.on('calling', callback)
-
-export const joinCall = (body: { chatId: string, peerUserId: string }) => connection.send('joinCall', body)
-
-export const onJoinCall = (callback: (...args: any[]) => void) => connection.on('joinCall', callback)
-
-export const leaveCall = (body: { peerId: string, chatId: string, userId: number }) =>
-    connection.send('leaveCall', body)
-
-export const onLeaveCall = (callback: (...args: any[]) => void) => connection.on('leaveCall', callback)
+const EndCallMethod = 'EndCall'
+export const sendEndCall = (chatId: string) => connection.send(EndCallMethod, chatId)
+export const onEndCall = (callback: (chatId: string) => void) => connection.on(EndCallMethod, callback)
 
 export default connection

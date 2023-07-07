@@ -1,7 +1,7 @@
 <template>
     <div class="side-menu" :class="{ 'active': active }">
         <section class="control">
-            <slot name="control"></slot>
+            <slot name="toggle"></slot>
         </section>
         <slot name="content"></slot>
     </div>

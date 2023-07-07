@@ -1,11 +1,11 @@
 <template>
-    <div class="chat-item" :class="{ 'active': active }" :data-time="getTime(chat.message?.date || chat.date)">
+    <div class="chat-item" :class="{ 'active': active }" :data-time="getTime(chat.lastMessage?.date || chat.date)">
         <div class="img-wrap">
             <AvatarImg :src="chat.image" alter="https://html.com/wp-content/uploads/flamingo4x.jpg" />
         </div>
         <div class="chat-info">
             <p>{{ chat.name }}</p>
-            <p class="chat-message" v-if="chat.message">{{ chat.message.content }}</p>
+            <p class="chat-message">{{ chat.lastMessage.content }}</p>
         </div>
         <span class="chat-unread" v-if="chat.unread > 0">{{ chat.unread }}</span>
     </div>

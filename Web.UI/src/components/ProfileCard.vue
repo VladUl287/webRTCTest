@@ -1,21 +1,20 @@
 <template>
     <div class="user-card">
-        <AvatarImg :src="profile?.image" alter="https://html.com/wp-content/uploads/flamingo4x.jpg" />
+        <AvatarImg :src="authStore.profile?.image" alter="https://html.com/wp-content/uploads/flamingo4x.jpg" />
 
         <section>
-            <p>{{ profile?.name }}</p>
+            <p>{{ authStore.profile?.name }}</p>
         </section>
     </div>
 </template>
 <script setup lang="ts">
-import type { Profile } from 'oidc-client';
-import type { PropType } from 'vue';
 import AvatarImg from '@/components/controls/AvatarImg.vue'
+import { useAuthStore } from '@/stores/auth';
 
-defineProps({
-    profile: Object as PropType<Profile  | null>
-})
+const authStore = useAuthStore()
+
 </script>
+
 <style scoped>
 .user-card {
     padding: 1em;

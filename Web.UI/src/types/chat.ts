@@ -1,3 +1,5 @@
+import type { LastMessage } from "./message"
+
 export type Chat = {
     id: string,
     name: string,
@@ -13,16 +15,7 @@ export enum ChatType {
     dialog
 }
 
-export type Message = {
-    id: string,
-    content: string,
-    userId: string,
+export type ChatUpdate = {
     chatId: string,
-    date: string,
-    edit: boolean
-}
-
-export type LastMessage = {
-    date: string,
-    content: string
+    lastRead: Date
 }

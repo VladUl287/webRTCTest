@@ -18,13 +18,11 @@
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue'
-import { joinCall, leaveCall, onJoinCall, onLeaveCall } from '@/hubs/chat'
-import { useAuthStore } from '@/stores/auth'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { sendJoinCall, sendLeaveCall, onJoinCall, onLeaveCall } from '@/hubs/chat'
 import { createPeer } from '@/peer'
 import type Peer from 'peerjs'
-
-const authStore = useAuthStore()
+import { normalizeNodeId } from '@/helpers/nodes'
 
 const peer = ref<Peer>()
 const dialog = ref<HTMLDialogElement>()
@@ -41,29 +39,25 @@ const emit = defineEmits<{
     (e: 'update:modelValue', value: Boolean): void
 }>()
 
-watch(
-    () => props.chatId,
-    () => {
-        discard()
-        initPeer()
-    }
-)
+onMounted(() => toggleModal(props.modelValue))
 
 watch(
     () => props.modelValue,
-    (visible) => {
-        if (visible) {
-            dialog.value?.showModal()
-
-            initPeer()
-        }
-        else {
-            dialog.value?.close()
-        }
-    }
+    toggleModal
 )
 
-const initPeer = () => {
+function toggleModal(visible: boolean) {
+    if (visible) {
+        dialog.value?.showModal()
+
+        setPeer()
+    }
+    else {
+        dialog.value?.close()
+    }
+}
+
+const setPeer = () => {
     if (!peer.value || peer.value.destroyed) {
         peer.value = createPeer('')
 
@@ -72,30 +66,33 @@ const initPeer = () => {
 
             appendVideo(stream, id, true)
 
-            joinCall({
+            sendJoinCall({
                 chatId: props.chatId,
-                peerUserId: id
+                peerId: id
             })
         })
 
         peer.value.on('call', async (call) => {
-            const camera_stream = await getStream()
-            call.answer(camera_stream)
+            const stream = await getStream()
+            call.answer(stream)
             call.on('stream', stream => appendVideo(stream, call.peer))
         })
+
+        peer.value.on('error', (err) => console.log('error', err))
+        peer.value.on('close', () => console.log('close'))
+        peer.value.on('disconnected', () => discard())
     }
 }
 
-onJoinCall(async (peerId: string) => {
-    if (!peer.value || peerId === peer.value.id) return
-
-    const camera_stream = await getStream()
-    const call = peer.value.call(peerId, camera_stream)
-    call.on('stream', stream => appendVideo(stream, peerId))
+onJoinCall(async ({ peerId, chatId }) => {
+    if (peer.value && peerId === peer.value.id && chatId === props.chatId) {
+        const stream = await getStream()
+        const call = peer.value.call(peerId, stream)
+        call.on('stream', stream => appendVideo(stream, peerId))
+    }
 })
 
-
-onLeaveCall((peerId: string) => {
+onLeaveCall(({ peerId }) => {
     if (peer.value && peer.value.id === peerId) {
         return discard()
     }
@@ -121,27 +118,25 @@ const getStreamMake = () => {
 const getStream = getStreamMake()
 
 const stopStream = async () => {
-    const camera_stream = await getStream()
-
-    camera_stream.getTracks().forEach(track => track.stop())
+    const stream = await getStream()
+    stream.getTracks()
+        .forEach(track => track.stop())
 }
 
-const collapse = () => {
-    emit('update:modelValue', false)
-}
+const collapse = () => emit('update:modelValue', false)
 
 const discard = () => {
     stopStream()
 
-    if (peer.value?.id && props.chatId && authStore.profile) {
-        leaveCall({
+    if (peer.value?.id && props.chatId) {
+        sendLeaveCall({
             chatId: props.chatId,
-            peerId: peer.value.id,
-            userId: +authStore.profile.sub
+            peerId: peer.value.id
         })
     }
 
     peer.value?.destroy()
+    peer.value = undefined
 
     clearVideos()
 
@@ -161,7 +156,7 @@ const appendVideo = (stream: MediaStream, id: string, muted: boolean = false) =>
 
     if (!videos) return
 
-    const videoExists = videos.querySelector('#' + normilizeId(id))
+    const videoExists = videos.querySelector('#' + normalizeNodeId(id))
 
     if (videoExists) return
 
@@ -169,16 +164,14 @@ const appendVideo = (stream: MediaStream, id: string, muted: boolean = false) =>
     video.srcObject = stream
     video.autoplay = true
     video.muted = muted
-    video.id = normilizeId(id)
+    video.id = normalizeNodeId(id)
 
     videos.appendChild(video)
 }
 
 const removeVideo = (id: string) => {
-    document.querySelector('#' + normilizeId(id))?.remove()
+    document.querySelector('#' + normalizeNodeId(id))?.remove()
 }
-
-const normilizeId = (value: string) => 'a' + value
 
 window.onbeforeunload = discard
 

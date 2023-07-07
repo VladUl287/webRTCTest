@@ -6,8 +6,8 @@
 </template>
   
 <script setup lang="ts">
-import type { PropType } from 'vue';
-import type { Message } from '@/types/chat';
+import type { PropType } from 'vue'
+import type { Message } from '@/types/message'
 
 defineProps({
     message: {
