@@ -1,4 +1,4 @@
-using Web.Hubs.Api;
+using Web.Hubs.Core;
 using FluentValidation;
 using Web.Hubs.Api.Host;
 using Web.Hubs.Api.Hubs;
@@ -15,14 +15,14 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddDatabase<DatabaseContext, IInfrastructureMarker>(builder.Configuration);
 
     builder.Services.AddSignalR();
-        //.AddMessagePackProtocol();
+    //.AddMessagePackProtocol();
 
     builder.Services.AddOpenIdAuthentication();
 
     builder.Services.AddRepositories();
     builder.Services.AddServices();
 
-    builder.Services.AddValidatorsFromAssembly(typeof(IApiMarker).Assembly);
+    builder.Services.AddValidatorsFromAssembly(typeof(ICoreMarker).Assembly);
 
     builder.Services.AddHostedService<RedisFlushService>();
 

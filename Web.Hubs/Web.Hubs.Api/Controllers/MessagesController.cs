@@ -21,10 +21,10 @@ public sealed class MessagesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<MessageDto>> GetMessages([FromQuery][BindRequired] Guid chatId, PageFilter? filter = null)
+    public Task<MessageDto[]> GetMessages([FromQuery][BindRequired] Guid chatId, PageFilter? filter = null)
     {
         var userId = User.GetUserId<long>();
 
-        return await messagesPresenter.GetMessages(chatId, userId, filter);
+        return messagesPresenter.GetMessages(chatId, userId, filter);
     }
 }

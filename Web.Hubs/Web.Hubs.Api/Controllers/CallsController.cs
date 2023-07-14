@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Web.Hubs.Core.Services;
-using Web.Hubs.Core.Dtos;
 
 namespace Web.Hubs.Api.Controllers;
 
@@ -19,8 +18,13 @@ public sealed class CallsController : ControllerBase
     }
 
     [HttpGet]
-    public Task<CallDto> GetCall([FromQuery][BindRequired] Guid callId)
+    public async Task<IActionResult> GetCall([FromQuery][BindRequired] Guid callId)
     {
-        return callService.Get(callId);
+        var result = await callService.Get(callId);
+
+        return result.Match<IActionResult>(
+            call => Ok(call),
+            notFound => NotFound()
+        );
     }
 }

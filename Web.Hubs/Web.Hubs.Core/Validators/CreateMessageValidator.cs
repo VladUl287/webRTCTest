@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using Web.Hubs.Core.Dtos.Messages;
 
-namespace Web.Hubs.Api.Validators;
+namespace Web.Hubs.Core.Validators;
 
 public sealed class CreateMessageValidator : AbstractValidator<CreateMessageDto>
 {

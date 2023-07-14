@@ -16,8 +16,6 @@ internal static class StartupServices
     public static void AddDatabase<TContext, TAssemblyMarker>(this IServiceCollection services, IConfiguration configuration)
         where TContext : DbContext, IUnitOfWork
     {
-        const int EnableRetryOnFailure = 2;
-
         services.AddDbContext<TContext>(
             options =>
             {
@@ -26,7 +24,6 @@ internal static class StartupServices
                     options =>
                     {
                         options.MigrationsAssembly(typeof(TAssemblyMarker).Assembly.FullName);
-                        // options.EnableRetryOnFailure(EnableRetryOnFailure);
                     });
                 // options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
                 options.LogTo(Console.WriteLine, LogLevel.Information);
@@ -97,7 +94,7 @@ internal static class StartupServices
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<ICallService, CallService>();
         services.AddScoped<IMessageService, MessageService>();
-        services.AddScoped<IUserChatService, UserChatService>();
+        services.AddScoped<IChatUserService, ChatUserService>();
 
         services.AddSingleton<IStorage<long>, StorageDictionary>();
     }

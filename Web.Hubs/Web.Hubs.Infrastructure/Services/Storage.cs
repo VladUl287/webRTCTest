@@ -15,17 +15,6 @@ public sealed class Storage : IStorage<long>
         this.redis = redis;
     }
 
-    public async Task<string[]> Get(long userId)
-    {
-        var redisKey = new RedisKey(userId.ToString());
-
-        var values = await database.HashGetAllAsync(redisKey);
-
-        return values
-            .Select(e => e.Value.ToString())
-            .ToArray();
-    }
-
     public async Task<string[]> Get(long[] userIds)
     {
         var entries = new List<HashEntry>();

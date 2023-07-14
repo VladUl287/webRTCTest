@@ -16,61 +16,46 @@ public sealed class ChatHub : Hub
     private readonly ICallService callService;
     private readonly IChatPresenter chatPresenter;
     private readonly IMessageService messageService;
-    private readonly IUserChatService userChatService;
+    private readonly IChatUserService chatUserService;
 
     public ChatHub(
         IStorage<long> storage,
         ICallService callService,
         IChatPresenter chatPresenter,
         IMessageService messageService,
-        IUserChatService userChatService)
+        IChatUserService userChatService)
     {
         this.connections = storage;
         this.callService = callService;
         this.chatPresenter = chatPresenter;
         this.messageService = messageService;
-        this.userChatService = userChatService;
+        this.chatUserService = userChatService;
     }
 
-    public async Task StartCall(StartCall startCall)
+    public async Task StartCall(Guid chatId)
     {
         var userId = Context.User.GetUserId<long>();
 
-        if (startCall.UserId != userId)
-        {
-            return;
-        }
+        var result = await callService.Create(chatId, userId);
 
-        var userExists = await callService.HasValue(userId);
-        if (userExists)
-        {
-            return;
-        }
-
-        var callExists = await callService.HasKey(startCall.ChatId);
-        if (callExists)
-        {
-            return;
-        }
-
-        await callService.Add(startCall.ChatId, userId);
-
-        await NotifyUsers(startCall.ChatId, new { chatId = startCall.ChatId, userId = userId }, nameof(StartCall));
+        await result.Match(
+            success => NotifyUsers(chatId, new { chatId, userId }, nameof(StartCall)),
+            chatNotFound => Task.CompletedTask, //NotifyUser(userId, "Chat not found", "Error"))
+            callAlreadyExists => Task.CompletedTask //NotifyUser(userId, "Call already exists", "Error"))
+        );
     }
 
     public async Task JoinCall(JoinCall join)
     {
         var userId = Context.User.GetUserId<long>();
 
-        var userExists = await callService.HasValue(userId);
-        if (userExists)
-        {
-            return;
-        }
+        var result = await callService.Add(join.ChatId, userId);
 
-        await callService.Add(join.ChatId, userId);
-
-        await NotifyUsers(join.ChatId, join, nameof(JoinCall));
+        await result.Match(
+            success => NotifyUsers(join.ChatId, join, nameof(JoinCall)),
+            userInCall => Task.CompletedTask, // leave call?
+            callNotFound => Task.CompletedTask //NotifyUser(userId, "Call not found", "Error"))
+        );
     }
 
     public async Task LeaveCall(LeaveCall leave)
@@ -97,21 +82,18 @@ public sealed class ChatHub : Hub
 
         var result = await messageService.Create(message, userId);
 
-        if (result.IsT1)
-        {
-            return;
-        }
-
-        await NotifyUsers(result.AsT0.ChatId, result.AsT0, nameof(SendMessage));
+        await result.Match(
+            message => NotifyUsers(message.ChatId, message, nameof(SendMessage)),
+            error => Task.CompletedTask  //NotifyUser(userId, "Call not found", "Error"))
+        );
     }
 
-    public async Task UpdateChat(UpdateChatDto userChat)
+    public async Task UpdateChat(UpdateChatUserDto userChat)
     {
         var userId = Context.User.GetUserId<long>();
 
-        var result = await userChatService.Update(userChat.ChatId, userId, userChat.LastRead);
-
-        if (result.IsT1 || result.IsT2)
+        var result = await chatUserService.Update(userChat.ChatId, userId, userChat.LastRead);
+        if (result.IsT1)
         {
             return;
         }
@@ -150,10 +132,9 @@ public sealed class ChatHub : Hub
         await connections.Delete(userId, Context.ConnectionId);
 
         var callId = await callService.Delete(userId);
-
-        if (callId.HasValue)
+        if (callId != default)
         {
-            await NotifyUsers(callId.Value, callId.Value, nameof(LeaveCall));
+            await NotifyUsers(callId, callId, nameof(LeaveCall));
         }
 
         await base.OnDisconnectedAsync(exception);

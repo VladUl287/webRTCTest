@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Web.Hubs.Api.Extensions;
 using Web.Hubs.Core.Dtos.Chats;
 using Web.Hubs.Core.Dtos.Filters;
-using Web.Hubs.Core.Enums;
 using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Services;
 
@@ -15,8 +14,8 @@ namespace Web.Hubs.Api.Controllers;
 [Route("api/[controller]/[action]")]
 public sealed class ChatsController : ControllerBase
 {
-    private readonly IChatPresenter chatPresenter;
     private readonly IChatService chatService;
+    private readonly IChatPresenter chatPresenter;
 
     public ChatsController(IChatPresenter chatPresenter, IChatService chatService)
     {
@@ -25,11 +24,11 @@ public sealed class ChatsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetChatId(long userId, ChatType chatType)
+    public async Task<IActionResult> GetDialog([FromQuery][BindRequired] long userId)
     {
         var currentUserId = User.GetUserId<long>();
 
-        var result = await chatPresenter.GetChatId(currentUserId, userId, chatType);
+        var result = await chatPresenter.GetDialog(currentUserId, userId);
 
         return result.Match<IActionResult>(
             id => Ok(id),

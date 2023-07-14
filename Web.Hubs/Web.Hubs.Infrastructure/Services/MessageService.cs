@@ -20,9 +20,8 @@ public sealed class MessageService : IMessageService
 
     public async Task<OneOf<MessageDto, Error>> Create(CreateMessageDto create, long userId)
     {
-        var chatUserExists = await unitOfWork.ChatsUsers.AnyAsync(cu => cu.ChatId == create.ChatId && cu.UserId == userId);
-
-        if (!chatUserExists)
+        var userInChat = await unitOfWork.ChatsUsers.AnyAsync(cu => cu.ChatId == create.ChatId && cu.UserId == userId);
+        if (!userInChat)
         {
             return new Error();
         }

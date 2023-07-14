@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Web.Hubs.Infrastructure.Proxies;
 using Web.Hubs.Infrastructure.Database;
 using Web.Hubs.Infrastructure.Database.Queries;
+using Microsoft.EntityFrameworkCore;
 
 namespace Web.Hubs.Infrastructure.Services;
 
@@ -128,7 +129,7 @@ public sealed class ChatService : IChatService
             return false;
         }
 
-        return false;
+        return true;
     }
 
     public bool ValidDialog(CreateChatDto chat)
