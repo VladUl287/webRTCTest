@@ -5,12 +5,12 @@ using Web.Hubs.Core.Enums;
 using Web.Hubs.Core.Services;
 using Web.Hubs.Core.Entities;
 using Web.Hubs.Core.Dtos.Chats;
-using Web.Hubs.Core.Repositories;
 using Microsoft.Extensions.Logging;
 using Web.Hubs.Infrastructure.Proxies;
 using Web.Hubs.Infrastructure.Database;
 using Web.Hubs.Infrastructure.Database.Queries;
-using Microsoft.EntityFrameworkCore;
+using FluentValidation;
+using System.ComponentModel.DataAnnotations;
 
 namespace Web.Hubs.Infrastructure.Services;
 
@@ -19,139 +19,98 @@ public sealed class ChatService : IChatService
     private readonly IAuthApi authApi;
     private readonly IUnitOfWork unitOfWork;
     private readonly ILogger<ChatService> logger;
-    private readonly IChatPresenter chatPresenter;
+    private readonly IValidator<CreateChatDto> validator;
 
-    public ChatService(IUnitOfWork unitOfWork, IChatPresenter chatPresenter, IAuthApi authApi, ILogger<ChatService> logger)
+    public ChatService(ILogger<ChatService> logger, IUnitOfWork unitOfWork, IAuthApi authApi, IValidator<CreateChatDto> validator)
     {
-        this.unitOfWork = unitOfWork;
-        this.chatPresenter = chatPresenter;
-        this.authApi = authApi;
         this.logger = logger;
+        this.authApi = authApi;
+        this.validator = validator;
+        this.unitOfWork = unitOfWork;
     }
 
-    public async Task<OneOf<Guid, Error<string>>> Create(CreateChatDto chat)
+    public async Task<OneOf<Guid, ValidationResult, Error<string>>> Create(CreateChatDto chat, long userId, CancellationToken cancellationToken = default)
     {
         try
         {
-            if (chat is { Type: ChatType.Monolog })
+            if (chat.UserId != userId)
             {
-                if (!ValidMonolog(chat))
-                {
-                    return new Error<string>("Not correct data");
-                }
+                return new Error<string>("Error creating chat");
+            }
 
-                var chatId = await ChatQueries.GetMonologId(unitOfWork.Context, chat.UserId);
+            var validation = await validator.ValidateAsync(chat, cancellationToken);
+
+            if (validation.IsValid)
+            {
+                var chatId = chat.Type switch
+                {
+                    ChatType.Monolog => await ChatQueries.GetMonologId(unitOfWork.Context, chat.UserId),
+                    ChatType.Dialog => await ChatQueries.GetDialogId(unitOfWork.Context, chat.Users[0].Id, chat.Users[1].Id),
+                    _ => default
+                };
 
                 if (chatId != default)
                 {
                     return chatId;
                 }
-            }
-            else if (chat is { Type: ChatType.Dialog })
-            {
-                if (!ValidDialog(chat))
-                {
-                    return new Error<string>("Not correct data");
-                }
 
-                var firstCollocutor = chat.Users[0];
-                var secondCollocutor = chat.Users[1];
-                var chatId = await ChatQueries.GetDialogId(unitOfWork.Context, firstCollocutor.Id, secondCollocutor.Id);
-
-                if (chatId != default)
-                {
-                    return chatId;
-                }
+                return await AddChat(chat);
             }
 
-            return await CreateChat(chat);
+            return new ValidationResult(validation.Errors[0].ErrorMessage);
         }
         catch (Exception ex)
         {
             logger.LogError(ex.Message, chat);
 
-            return new Error<string>("Chat creation error");
+            return new Error<string>("Error creating chat. Try later");
         }
     }
 
-    private async Task<Guid> CreateChat(CreateChatDto create)
+    private async Task<Guid> AddChat(CreateChatDto create, CancellationToken cancellationToken = default)
     {
         var chat = create.Adapt<Chat>();
 
-        await unitOfWork.Chats.AddAsync(chat);
+        await unitOfWork.Chats.AddAsync(chat, cancellationToken);
 
         foreach (var user in create.Users)
         {
-            var chatUser = new ChatUser
-            {
-                ChatId = chat.Id,
-                UserId = user.Id
-            };
+            var chatUser = await CreateChatUser(create, chat.Id, user.Id);
 
-            if (chat.Type is ChatType.Dialog)
-            {
-                var firstCollocutor = create.Users[0].Id;
-                var secondCollocutor = create.Users[1].Id;
-
-                var userInfoId = firstCollocutor;
-
-                if (firstCollocutor == chatUser.UserId)
-                {
-                    userInfoId = secondCollocutor;
-                }
-
-                var userInfo = await authApi.GetUserInfo(userInfoId);
-
-                chatUser.Name = userInfo.Content?.UserName ?? string.Empty;
-                chatUser.Image = userInfo.Content?.Image ?? string.Empty;
-            }
-
-            await unitOfWork.ChatsUsers.AddAsync(chatUser);
+            await unitOfWork.ChatsUsers.AddAsync(chatUser, cancellationToken);
         }
 
-        await unitOfWork.SaveChangesAsync();
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return chat.Id;
     }
 
-
-    public bool ValidMonolog(CreateChatDto chat)
+    private async Task<ChatUser> CreateChatUser(CreateChatDto create, Guid chatId, long userId)
     {
-        if (chat is { Users.Length: not 1 })
+        var chatUser = new ChatUser
         {
-            return false;
+            ChatId = chatId,
+            UserId = userId
+        };
+
+        if (create.Type is ChatType.Dialog)
+        {
+            var firstUser = create.Users[0].Id;
+            var secondUser = create.Users[1].Id;
+
+            var userInfoId = firstUser != userId ? firstUser : secondUser;
+
+            var userInfoResult = await authApi.GetUserInfo(userInfoId);
+
+            if (userInfoResult is { Content: null } or { IsSuccessStatusCode: false })
+            {
+                throw new InvalidOperationException($"Cannot get user info for user with id = {userId}");
+            }
+
+            chatUser.Name = userInfoResult.Content.UserName;
+            chatUser.Image = userInfoResult.Content.Image;
         }
 
-        var user = chat.Users[0];
-
-        if (user is null || user.Id != chat.UserId)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    public bool ValidDialog(CreateChatDto chat)
-    {
-        if (chat.Users is { Length: not 2 })
-        {
-            return false;
-        }
-
-        var firstCollocutor = chat.Users[0];
-        var secondCollocutor = chat.Users[1];
-
-        if (firstCollocutor is null || secondCollocutor is null)
-        {
-            return false;
-        }
-
-        if (firstCollocutor.Id == secondCollocutor.Id)
-        {
-            return false;
-        }
-
-        return true;
+        return chatUser;
     }
 }

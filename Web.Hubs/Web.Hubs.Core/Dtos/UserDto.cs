@@ -6,7 +6,5 @@ public sealed class UserDto
 
     public string Image { get; init; } = string.Empty;
 
-    public string Email { get; init; } = string.Empty;
-
     public string UserName { get; init; } = string.Empty;
 }

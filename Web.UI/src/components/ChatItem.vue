@@ -5,7 +5,7 @@
         </div>
         <div class="chat-info">
             <p>{{ chat.name }}</p>
-            <p class="chat-message">{{ chat.lastMessage.content }}</p>
+            <p class="chat-message">{{ chat.lastMessage?.content }}</p>
         </div>
         <span class="chat-unread" v-if="chat.unread > 0">{{ chat.unread }}</span>
     </div>

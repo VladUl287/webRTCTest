@@ -14,18 +14,14 @@ public sealed class ChatPresenter : IChatPresenter
 {
     private readonly DatabaseContext dbcontext;
 
-    public ChatPresenter(DatabaseContext context)
+    public ChatPresenter(DatabaseContext dbcontext)
     {
-        this.dbcontext = context;
+        this.dbcontext = dbcontext;
     }
 
-    public Task<bool> ChatExists(Guid chatId)
-    {
-        return dbcontext.Chats
-            .AnyAsync(c => c.Id == chatId);
-    }
+    public Task<bool> ChatExists(Guid chatId) => ChatExistsQuery(dbcontext, chatId);
 
-    public async Task<OneOf<Guid, NotFound>> GetDialog(long firstUser, long secondUser)
+    public async Task<OneOf<Guid, NotFound>> GetDialogByUsers(long firstUser, long secondUser)
     {
         var chats = await dbcontext.ChatsUsers
             .AsNoTracking()
@@ -51,7 +47,7 @@ public sealed class ChatPresenter : IChatPresenter
         return result;
     }
 
-    public async Task<OneOf<ChatDto, NotFound>> GetChat(Guid chatId, long userId)
+    public async Task<OneOf<ChatDto, NotFound>> GetChatById(Guid chatId, long userId)
     {
         var result = await dbcontext.ChatsUsers
             .Where(cu => cu.ChatId == chatId && cu.UserId == userId)
@@ -67,7 +63,7 @@ public sealed class ChatPresenter : IChatPresenter
         return result;
     }
 
-    public Task<ChatDto[]> GetChats(long userId, PageFilter? filter = null)
+    public Task<ChatDto[]> GetChatsForUser(long userId, PageFilter? filter = null)
     {
         return dbcontext.ChatsUsers
             .Where(cu => cu.UserId == userId)
@@ -77,7 +73,7 @@ public sealed class ChatPresenter : IChatPresenter
             .ToArrayAsync();
     }
 
-    public Task<long[]> GetUsers(Guid chatId, PageFilter? pageFilter = null)
+    public Task<long[]> GetUsersForChat(Guid chatId, PageFilter? pageFilter = null)
     {
         return dbcontext.ChatsUsers
             .Where(ch => ch.ChatId == chatId)
@@ -85,4 +81,13 @@ public sealed class ChatPresenter : IChatPresenter
             .PageFilter(pageFilter)
             .ToArrayAsync();
     }
+
+    #region Compiled queries
+
+    public static readonly Func<DatabaseContext, Guid, Task<bool>> ChatExistsQuery =
+        EF.CompileAsyncQuery((DatabaseContext dbcontext, Guid chatId) =>
+            dbcontext.Chats.Any(c => c.Id == chatId)
+        );
+
+    #endregion
 }

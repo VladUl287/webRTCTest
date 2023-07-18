@@ -8,7 +8,7 @@ public sealed class Chat
 
     public required string Name { get; set; }
 
-    public string Image { get; set; } = string.Empty;
+    public required string Image { get; set; }
 
     public required long UserId { get; init; }
 
@@ -16,7 +16,7 @@ public sealed class Chat
 
     public DateTime Date { get; init; } = DateTime.UtcNow;
 
-    public IEnumerable<Message>? Messages { get; init; }
+    public IEnumerable<Message> Messages { get; init; } = Enumerable.Empty<Message>();
 
-    public IEnumerable<ChatUser>? ChatUsers { get; init; }
+    public IEnumerable<ChatUser> ChatUsers { get; init; } = Enumerable.Empty<ChatUser>();
 }

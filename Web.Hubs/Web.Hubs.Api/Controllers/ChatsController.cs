@@ -26,9 +26,9 @@ public sealed class ChatsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetDialog([FromQuery][BindRequired] long userId)
     {
-        var currentUserId = User.GetUserId<long>();
+        var firstUserId = User.GetUserId<long>();
 
-        var result = await chatPresenter.GetDialog(currentUserId, userId);
+        var result = await chatPresenter.GetDialogByUsers(firstUserId, userId);
 
         return result.Match<IActionResult>(
             id => Ok(id),
@@ -41,7 +41,7 @@ public sealed class ChatsController : ControllerBase
     {
         var userId = User.GetUserId<long>();
 
-        var result = await chatPresenter.GetChat(chatId, userId);
+        var result = await chatPresenter.GetChatById(chatId, userId);
 
         return result.Match<IActionResult>(
             success => Ok(success),
@@ -54,17 +54,20 @@ public sealed class ChatsController : ControllerBase
     {
         var userId = User.GetUserId<long>();
 
-        return await chatPresenter.GetChats(userId, filter);
+        return await chatPresenter.GetChatsForUser(userId, filter);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateChatDto createChat)
     {
-        var result = await chatService.Create(createChat);
+        var userId = User.GetUserId<long>();
+
+        var result = await chatService.Create(createChat, userId);
 
         return result.Match<IActionResult>(
-            id => Ok(id),
-            error => BadRequest(error)
+            chatId => Created(nameof(Create), chatId),
+            validation => BadRequest(validation.ErrorMessage),
+            error => BadRequest(error.Value)
         );
     }
 }

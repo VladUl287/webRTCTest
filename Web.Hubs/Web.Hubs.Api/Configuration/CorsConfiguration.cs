@@ -1,4 +1,4 @@
-namespace Web.Hubs.Core.Configuration;
+namespace Web.Hubs.Api.Configuration;
 
 public sealed class CorsConfiguration
 {

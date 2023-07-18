@@ -11,12 +11,12 @@ public sealed class ChatConfiguration : IEntityTypeConfiguration<Chat>
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Name)
-            .HasMaxLength(255)
+            .HasMaxLength(1000)
             .IsRequired();
 
         builder.Property(x => x.Image)
-            .HasMaxLength(255)
-            .IsRequired(false);
+            .HasMaxLength(1000)
+            .IsRequired();
 
         builder.Property(x => x.UserId)
             .IsRequired();

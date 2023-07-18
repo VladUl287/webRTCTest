@@ -84,6 +84,7 @@ public sealed class ChatHub : Hub
 
         await result.Match(
             message => NotifyUsers(message.ChatId, message, nameof(SendMessage)),
+            validation => Task.CompletedTask,
             error => Task.CompletedTask  //NotifyUser(userId, "Call not found", "Error"))
         );
     }
@@ -105,7 +106,7 @@ public sealed class ChatHub : Hub
 
     private async Task NotifyUsers<TMessage>(Guid chatId, TMessage? message, string method)
     {
-        var users = await chatPresenter.GetUsers(chatId);
+        var users = await chatPresenter.GetUsersForChat(chatId);
 
         if (users?.Length > 0)
         {

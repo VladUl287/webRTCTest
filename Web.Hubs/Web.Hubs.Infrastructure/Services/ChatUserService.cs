@@ -23,9 +23,9 @@ public sealed class ChatUserService : IChatUserService
             lastRead = DateTime.SpecifyKind(lastRead, DateTimeKind.Utc);
         }
 
-        var relationExists = await context.ChatsUsers.AnyAsync(cu => cu.ChatId == chatId && cu.UserId == userId && cu.LastRead < lastRead);
+        var chatUserExists = await context.ChatsUsers.AnyAsync(cu => cu.ChatId == chatId && cu.UserId == userId && cu.LastRead < lastRead);
 
-        if (relationExists)
+        if (chatUserExists)
         {
             await ChatUserQueries.UpdateDialogLastRead(context, chatId, userId, lastRead);
 
