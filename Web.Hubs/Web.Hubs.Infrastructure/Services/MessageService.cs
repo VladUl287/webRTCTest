@@ -42,6 +42,14 @@ public sealed class MessageService : IMessageService
             };
 
             await unitOfWork.Messages.AddAsync(message);
+
+            // var chatUser = await unitOfWork.ChatsUsers.FirstOrDefaultAsync(cu => cu.UserId == userId && cu.ChatId == messageDto.ChatId);
+
+            // if (chatUser is not null)
+            // {
+            //     chatUser.LastRead = message.Date;
+            // }
+
             await unitOfWork.SaveChangesAsync();
 
             return message.Adapt<MessageDto>();

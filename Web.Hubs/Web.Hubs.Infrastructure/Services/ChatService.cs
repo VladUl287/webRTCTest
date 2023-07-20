@@ -29,7 +29,7 @@ public sealed class ChatService : IChatService
         this.unitOfWork = unitOfWork;
     }
 
-    public async Task<OneOf<Guid, ValidationResult, Error<string>>> Create(CreateChatDto chat, long userId, CancellationToken cancellationToken = default)
+    public async Task<OneOf<Guid, ValidationResult, Error<string>>> Create(CreateChatDto chat, long userId)
     {
         try
         {
@@ -38,7 +38,7 @@ public sealed class ChatService : IChatService
                 return new Error<string>("Error creating chat");
             }
 
-            var validation = await validator.ValidateAsync(chat, cancellationToken);
+            var validation = await validator.ValidateAsync(chat);
 
             if (validation.IsValid)
             {

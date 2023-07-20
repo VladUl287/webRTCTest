@@ -25,6 +25,14 @@ internal static class ProjectionExtensions
                     chat.ChatUsers!.First(x => x.UserId == userId).Image :
                     chat.Image,
 
+                // ChatUsers = chat.ChatUsers!
+                //     .Select(cu => new ChatUserDto
+                //     {
+                //         UserId = cu.UserId,
+                //         LastRead = cu.LastRead
+                //     })
+                //     .ToArray(),
+
                 LastRead = chat.ChatUsers!
                     .Where(cu => cu.UserId == userId)
                     .Select(cu => cu.LastRead)

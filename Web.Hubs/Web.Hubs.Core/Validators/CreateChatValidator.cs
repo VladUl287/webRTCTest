@@ -10,12 +10,10 @@ public sealed class CreateChatValidator : AbstractValidator<CreateChatDto>
     public CreateChatValidator()
     {
         RuleFor(p => p.Name)
-            .NotEmpty()
             .MaximumLength(255)
             .WithMessage("Incorrect chat name");
 
         RuleFor(p => p.Image)
-            .NotEmpty()
             .MaximumLength(255)
             .WithMessage("Incorrect chat image");
 
@@ -60,7 +58,7 @@ public sealed class CreateChatValidator : AbstractValidator<CreateChatDto>
 
             if (user is null || user.Id != chatDto.UserId)
             {
-                result.Errors.Add(new ValidationFailure(string.Empty, "The monolog creator user not equal member user"));
+                result.Errors.Add(new(string.Empty, "The monolog creator user not equal member user"));
 
                 return false;
             }
@@ -70,7 +68,7 @@ public sealed class CreateChatValidator : AbstractValidator<CreateChatDto>
         {
             if (chatDto.Users is { Length: not 2 })
             {
-                result.Errors.Add(new ValidationFailure(string.Empty, "The dialog cannot contain more or less than two users"));
+                result.Errors.Add(new(string.Empty, "The dialog cannot contain more or less than two users"));
 
                 return false;
             }
@@ -80,14 +78,14 @@ public sealed class CreateChatValidator : AbstractValidator<CreateChatDto>
 
             if (firstUser is null || secondUser is null)
             {
-                result.Errors.Add(new ValidationFailure(string.Empty, "Some of users not correct"));
+                result.Errors.Add(new(string.Empty, "Some of users not correct"));
 
                 return false;
             }
 
             if (firstUser.Id == secondUser.Id)
             {
-                result.Errors.Add(new ValidationFailure(string.Empty, "The dialog contains the same user twice"));
+                result.Errors.Add(new(string.Empty, "The dialog contains the same user twice"));
 
                 return false;
             }

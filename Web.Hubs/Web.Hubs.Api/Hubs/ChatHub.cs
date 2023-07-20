@@ -38,11 +38,10 @@ public sealed class ChatHub : Hub
 
         var result = await callService.Create(chatId, userId);
 
-        await result.Match(
-            success => NotifyUsers(chatId, new { chatId, userId }, nameof(StartCall)),
-            chatNotFound => Task.CompletedTask, //NotifyUser(userId, "Chat not found", "Error"))
-            callAlreadyExists => Task.CompletedTask //NotifyUser(userId, "Call already exists", "Error"))
-        );
+        if (result.IsT0)
+        {
+            await NotifyUsers(chatId, new { chatId, userId }, nameof(StartCall));
+        }
     }
 
     public async Task JoinCall(JoinCall join)
@@ -51,11 +50,10 @@ public sealed class ChatHub : Hub
 
         var result = await callService.Add(join.ChatId, userId);
 
-        await result.Match(
-            success => NotifyUsers(join.ChatId, join, nameof(JoinCall)),
-            userInCall => Task.CompletedTask, // leave call?
-            callNotFound => Task.CompletedTask //NotifyUser(userId, "Call not found", "Error"))
-        );
+        if (result.IsT0)
+        {
+            await NotifyUsers(join.ChatId, join, nameof(JoinCall));
+        }
     }
 
     public async Task LeaveCall(LeaveCall leave)
@@ -76,17 +74,16 @@ public sealed class ChatHub : Hub
         await NotifyUsers(chatId, chatId, nameof(EndCall));
     }
 
-    public async Task SendMessage(CreateMessageDto message)
+    public async Task CreateMessage(CreateMessageDto message)
     {
         var userId = Context.User.GetUserId<long>();
 
         var result = await messageService.Create(message, userId);
 
-        await result.Match(
-            message => NotifyUsers(message.ChatId, message, nameof(SendMessage)),
-            validation => Task.CompletedTask,
-            error => Task.CompletedTask  //NotifyUser(userId, "Call not found", "Error"))
-        );
+        if (result.IsT0)
+        {
+            await NotifyUsers(message.ChatId, result.AsT0, nameof(CreateMessage));
+        }
     }
 
     public async Task UpdateChat(UpdateChatUserDto userChat)
@@ -94,12 +91,11 @@ public sealed class ChatHub : Hub
         var userId = Context.User.GetUserId<long>();
 
         var result = await chatUserService.Update(userChat.ChatId, userId, userChat.LastRead);
-        if (result.IsT1)
-        {
-            return;
-        }
 
-        await NotifyUsers(userChat.ChatId, userChat.ChatId, nameof(UpdateChat));
+        if (result.IsT0)
+        {
+            await NotifyUsers(userChat.ChatId, userChat.ChatId, nameof(UpdateChat));
+        }
     }
 
     public Task ChatCreated(Guid chatId) => NotifyUsers(chatId, chatId, nameof(ChatCreated));

@@ -16,7 +16,7 @@ public sealed class Chat
 
     public DateTime Date { get; init; } = DateTime.UtcNow;
 
-    public IEnumerable<Message> Messages { get; init; } = Enumerable.Empty<Message>();
+    public ICollection<Message>? Messages { get; init; }
 
-    public IEnumerable<ChatUser> ChatUsers { get; init; } = Enumerable.Empty<ChatUser>();
+    public ICollection<ChatUser>? ChatUsers { get; init; }
 }

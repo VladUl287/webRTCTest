@@ -19,4 +19,6 @@ public sealed class ChatDto
     public LastMessageDto? LastMessage { get; init; }
 
     public int? Unread { get; init; }
+
+    // public ChatUserDto[] ChatUsers { get; init; } = Array.Empty<ChatUserDto>();
 }

@@ -7,5 +7,5 @@ namespace Web.Hubs.Core.Services;
 
 public interface IChatService
 {
-    Task<OneOf<Guid, ValidationResult, Error<string>>> Create(CreateChatDto chatCreate, long userId, CancellationToken cancellationToken = default);
+    Task<OneOf<Guid, ValidationResult, Error<string>>> Create(CreateChatDto chatCreate, long userId);
 }
