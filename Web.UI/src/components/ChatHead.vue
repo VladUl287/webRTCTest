@@ -7,7 +7,7 @@
             <p class="chat-name">{{ chat.name }}</p>
         </section>
         <section class="chat-actions">
-            <button @click="emits('startCall')" class="chat-action">
+            <button @click="emits('startCall')" class="base-btn">
                 <span class="material-symbols-outlined">call</span>
             </button>
         </section>
@@ -56,15 +56,5 @@ const emits = defineEmits<{
 
 .chat-actions {
     margin-left: auto;
-}
-
-.chat-action {
-    display: flex;
-    padding: .5em;
-    cursor: pointer;
-    border-radius: 50%;
-    background-color: transparent;
-    color: var(--color-placeholder);
-    border: 1px solid var(--color-border-dark);
 }
 </style>

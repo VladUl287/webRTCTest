@@ -23,6 +23,13 @@ const config: UserManagerSettings = {
 export const useAuthStore = defineStore('auth', () => {
     let user: User | null = null
 
+    const userId = computed(() => {
+        if (user && user.profile) {
+            return +user.profile.sub
+        }
+        return undefined
+    })
+
     const profile = computed(() => user?.profile)
 
     const userManager = new UserManager(config)
@@ -47,7 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
             await userManager.signinSilent({ timeout: 1000 })
 
             window.location.href = '../'
-        } catch {            
+        } catch {
             logout()
         }
 
@@ -67,5 +74,5 @@ export const useAuthStore = defineStore('auth', () => {
             })
     }
 
-    return { profile, silentRenew, getUser, login, logout, signingCallback }
+    return { userId, profile, silentRenew, getUser, login, logout, signingCallback }
 })

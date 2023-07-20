@@ -11,3 +11,8 @@ export type LastMessage = {
     date: string,
     content: string
 }
+
+export type CreateMessage = {
+    chatId: string,
+    content: string
+}

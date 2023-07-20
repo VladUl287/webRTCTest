@@ -1,7 +1,7 @@
 import { HubConnectionBuilder } from "@microsoft/signalr"
 import { useAuthStore } from '@/stores/auth'
 import type { JoinCall, LeaveCall, StartCall } from '@/types/call'
-import type { Message } from '@/types/message'
+import type { CreateMessage, Message } from '@/types/message'
 import type { ChatUpdate } from "@/types/chat"
 
 const connection = new HubConnectionBuilder()
@@ -16,20 +16,20 @@ const connection = new HubConnectionBuilder()
     // .withHubProtocol(new signalRMsgpack.MessagePackHubProtocol())
     .build()
 
-const SendMessageMethod = 'SendMessage'
-export const sendMessage = (body: { chatId: string, content: string }) => connection.send(SendMessageMethod, body)
-export const onSendMessage = (callback: (result: Message) => void) => connection.on(SendMessageMethod, callback)
+const SendMessageMethod = 'CreateMessage'
+export const createMessage = (body: CreateMessage) => connection.send(SendMessageMethod, body)
+export const onCreateMessage = (callback: (result: Message) => void) => connection.on(SendMessageMethod, callback)
 
 const ChatCreatedMethod = 'ChatCreated'
 export const sendChatCreated = (chatId: string) => connection.send(ChatCreatedMethod, chatId)
 export const onChatCreated = (callback: (chatId: string) => void) => connection.on(ChatCreatedMethod, callback)
 
 const ChatUpdateMethod = 'UpdateChat'
-export const updateChat = (body: ChatUpdate) => connection.send(ChatUpdateMethod, body)
+export const sendUpdateChat = (body: ChatUpdate) => connection.send(ChatUpdateMethod, body)
 export const onUpdateChat = (callback: (chatId: string) => void) => connection.on(ChatUpdateMethod, callback)
 
 const StartCallMethod = 'StartCall'
-export const sendStartCall = (body: StartCall) => connection.send(StartCallMethod, body)
+export const sendStartCall = (body: string) => connection.send(StartCallMethod, body)
 export const onStartCall = (callback: (result: StartCall) => void) => connection.on(StartCallMethod, callback)
 
 const JoinCallMethod = 'JoinCall'

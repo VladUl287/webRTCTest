@@ -1,43 +1,62 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { ChatType } from '@/types/chat'
 import type { Chat } from '@/types/chat'
 import instance from '@/http'
 
 export const useChatStore = defineStore('chat', () => {
-    const chats = ref<Chat[]>([])
+    const _chat = ref<Chat | undefined>()
+    const _chats = ref<Chat[]>([])
+    const _chatsLoading = ref<boolean>()
+
+    const chat = computed(() => _chat.value)
+    const chats = computed(() => _chats.value)
+    const chatsLoading = computed(() => _chatsLoading.value)
+
+    const setLastRead = (date: string) => {
+        if (_chat.value) {
+            _chat.value.lastRead = date
+        }
+    }
 
     const getChat = async (chatId: string): Promise<Chat | undefined> => {
         try {
             const result = await instance.get<Chat>('/api/chats/getchat', { params: { chatId } })
 
-            const index = chats.value.findIndex(chat => chat.id === result.data.id)
+            _chat.value = result.data
+
+            const index = _chats.value.findIndex(chat => chat.id === result.data.id)
 
             if (index > -1) {
-                chats.value[index] = result.data
+                _chats.value[index] = result.data
             }
             else {
-                chats.value.push(result.data)
+                _chats.value.push(result.data)
             }
 
             return result.data
         } catch (error) {
             console.log(error)
-
-            throw new Error("Error getting chat")
         }
     }
 
     const getChats = async (): Promise<void> => {
         try {
+            _chatsLoading.value = true
+
             const result = await instance.get<Chat[]>('/api/chats/getchats')
-            chats.value = result.data
+
+            _chats.value = result.data
         } catch (error) {
             console.log(error)
+
+            _chats.value = []
+        } finally {
+            _chatsLoading.value = false
         }
     }
 
-    const create = async (chat: { name: string, image: string, userId: string, type: ChatType, users: { id: string }[] }): Promise<string | undefined> => {
+    const create = async (chat: { name: string, image: string, userId: number, type: ChatType, users: { id: number }[] }): Promise<string | undefined> => {
         try {
             const result = await instance.post<string>('/api/chats/create', chat)
 
@@ -47,5 +66,5 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
-    return { chats, getChats, getChat, create }
+    return { chat, chats, chatsLoading, setLastRead, getChats, getChat, create }
 })

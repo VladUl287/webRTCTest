@@ -9,11 +9,6 @@ const router = createRouter({
       component: () => import('@/views/MainView.vue')
     },
     {
-      path: '/account',
-      name: 'account',
-      component: () => import('@/views/AccountView.vue')
-    },
-    {
       path: '/callback',
       name: 'callback',
       component: () => import('@/views/CallbackView.vue')

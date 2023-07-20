@@ -25,7 +25,7 @@ const getTime = (dateString: string) => dateString && timeFormat.format(new Date
   
 <style>
 .message-item {
-    max-width: 60%;
+    max-width: 40%;
     min-width: 15%;
     padding: .5em 1em;
     border-radius: 1em;

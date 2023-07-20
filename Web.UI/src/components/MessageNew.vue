@@ -1,37 +1,43 @@
 <template>
-    <div class="message-new">
+    <section class="message-new">
         <div class="textarea" contenteditable data-placeholder="message" ref="textarea"></div>
-        <button @click="sendMessage">
+        <button @click="sendMessage" class="base-btn">
             <span class="material-symbols-outlined">
                 send
             </span>
         </button>
-    </div>
+    </section>
 </template>
   
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { CreateMessage } from '@/types/message'
 
-defineProps({
+const props = defineProps({
+    chatId: {
+        type: String,
+        required: true
+    },
     disabled: Boolean
 })
 
 const emits = defineEmits<{
-    (e: 'send', content: string): void
+    (e: 'sendMessage', body: CreateMessage): void
 }>()
 
 const textarea = ref<HTMLElement>()
 
 const sendMessage = () => {
-    if (textarea.value && textarea.value.innerText) {
-        emits('send', textarea.value.innerText)
+    const content = textarea.value?.innerText
+
+    if (props.chatId && content) {
+        emits('sendMessage', { chatId: props.chatId, content })
     }
 }
 </script>
   
 <style scoped>
 .message-new {
-    width: 100%;
     display: grid;
     align-items: center;
     padding: var(--section-gap) 0;
@@ -51,14 +57,5 @@ const sendMessage = () => {
 .textarea:empty::before {
     content: attr(data-placeholder);
     color: var(--color-placeholder);
-}
-
-button {
-    display: flex;
-    padding: .7em;
-    border-radius: 50%;
-    background-color: transparent;
-    color: var(--color-placeholder);
-    border: 1px solid var(--color-border-dark);
 }
 </style>

@@ -1,3 +1,8 @@
+export type Call = {
+    id: string,
+    users: number[]
+}
+
 export type StartCall = {
     chatId: string,
     userId: number

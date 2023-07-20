@@ -10,6 +10,11 @@ export type Chat = {
     unread: number
 }
 
+export type ChatUser = {
+    userId: number,
+    lastRead: string
+}
+
 export enum ChatType {
     monolog,
     dialog
@@ -17,5 +22,5 @@ export enum ChatType {
 
 export type ChatUpdate = {
     chatId: string,
-    lastRead: Date
+    lastRead: string
 }
