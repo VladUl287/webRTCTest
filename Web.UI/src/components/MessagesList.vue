@@ -5,8 +5,8 @@
         </div>
         <div v-else class="messages-list" ref="messagesList">
             <MessageItem v-for="message of messagesReverse" :key="message.id" :id="normalizeNodeId(message.id)"
-                :message="message" :right="userId === message.userId"
-                :class="{ 'active': active(message.userId, message.date) }" />
+                :message="message" :right="userId === message.userId" />
+            <!-- :class="{ 'active': active(message.userId, message.date) }" /> -->
         </div>
     </section>
 </template>
@@ -19,12 +19,12 @@ import MessageItem from '@/components/MessageItem.vue'
 import LoadingRing from '@/components/controls/LoadingRing.vue'
 import { normalizeNodeId } from '@/helpers/nodes'
 
-const messageVisibleRatio = .5
+// const messageVisibleRatio = .5
 
-const options = {
-    root: document.querySelector('.messages-list'),
-    threshold: messageVisibleRatio
-}
+// const options = {
+//     root: document.querySelector('.messages-list'),
+//     threshold: messageVisibleRatio
+// }
 
 const messagesList = ref<HTMLElement>()
 
@@ -44,15 +44,15 @@ const props = defineProps({
     loading: Boolean
 })
 
-const emit = defineEmits<{
-    (e: 'messageCheck', date: string): void
-}>()
+// const emit = defineEmits<{
+//     (e: 'messageCheck', date: string): void
+// }>()
 
 watch(
     () => messagesList.value?.children,
     () => {
         scrollToFirstUnreadMessage()
-        observeLastMessage()
+        // observeLastMessage()
     },
     { flush: 'post' })
 
@@ -68,15 +68,15 @@ watch(
         }
     })
 
-watch(
-    () => props.chat?.lastRead,
-    () => observeLastMessage())
+// watch(
+//     () => props.chat?.lastRead,
+//     () => observeLastMessage())
 
 const messagesReverse = computed(() => [...props.messages].reverse())
 
-const active = (userId: number, date: string) => {
-    return props.userId && props.userId != userId && props.chat && props.chat.lastRead < date
-}
+// const active = (userId: number, date: string) => {
+//     return props.userId && props.userId != userId && props.chat && props.chat.lastRead < date
+// }
 
 const scrollToFirstUnreadMessage = () => {
     const message = getFirstUnreadMessage()
@@ -87,24 +87,24 @@ const scrollToFirstUnreadMessage = () => {
     }
 }
 
-const observeLastMessage = (): void => {
-    const message = getFirstUnreadMessage()
+// const observeLastMessage = (): void => {
+//     const message = getFirstUnreadMessage()
 
-    if (message) {
-        const element = getMessageElement(message.id)
+//     if (message) {
+//         const element = getMessageElement(message.id)
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.intersectionRatio >= messageVisibleRatio) {
-                    emit('messageCheck', message.date)
-                    observer.disconnect()
-                }
-            })
-        }, options);
+//         const observer = new IntersectionObserver((entries) => {
+//             entries.forEach(entry => {
+//                 if (entry.intersectionRatio >= messageVisibleRatio) {
+//                     emit('messageCheck', message.date)
+//                     observer.disconnect()
+//                 }
+//             })
+//         }, options);
 
-        element && observer.observe(element)
-    }
-}
+//         element && observer.observe(element)
+//     }
+// }
 
 const getMessageElement = (id: string) => messagesList.value?.querySelector('#' + normalizeNodeId(id))
 
@@ -121,9 +121,9 @@ const scrollToBottom = () => {
 </script>
   
 <style scoped>
-.active {
+/* .active {
     background-color: rgba(233, 106, 233, 0.2);
-}
+} */
 
 .messages-wrap {
     height: 100%;

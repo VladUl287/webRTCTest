@@ -1,7 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { ChatType } from '@/types/chat'
-import type { Chat } from '@/types/chat'
+import { type Chat, ChatType } from '@/types/chat'
 import instance from '@/http'
 
 export const useChatStore = defineStore('chat', () => {
@@ -56,6 +55,23 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
+    const createDialog = async (firstUser: number, secondUser: number): Promise<string | undefined> => {
+        try {
+            const result = await instance.post<string>('/api/chats/create', {
+                userId: firstUser,
+                type: ChatType.dialog,
+                users: [
+                    { id: firstUser },
+                    { id: secondUser },
+                ]
+            })
+
+            return result.data
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     const create = async (chat: { name: string, image: string, userId: number, type: ChatType, users: { id: number }[] }): Promise<string | undefined> => {
         try {
             const result = await instance.post<string>('/api/chats/create', chat)
@@ -66,5 +82,5 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
-    return { chat, chats, chatsLoading, setLastRead, getChats, getChat, create }
+    return { chat, chats, chatsLoading, createDialog, setLastRead, getChats, getChat, create }
 })

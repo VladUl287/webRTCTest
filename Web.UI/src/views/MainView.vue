@@ -44,7 +44,7 @@
             class="notification" />
 
           <MessagesList v-if="chatStore.chat" :chat="chatStore.chat" :messages="messageStore.messages"
-            :userId="authStore.userId" :loading="messageStore.messagesLoading" @messageCheck="messageCheck" />
+            :userId="authStore.userId" :loading="messageStore.messagesLoading" />
         </div>
       </section>
 
@@ -70,13 +70,11 @@ import ProfileControls from '@/components/ProfileControls.vue'
 import ChatNotification from '@/components/ChatNotification.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '@/stores/chats'
-import { ChatType } from '@/types/chat'
 import { useMessageStore } from '@/stores/messages'
 import type { SearchItem } from '@/types/components'
 import { useCallStore } from '@/stores/calls'
 import { useSearchStore } from '@/stores/search'
-import { createMessage, onCreateMessage, onChatCreated, sendStartCall, onStartCall, sendChatCreated, onLeaveCall, onEndCall, onUpdateChat, sendEndCall, sendUpdateChat } from '@/hubs/chat'
-import { debounce } from '@/helpers/debounce'
+import { createMessage, onCreateMessage, onChatCreated, sendStartCall, onStartCall, sendChatCreated, onLeaveCall, onEndCall, onUpdateChat, sendEndCall } from '@/hubs/chat'
 
 const CallView = defineAsyncComponent(() => import('@/views/CallView.vue'))
 
@@ -116,31 +114,29 @@ const getChatContent = () => {
   }
 }
 
-const messageCheck = (date: string) => {
-  chatStore.setLastRead(date)
-  sendUpdateChatDebounce(date)
-}
+// const messageCheck = (date: string) => {
+//   chatStore.setLastRead(date)
+//   sendUpdateChatDebounce(date)
+// }
 
-const sendUpdateChatDebounce = debounce((date: string) => {
-  console.log('date', date);
-  // chatId.value && sendUpdateChat({
-  //   chatId: chatId.value,
-  //   lastRead: date
-  // })
-}, 300)
+// const sendUpdateChatDebounce = debounce((date: string) => {
+//   console.log('date', date);
+//   chatId.value && sendUpdateChat({
+//      chatId: chatId.value,
+//      lastRead: date
+//   })
+// }, 300)
 
 const inputSearch = (value: string) => searchStore.loadUsers(value)
 
-const startCall = () => {
-  chatId.value && sendStartCall(chatId.value)
-}
+const startCall = () => chatId.value && sendStartCall(chatId.value)
 
 const endCall = (chatId: string) => sendEndCall(chatId)
 
 const showCall = () => callActive.value = true
 
 onStartCall(({ userId, chatId }) => {
-  if (authStore.userId && authStore.userId === userId) {
+  if (authStore?.userId === userId) {
     callActive.value = true
   }
   chatId && callStore.getCall(chatId)
@@ -157,16 +153,10 @@ const itemSelect = async (item: SearchItem) => {
 
   if (item.value) return chatSelect(item.value)
 
-  if (authStore.userId) {
-    const chatId = await chatStore.create({
-      name: '', image: '',
-      type: ChatType.dialog,
-      userId: authStore.userId,
-      users: [
-        { id: authStore.userId },
-        { id: +item.key }
-      ]
-    })
+  const itemUserId = +item.key
+
+  if (authStore.userId && !isNaN(itemUserId)) {
+    const chatId = await chatStore.createDialog(authStore.userId, itemUserId)
 
     if (chatId) {
       sendChatCreated(chatId)
