@@ -1,0 +1,2 @@
+﻿dotnet ef migrations add "Initial" --project Web.Hubs/Web.Hubs.Infrastructure --startup-project Web.Hubs/Web.Hubs.Api --output-dir Database/Migrations
+dotnet ef migrations add "Initial" --project Web.Auth/Web.Auth.Infrastructure --startup-project Web.Auth/Web.Auth.Api --output-dir Database/Migrations
