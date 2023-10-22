@@ -1,5 +1,5 @@
 using StackExchange.Redis;
-using Web.Hubs.Core.Services;
+using Web.Hubs.Core.Contracts.Services;
 
 namespace Web.Hubs.Infrastructure.Services;
 

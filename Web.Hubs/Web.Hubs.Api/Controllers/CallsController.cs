@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Web.Hubs.Core.Services;
+using Web.Hubs.Core.Contracts.Services;
 
 namespace Web.Hubs.Api.Controllers;
 

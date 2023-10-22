@@ -1,17 +1,16 @@
 using OneOf;
 using OneOf.Types;
 using Web.Hubs.Core.Dtos;
-using Web.Hubs.Core.Results;
 
-namespace Web.Hubs.Core.Services;
+namespace Web.Hubs.Core.Contracts.Services;
 
 public interface ICallService
 {
     Task<OneOf<CallDto, NotFound>> Get(Guid userId);
 
-    Task<OneOf<Success, NotFound, AlreadyExists>> Create(Guid callId, long userId);
+    Task<OneOf<Success, Error>> Create(long userId);
 
-    Task<OneOf<Success, Error, NotFound>> Add(Guid callId, long userId);
+    Task<OneOf<Success, Error, NotFound>> AddUser(Guid callId, long userId);
 
     Task Delete(Guid callId);
 

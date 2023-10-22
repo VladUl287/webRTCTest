@@ -1,10 +1,10 @@
 using Mapster;
-using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Filters;
 using Web.Hubs.Core.Dtos.Messages;
 using Microsoft.EntityFrameworkCore;
 using Web.Hubs.Infrastructure.Database;
 using Web.Hubs.Infrastructure.Extensions;
+using Web.Hubs.Core.Contracts.Repositories;
 
 namespace Web.Hubs.Infrastructure.Repositories;
 

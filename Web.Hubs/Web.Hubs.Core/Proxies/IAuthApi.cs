@@ -1,7 +1,7 @@
 ﻿using Refit;
 using Web.Hubs.Core.Dtos;
 
-namespace Web.Hubs.Infrastructure.Proxies;
+namespace Web.Hubs.Core.Proxies;
 
 public interface IAuthApi
 {

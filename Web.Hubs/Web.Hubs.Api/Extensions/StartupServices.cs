@@ -1,21 +1,24 @@
 using Refit;
-using Web.Hubs.Core.Services;
-using Web.Hubs.Core.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Web.Hubs.Infrastructure.Database;
 using Web.Hubs.Infrastructure.Services;
 using Web.Hubs.Infrastructure.Repositories;
 using Web.Hubs.Api.HttpHandlers;
-using Web.Hubs.Infrastructure.Proxies;
 using Web.Hubs.Api.Configuration;
 using OpenIddict.Validation.AspNetCore;
+using Web.Hubs.Core.Contracts.Repositories;
+using Web.Hubs.Core.Contracts.Services;
+using Web.Hubs.Core.Services;
+using StackExchange.Redis;
+using Web.Hubs.Core.Contracts;
+using Web.Hubs.Infrastructure;
+using Web.Hubs.Core.Proxies;
 
 namespace Web.Hubs.Api.Extensions;
 
 internal static class StartupServices
 {
     public static void AddDatabase<TContext, TAssemblyMarker>(this IServiceCollection services, IConfiguration configuration)
-        where TContext : DbContext, IUnitOfWork
+        where TContext : DbContext
     {
         services.AddDbContext<TContext>(
             options =>
@@ -30,8 +33,6 @@ internal static class StartupServices
             },
             ServiceLifetime.Scoped
         );
-
-        services.AddScoped<IUnitOfWork, TContext>();
     }
 
     public static void AddOpenIdAuthentication(this IServiceCollection services)
@@ -79,21 +80,30 @@ internal static class StartupServices
 
     public static void AddRepositories(this IServiceCollection services)
     {
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddScoped<IChatManager, ChatManager>();
         services.AddScoped<IChatPresenter, ChatPresenter>();
+
+        services.AddScoped<IMessageManager, MessageManager>();
         services.AddScoped<IMessagePresenter, MessagePresenter>();
+
+        services.AddScoped<ICallManager, CallManager>();
+        services.AddScoped<ICallPresenter, CallPresenter>();
     }
 
     public static void AddServices(this IServiceCollection services)
     {
-        // services.AddSingleton<ConnectionMultiplexer>(factory => ConnectionMultiplexer.Connect("localhost:6379,allowAdmin=true"));
-        // services.AddSingleton<IStorage<long>, Storage>();
+        services.AddSingleton(factory => ConnectionMultiplexer.Connect("localhost:6379,allowAdmin=true"));
+
+        services.AddSingleton<IStorage<long>, Storage>();
 
         services.AddScoped<IChatService, ChatService>();
-        services.AddScoped<ICallService, CallService>();
-        services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IChatUserService, ChatUserService>();
 
-        services.AddSingleton<IStorage<long>, StorageDictionary>();
+        services.AddScoped<ICallService, CallService>();
+
+        services.AddScoped<IMessageService, MessageService>();
     }
 
     public static void AddRefit(this IServiceCollection services)

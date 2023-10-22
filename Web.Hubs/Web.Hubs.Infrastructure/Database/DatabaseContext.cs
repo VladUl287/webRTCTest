@@ -4,14 +4,10 @@ using Web.Hubs.Infrastructure.Database.Configuration;
 
 namespace Web.Hubs.Infrastructure.Database;
 
-public sealed class DatabaseContext : DbContext, IUnitOfWork
+public sealed class DatabaseContext : DbContext
 {
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
-    {
-        Database.EnsureCreated();
-    }
-
-    public DatabaseContext Context => this;
+    {}
 
     public DbSet<Chat> Chats => Set<Chat>();
     public DbSet<Call> Calls => Set<Call>();

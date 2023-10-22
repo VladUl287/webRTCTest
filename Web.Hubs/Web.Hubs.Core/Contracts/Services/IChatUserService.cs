@@ -1,7 +1,7 @@
 ﻿using OneOf;
 using OneOf.Types;
 
-namespace Web.Hubs.Core.Services;
+namespace Web.Hubs.Core.Contracts.Services;
 
 public interface IChatUserService
 {

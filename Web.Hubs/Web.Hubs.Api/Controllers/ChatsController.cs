@@ -2,10 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Web.Hubs.Api.Extensions;
+using Web.Hubs.Core.Contracts.Repositories;
+using Web.Hubs.Core.Contracts.Services;
 using Web.Hubs.Core.Dtos.Chats;
 using Web.Hubs.Core.Dtos.Filters;
-using Web.Hubs.Core.Repositories;
-using Web.Hubs.Core.Services;
+using Web.Hubs.Core.Enums;
 
 namespace Web.Hubs.Api.Controllers;
 
@@ -28,7 +29,7 @@ public sealed class ChatsController : ControllerBase
     {
         var firstUserId = User.GetUserId<long>();
 
-        var result = await chatPresenter.GetDialogByUsers(firstUserId, userId);
+        var result = await chatPresenter.GetChatId(ChatType.Dialog, new[] { firstUserId, userId });
 
         return result.Match<IActionResult>(
             id => Ok(id),

@@ -18,5 +18,5 @@ public sealed class Chat
 
     public ICollection<Message>? Messages { get; init; }
 
-    public ICollection<ChatUser>? ChatUsers { get; init; }
+    public ICollection<ChatUser>? ChatUsers { get; set; }
 }

@@ -5,6 +5,7 @@ using Web.Hubs.Api.Hubs;
 using Web.Hubs.Infrastructure;
 using Web.Hubs.Api.Extensions;
 using Web.Hubs.Infrastructure.Database;
+using Web.Hubs.Core.Proxies;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -15,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddDatabase<DatabaseContext, IInfrastructureMarker>(builder.Configuration);
 
     builder.Services.AddSignalR();
-    //.AddMessagePackProtocol();
+        //.AddMessagePackProtocol();
 
     builder.Services.AddOpenIdAuthentication();
 

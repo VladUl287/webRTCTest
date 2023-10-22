@@ -1,4 +1,4 @@
-namespace Web.Hubs.Core.Services;
+namespace Web.Hubs.Core.Contracts.Services;
 
 public interface IStorage<T>
     where T : struct

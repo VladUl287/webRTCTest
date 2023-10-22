@@ -2,11 +2,13 @@
 using OneOf.Types;
 using Web.Hubs.Core.Enums;
 using Web.Hubs.Core.Dtos.Chats;
-using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Filters;
 using Microsoft.EntityFrameworkCore;
 using Web.Hubs.Infrastructure.Database;
 using Web.Hubs.Infrastructure.Extensions;
+using Web.Hubs.Core.Contracts.Repositories;
+using Web.Hubs.Core.Entities;
+using Web.Hubs.Infrastructure.Database.Queries;
 
 namespace Web.Hubs.Infrastructure.Repositories;
 
@@ -20,32 +22,6 @@ public sealed class ChatPresenter : IChatPresenter
     }
 
     public Task<bool> ChatExists(Guid chatId) => ChatExistsQuery(dbcontext, chatId);
-
-    public async Task<OneOf<Guid, NotFound>> GetDialogByUsers(long firstUser, long secondUser)
-    {
-        var chats = await dbcontext.ChatsUsers
-            .AsNoTracking()
-            .Where(cu => cu.UserId == firstUser && cu.Chat!.Type == ChatType.Dialog)
-            .Select(cu => cu.ChatId)
-            .ToArrayAsync();
-
-        if (chats.Length == 0)
-        {
-            return new NotFound();
-        }
-
-        var result = await dbcontext.ChatsUsers
-            .Where(cu => cu.UserId == secondUser && chats.Contains(cu.ChatId))
-            .Select(cu => cu.ChatId)
-            .FirstOrDefaultAsync();
-
-        if (result == default)
-        {
-            return new NotFound();
-        }
-
-        return result;
-    }
 
     public async Task<OneOf<ChatDto, NotFound>> GetChatById(Guid chatId, long userId)
     {
@@ -80,6 +56,32 @@ public sealed class ChatPresenter : IChatPresenter
             .Select(ch => ch.UserId)
             .PageFilter(pageFilter)
             .ToArrayAsync();
+    }
+
+    public async Task<OneOf<Guid, NotFound>> GetChatId(ChatType type, long[] users)
+    {
+        var chatId = type switch
+        {
+            ChatType.Monolog => await ChatQueries.GetMonologId(dbcontext, users[0]),
+            ChatType.Dialog => await ChatQueries.GetDialogId(dbcontext, users[0], users[1]),
+            _ => default
+        };
+
+        return chatId;
+    }
+
+    public async Task<OneOf<ChatUser, NotFound>> GetChatUser(Guid chatId, long userId)
+    {
+        var result = await dbcontext.ChatsUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cu => cu.ChatId == chatId && cu.UserId == userId);
+
+        if (result is null)
+        {
+            return new NotFound();
+        }
+
+        return result;
     }
 
     #region Compiled queries

@@ -1,7 +1,7 @@
 using Web.Hubs.Core.Dtos.Filters;
 using Web.Hubs.Core.Dtos.Messages;
 
-namespace Web.Hubs.Core.Repositories;
+namespace Web.Hubs.Core.Contracts.Repositories;
 
 public interface IMessagePresenter
 {

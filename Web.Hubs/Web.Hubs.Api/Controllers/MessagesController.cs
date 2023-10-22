@@ -1,10 +1,10 @@
 using Web.Hubs.Api.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Messages;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Web.Hubs.Core.Dtos.Filters;
+using Web.Hubs.Core.Contracts.Repositories;
 
 namespace Web.Hubs.Api.Controllers;
 

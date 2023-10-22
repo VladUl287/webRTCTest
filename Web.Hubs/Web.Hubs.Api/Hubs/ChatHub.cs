@@ -1,11 +1,11 @@
-using Web.Hubs.Core.Services;
 using Web.Hubs.Api.Extensions;
-using Web.Hubs.Core.Repositories;
 using Web.Hubs.Core.Dtos.Messages;
 using Web.Hubs.Core.Dtos.UserChat;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Web.Hubs.Core.Dtos;
+using Web.Hubs.Core.Contracts.Repositories;
+using Web.Hubs.Core.Contracts.Services;
 
 namespace Web.Hubs.Api.Hubs;
 
@@ -36,7 +36,7 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        var result = await callService.Create(chatId, userId);
+        var result = await callService.Create(userId);
 
         if (result.IsT0)
         {
@@ -48,7 +48,7 @@ public sealed class ChatHub : Hub
     {
         var userId = Context.User.GetUserId<long>();
 
-        var result = await callService.Add(join.ChatId, userId);
+        var result = await callService.AddUser(join.ChatId, userId);
 
         if (result.IsT0)
         {

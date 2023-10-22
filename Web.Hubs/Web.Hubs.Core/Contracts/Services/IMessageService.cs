@@ -3,7 +3,7 @@ using OneOf.Types;
 using Web.Hubs.Core.Dtos.Messages;
 using System.ComponentModel.DataAnnotations;
 
-namespace Web.Hubs.Core.Services;
+namespace Web.Hubs.Core.Contracts.Services;
 
 public interface IMessageService
 {

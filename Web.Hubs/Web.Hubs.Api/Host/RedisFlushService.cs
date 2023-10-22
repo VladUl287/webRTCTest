@@ -1,4 +1,4 @@
-﻿using Web.Hubs.Core.Services;
+﻿using Web.Hubs.Core.Contracts.Services;
 
 namespace Web.Hubs.Api.Host;
 
